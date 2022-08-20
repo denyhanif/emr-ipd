@@ -1,0 +1,50 @@
+﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="AnalysisPage.ascx.cs" Inherits="Form_SOAP_Control_Template_AnalysisPage" %>
+
+<asp:updatepanel runat="server">
+    <ContentTemplate>
+
+    <div class="col-lg-12" style="padding-left:0px;margin:0px">
+
+        <div style="height:150px;background-color:white; width:100%;border:1px; border-radius: 7px;box-shadow: 0px 2px 5px #9293A0;margin-top:0px" class="modal-dialog center-block">
+           <div>
+               <label style="background-color:white;color:#000000;font-family:Helvetica;font-weight:bold;font-size:14px;border-top-left-radius: 7px;border-top-right-radius: 7px;" class="form-control">Primary Diagnosis</label>
+           </div>
+           
+           <div class="modal-body">
+                <asp:TextBox runat="server" style="outline-color:transparent;max-width:100%;width:100%;resize:none;font-family:Helvetica" placeholder="Type here..." BorderColor="transparent" ID="txtPrimary" TextMode="MultiLine" Rows="4" />
+           </div>
+<%--           <div class="modal-footer">
+               
+           </div>--%>
+       </div>
+    </div>
+
+    <div class="col-lg-12" style="padding-left:0px;margin:0px">
+        <div class="col-lg-6" style="padding-left:0px;margin:0px">
+        <div style="height:150px;background-color:white; width:100%;border:1px; border-radius: 7px;box-shadow: 0px 2px 5px #9293A0;margin-top:0px" class="modal-dialog center-block">
+           <div>
+               <label style="background-color:white;color:#000000;font-family:Helvetica;font-weight:bold;font-size:14px;border-top-left-radius: 7px;border-top-right-radius: 7px;" class="form-control">Differential Diagnosis</label>
+           </div>
+           
+           <div class="modal-body">
+               <asp:TextBox runat="server" style="outline-color:transparent;max-width:100%;width:100%;resize:none;font-family:Helvetica" placeholder="Type here..." BorderColor="transparent" ID="txtDifferential" TextMode="MultiLine" Rows="4" />
+           </div>
+
+        </div>
+        </div>
+        
+        <div class="col-lg-6" style="padding:0px;margin:0px">
+        <div style="height:150px;background-color:white; width:100%;border:1px; border-radius: 7px;box-shadow: 0px 2px 5px #9293A0;margin-top:0px" class="modal-dialog center-block">
+           <div>
+               <label style="background-color:white;color:#000000;font-family:Helvetica;font-weight:bold;font-size:14px;border-top-left-radius: 7px;border-top-right-radius: 7px;" class="form-control">Secondary Diagnosis</label>
+           </div>
+           
+           <div class="modal-body">
+                <asp:TextBox runat="server" style="outline-color:transparent;max-width:100%;width:100%;resize:none;font-family:Helvetica" placeholder="Type here..." BorderColor="transparent" ID="txtSecondary" TextMode="MultiLine" Rows="4" />
+           </div>
+
+        </div>
+        </div>
+    </div>
+             </ContentTemplate>
+    </asp:updatepanel>

@@ -1,0 +1,94 @@
+﻿<%@ Page Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true" CodeFile="MedicationHistory.aspx.cs" Inherits="Form_General_MedicationHistory" %>
+
+<%@ Register Src="~/Form/General/Control/PatientCard.ascx" TagPrefix="uc1" TagName="PatientCard" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
+    <style type="text/css">
+        .shadows {
+            border: 1px; 
+            border-radius: 10px;
+            box-shadow: 0px 1px 5px #9293A0;
+            padding: 7px 7px 7px 7px;
+            width: 300px;
+            height: 150px;
+        }
+
+        .shadows-search {
+            border: 1px; 
+            border-radius: 10px;
+            box-shadow: 0px 1px 5px #9293A0;
+            padding: 7px 7px 7px 7px;
+            width: 200px;
+        }
+    </style>
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Medication History</title>
+    <link rel="stylesheet" href="~/Content/bootstrap/New/css/bootstrap.css" />
+</head>
+    <asp:UpdateProgress ID="uProgWorklist" runat="server" AssociatedUpdatePanelID="UPmedicationHistory">
+        <ProgressTemplate>
+            <div class="modal-backdrop" style="background-color:transparent;vertical-align:central;text-align:center">
+                <div class="login-logo"><img src="" style="visibility:collapse" width="30%" /> <br /></div>
+                <div class="login-box">
+                    <div> 
+                        <img alt="" height="200px" width="200px" style="background-color:transparent;vertical-align:middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                    </div>
+                </div>
+            </div>
+        </ProgressTemplate>
+    </asp:UpdateProgress>
+    <asp:UpdatePanel runat="server" UpdateMode="Conditional" ID="UPmedicationHistory">
+        <ContentTemplate>
+            <div style="height:90px;position:fixed;background-color:white; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+                <asp:HiddenField ID="hfPatientId" runat="server" />
+                <asp:HiddenField ID="hfEncounterId" runat="server" />
+                <asp:HiddenField ID="hfAdmissionId" runat="server" />
+                <uc1:PatientCard runat="server" ID="PatientCard" />
+            </div>
+            <div style="width:100%;height:150px;padding-top:90px">
+                <div class="btn-group btn-group-justified" style="background-color:whitesmoke;height:70px" role="group" aria-label="...">
+                              <div class="btn-group" role="group" style="width:1%">
+                                  <div class="container-fluid">
+                                    Encounter Times <br />
+                                    <asp:DropDownList ID="ddlEncounterMode" runat="server" Height="25px" Width="130px" style="border-radius: 2px;border: solid 1px #cdced9;height: 24px;max-width:100%;width:100%;resize:none;">
+                                        <asp:ListItem Text="Last Encounter" Value="1"></asp:ListItem>
+                                        <asp:ListItem Text="Last 5 Encounter" Value="5"></asp:ListItem>
+                                        <asp:ListItem Text="Last 10 Encounter" Value="10"></asp:ListItem>
+                                    </asp:DropDownList>
+                                  </div>
+                              </div>
+                              <div class="btn-group" role="group">
+                                  <div class="container-fluid" style="width:0.1%">
+                                      <br />
+                                      OR
+                                  </div>
+                              </div>
+                              <div class="btn-group" role="group" style="width:1%">
+                                  <div class="container-fluid">
+                                    Search by admission or doctor <br />
+                                    <asp:TextBox runat="server" ID="txt_admissionNo_doctorName" style="border-radius: 2px;border: solid 1px #cdced9;height: 24px;max-width:100%;width:100%;resize:none;" placeholder="Admission No - Doctor Name"></asp:TextBox>
+                                  </div>
+                              </div>
+                              <div class="btn-group" role="group" style="width:2%">
+                                <div class="container-fluid">
+                                    <br />
+                                    <asp:Button ID="btnSearch" runat="server" Width="70px" Text="Search" CssClass="btn btn-success" OnClick="btnSearch_Click"/>
+                                </div>
+                              </div>
+                            </div>
+            </div>
+            <div style="width:100%;">
+                <div runat="server" id="prescription" role="group">
+                </div>
+                <div runat="server" id="compound" role="group">
+                </div>
+                <div runat="server" id="consume" role="group">
+                </div>
+            </div>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+</asp:Content>

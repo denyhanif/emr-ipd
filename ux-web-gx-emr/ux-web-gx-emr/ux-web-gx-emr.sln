@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32106.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "ux-web-gx-emr", "ux-web-gx-emr", "{8DEB3FC2-B909-4648-AE80-606BE1720541}"
+	ProjectSection(WebsiteProperties) = preProject
+		SccProjectName = "SAK"
+		SccAuxPath = "SAK"
+		SccLocalPath = "SAK"
+		SccProvider = "SAK"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.6.1"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_60522"
+		Debug.AspNetCompiler.PhysicalPath = "ux-web-gx-emr\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_60522\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_60522"
+		Release.AspNetCompiler.PhysicalPath = "ux-web-gx-emr\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_60522\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "60522"
+		SlnRelativePath = "ux-web-gx-emr\"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8DEB3FC2-B909-4648-AE80-606BE1720541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DEB3FC2-B909-4648-AE80-606BE1720541}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {35E9DB64-0471-4963-8B23-3957343EA01D}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 1
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://10.85.129.54:8080/tfs/defaultcollection
+		SccWebProject0 = true
+		SccProjectUniqueName0 = ux-web-gx-emr
+		SccProjectName0 = ux-web-gx-emr
+		SccAuxPath0 = http://10.85.129.54:8080/tfs/defaultcollection
+		SccLocalPath0 = ux-web-gx-emr
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectEnlistmentChoice0 = 2
+	EndGlobalSection
+EndGlobal

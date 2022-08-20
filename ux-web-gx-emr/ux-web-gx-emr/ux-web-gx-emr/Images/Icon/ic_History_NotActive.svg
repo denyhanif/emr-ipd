@@ -1,0 +1,20 @@
+<svg id="ic_History_NotActive" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #d0d3ea;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <ellipse id="Ellipse_944" data-name="Ellipse 944" class="cls-1" cx="12" cy="12" rx="12" ry="12" transform="translate(24 0) rotate(90)"/>
+  <g id="Rounded" transform="translate(0.91 2.004)">
+    <g id="Group_5628" data-name="Group 5628" transform="translate(1.708 2.997)">
+      <path id="Path_34851" data-name="Path 34851" class="cls-2" d="M11.333,3a7.506,7.506,0,0,0-7.715,7.5H2.126a.412.412,0,0,0-.292.708l2.325,2.333a.412.412,0,0,0,.592,0l2.325-2.333a.417.417,0,0,0-.3-.708H5.284A5.831,5.831,0,0,1,11.2,4.666a5.906,5.906,0,0,1,5.749,5.749,5.836,5.836,0,0,1-5.832,5.916A5.745,5.745,0,0,1,7.55,15.1a.828.828,0,0,0-1.1.067h0a.833.833,0,0,0,.067,1.241A7.38,7.38,0,0,0,11.116,18a7.506,7.506,0,0,0,7.5-7.715A7.587,7.587,0,0,0,11.333,3Z" transform="translate(-1.708 -2.997)"/>
+      <path id="Path_34852" data-name="Path 34852" class="cls-2" d="M12.625,8h0A.629.629,0,0,0,12,8.625v3.066a.843.843,0,0,0,.408.717l2.6,1.541a.626.626,0,0,0,.642-1.075l-2.4-1.425V8.617A.628.628,0,0,0,12.625,8Z" transform="translate(-3.425 -3.831)"/>
+    </g>
+  </g>
+</svg>

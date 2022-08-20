@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:#9d1fc3}.cls-2{fill:#fff}
+        </style>
+    </defs>
+    <g id="ic_Lab" transform="translate(-414 -184)">
+        <circle id="Ellipse_2085" cx="12" cy="12" r="12" class="cls-1" data-name="Ellipse 2085" transform="translate(414 184)"/>
+        <path id="Union_156" d="M11.351 15.507H.649a.647.647 0 0 1-.563-.97L4.7 6.454h2.59l4.623 8.083a.647.647 0 0 1-.56.97zm-9.194-1.843c-.175.246.045.55.4.55h6.962c.356 0 .582-.323.408-.55l-2-3.691H4.049zM4.7 6.454V1.493A.75.75 0 0 1 4.807 0h2.38a.75.75 0 0 1 .1 1.493v4.961z" class="cls-2" data-name="Union 156" transform="translate(420 187)"/>
+    </g>
+</svg>

@@ -1,0 +1,381 @@
+﻿using log4net;
+using Microsoft.Ajax.Utilities;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using static PatientHistory;
+
+[Serializable]
+public class compareData
+{
+    public String ordeR_TESTNM { get; set; }
+    public String disP_SEQ { get; set; }
+    public String tesT_NM { get; set; }
+    public Boolean statusCheck { get; set; }
+}
+
+[Serializable]
+public class HeaderData
+{
+    public String tesT_GROUP { get; set; }
+    public String ordeR_TESTNM { get; set; }
+    public Boolean statusHeader { get; set; }
+    public Boolean statusCheck { get; set; }
+}
+
+public partial class Form_General_Result_CompareLaboratory : System.Web.UI.Page
+{
+
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_General_Result_CompareLaboratory));
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            if (Request.QueryString["idPatient"] == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                Session.Remove(Helper.ViewStateItemList);
+                Session.Remove(Helper.ViewStateHeaderChecklist);
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["PagefaId"], Request.QueryString["PageSoapId"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+                hfPagefaId.Value = Request.QueryString["PagefaId"];
+                hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+                getHeader();
+                getDataItem();
+                btn_back.PostBackUrl = String.Format("~/Form/General/Result/Result.aspx?idPatient={0}&EncounterId={1}&AdmissionId={2}&PagefaId={3}&PageSoapId={4}", hfPatientId.Value, hfEncounterId.Value, hfAdmissionId.Value, hfPagefaId.Value, hfPageSoapId.Value);
+            }
+        }
+    }
+
+    void getHeader()
+    {
+        try
+        {
+            log.Debug(LogLibrary.Logging("S", "GetPatientHeader", Helper.GetLoginUser(this), ""));
+
+            var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+            ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+            log.Debug(LogLibrary.Logging("E", "GetPatientHeader", Helper.GetLoginUser(this), JsongetPatientHistory.ToString()));
+            PatientHeader header = JsongetPatientHistory.header;
+            PatientCard.initializevalue(header);
+            PatientCard1.initializevalue(header);
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("GetPatientHeader", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "GetPatientHeader", Helper.GetLoginUser(this), ""));
+    }
+
+    void getDataItem()
+    {
+        List<LaboratoryHeader> listLabHeaderItem = new List<LaboratoryHeader>();
+        List<String> headerLab = new List<String>();
+        List<HeaderData> gridDataHeader = new List<HeaderData>();
+        StringBuilder innerHTMLHeader = new StringBuilder();
+
+        try
+        {
+            log.Debug(LogLibrary.Logging("S", "getHeaderLab", Helper.GetLoginUser(this), ""));
+            var dataLaboratory = clsResult.getHeaderLab(hfPatientId.Value);
+            var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryHeader>(dataLaboratory.Result.ToString());
+            headerLab = JsonLaboratory.list.DistinctBy(x => x.tesT_GROUP).Select(x => x.tesT_GROUP).ToList();
+            listLabHeaderItem = JsonLaboratory.list;
+            log.Debug(LogLibrary.Logging("E", "getHeaderLab", Helper.GetLoginUser(this), listLabHeaderItem.ToString()));
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getHeaderLab", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getHeaderLab", Helper.GetLoginUser(this), ""));
+
+        foreach(String data in headerLab)
+        {
+            gridDataHeader.Add(new HeaderData { tesT_GROUP = data, ordeR_TESTNM = data, statusHeader = true, statusCheck = false });
+
+            gridDataHeader.AddRange(listLabHeaderItem.FindAll(x => x.tesT_GROUP.Equals(data)).ToList().Select(
+                x => new HeaderData {
+                    tesT_GROUP = data,
+                    ordeR_TESTNM = x.tesT_NM,
+                    statusCheck = false,
+                    statusHeader = false
+                }
+                ));
+        }
+
+        Session[Helper.ViewStateItemList] = gridDataHeader.FindAll(x => x.statusHeader == false);
+
+        Session[Helper.ViewStateHeaderChecklist] = gridDataHeader.FindAll(x => x.statusHeader == true);
+
+        createinnerHTMLHeader(headerLab, listLabHeaderItem);
+        //DataTable dt = Helper.ToDataTable(gridDataHeader);
+        //gv_item.DataSource = dt;
+        //gv_item.DataBind();
+
+    }
+
+    void createinnerHTMLHeader(List<String> headerLab, List<LaboratoryHeader> listLabHeaderItem)
+    {
+        List<HeaderData> gridDataHeader = new List<HeaderData>();
+        StringBuilder innerHTMLHeader = new StringBuilder();
+
+        innerHTMLHeader.Append("<div>");
+        foreach (String data in headerLab)
+        {
+            string hideopenTestGroup = "javascript:hideItemGroupTest('" + data + "')";
+            string listCheckTestGroup = "javascript:checklistTestGroup('" + data + "')";
+            gridDataHeader.Add(new HeaderData { tesT_GROUP = data, ordeR_TESTNM = data, statusHeader = true, statusCheck = false });
+
+            //innerHTMLHeader.Append("<div style=\"height:80%\"><input type=\"checkbox\" value=" + data + " onclick=\"" + listCheckTestGroup + "\" /><span>" + data + "</span><button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\" onclick=\"" + hideopenTestGroup + "\">+</button></div>");
+            innerHTMLHeader.Append("<div style=\"height:80%; background-color:whitesmoke;\">" +
+                                    "<input type=\"checkbox\" value=" + data + " onclick=\"" + listCheckTestGroup + "\" />" +
+                                    "<label style=\"width:100%; cursor: pointer; padding-right:40%\" onclick=\"" + hideopenTestGroup + "\">" + data.Split(' ', '_').ToString() + "</label>" +
+                                    //"<span onclick=\"" + hideopenTestGroup + "\" data-dismiss=\"modal\" aria-hidden=\"true\" class=\"glyphicon glyphicon-chevron-down\"></span>" +
+                                    "</div>");
+            gridDataHeader.AddRange(listLabHeaderItem.FindAll(x => x.tesT_GROUP.Equals(data)).ToList().Select(
+                x => new HeaderData
+                {
+                    tesT_GROUP = data,
+                    ordeR_TESTNM = x.tesT_NM,
+                    statusCheck = false,
+                    statusHeader = false
+                }
+                ));
+
+            innerHTMLHeader.Append("<div id=" + data + " style=\"display:none;\" > <table class=\"table-condensed\">");
+            foreach (HeaderData dataItem in gridDataHeader.FindAll(x => x.tesT_GROUP.Equals(data) && x.statusHeader == false))
+            {
+                innerHTMLHeader.Append("<tr><td><span>" + dataItem.ordeR_TESTNM + "</span></td></tr>");
+            }
+            innerHTMLHeader.Append("</table> </div>");
+        }
+
+        innerHTMLHeader.Append("</div>");
+        divLabTestGroup.InnerHtml = innerHTMLHeader.ToString();
+
+    }
+
+    protected void src_item_txt_TextChanged(object sender, EventArgs e)
+    {
+        List<HeaderData> gridDataHeader = (List<HeaderData>)Session[Helper.ViewStateHeaderChecklist];
+        List<HeaderData> gridItemList = (List<HeaderData>)Session[Helper.ViewStateItemList];
+        List<HeaderData> gridSearchResult = new List<HeaderData>();
+
+        var gridDataSearch = gridDataHeader.FindAll(x => x.ordeR_TESTNM.Contains(src_item_txt.Text.ToUpper()));
+
+        foreach (HeaderData data in gridDataSearch.ToList())
+        {
+            gridSearchResult.Add(data);
+            gridSearchResult.AddRange(gridItemList.FindAll(x => x.tesT_GROUP == data.ordeR_TESTNM));
+        }
+
+        DataTable dt = Helper.ToDataTable(gridSearchResult);
+        //gv_item.DataSource = dt;
+        //gv_item.DataBind();
+    }
+
+    protected void slt_item_CheckedChanged(object sender, EventArgs e)
+    {
+        List<HeaderData> gridDataHeader = (List<HeaderData>)Session[Helper.ViewStateHeaderChecklist];
+        List<HeaderData> gridDataHeaderChecked = new List<HeaderData>();
+        List<HeaderData> gridDataHeaderNonChecked = (List<HeaderData>)Session[Helper.ViewStateHeaderChecklist];
+
+        //foreach (GridViewRow grid in gv_item.Rows)
+        //{
+        //    CheckBox chkItem = (CheckBox)grid.FindControl("slt_item");
+        //    if (chkItem.Checked)
+        //    {
+        //        var headerChecked = gridDataHeader.Find(x => x.ordeR_TESTNM.Equals(((Label)grid.FindControl("txt_item_name")).Text));
+        //        if (hf_list_header_checked.Value == "")
+        //        {
+        //            hf_list_header_checked.Value = headerChecked.ordeR_TESTNM;
+        //        }
+        //        else
+        //        {
+        //            hf_list_header_checked.Value = hf_list_header_checked.Value + ","+ headerChecked.ordeR_TESTNM;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var checkedNonSearch = gridDataHeader.Find(x => x.statusCheck == true && x.ordeR_TESTNM != ((Label)grid.FindControl("txt_item_name")).Text);
+        //    }
+        //}
+
+        //String[] itemChecked = hf_list_header_checked.Value.Split(',');
+
+        //for (int i = 0; i< itemChecked.Length; i++)
+        //{
+        //    var checkedHeader = gridDataHeader.Find(x => x.ordeR_TESTNM.Equals(itemChecked[i]));
+        //    gridDataHeaderNonChecked = gridDataHeaderNonChecked.FindAll(x => x.ordeR_TESTNM != itemChecked[i]);
+        //    gridDataHeaderChecked.Add( new HeaderData { ordeR_TESTNM = checkedHeader.ordeR_TESTNM, statusHeader = true, statusCheck = true }); 
+        //}
+
+        //foreach (HeaderData data in gridDataHeaderNonChecked)
+        //{
+        //    gridDataHeaderChecked.Add(new HeaderData { ordeR_TESTNM = data.ordeR_TESTNM, statusHeader = true, statusCheck = false });
+        //}
+
+        //var temp = gridDataHeaderChecked.FindAll(x => x.statusCheck == true);
+        //Session[Helper.ViewStateHeaderChecklist] = gridDataHeaderChecked;
+    }
+
+    void setTableCompare (List<LaboratoryCompare> data, String testHeader)
+    {
+        StringBuilder table = new StringBuilder();
+
+        var date = data.Find(x => x.isInfo == 3);
+        var ono = data.Find(x => x.isInfo == 1);
+        var header = data.FindAll(x => x.IsHeader == 1).DistinctBy(x => x.ordeR_TESTNM);
+        string link1 = "javascript:Open('" + ono.onO_1 + "')";
+        string link2 = "javascript:Open('" + ono.onO_2 + "')";
+        string link3 = "javascript:Open('" + ono.onO_3 + "')";
+        string link4 = "javascript:Open('" + ono.onO_4 + "')";
+        string link5 = "javascript:Open('" + ono.onO_5 + "')";
+
+        table.Append("<div><h4>"+testHeader+ "</h4></div>" +
+            "<div><table class=\"table table-striped table-condensed\"><tr><td>Test</td>" +
+                            "<td>"+date.onO_1+"</td>" +
+                            "<td>"+date.onO_2+"</td>" +
+                            "<td>"+date.onO_3+"</td>" +
+                            "<td>"+date.onO_4+"</td>" +
+                            "<td>"+date.onO_5+"</td>" +
+                            "<td>Unit</td>" +
+                            "<td>References</td></tr>" +
+                         "<tr><td></td>" +
+                            "<td><a href=\"" + link1 + "\" style=\"color: blue; text-decoration:underline; \">" + ono.onO_1 + "</a></td>" +
+                            "<td><a href=\"" + link2 + "\" style=\"color: blue; text-decoration:underline; \">" + ono.onO_2 + "</a></td>" +
+                            "<td><a href=\"" + link3 + "\" style=\"color: blue; text-decoration:underline; \">" + ono.onO_3 + "</a></td>" +
+                            "<td><a href=\"" + link4 + "\" style=\"color: blue; text-decoration:underline; \">" + ono.onO_4 + "</a></td>" +
+                            "<td><a href=\"" + link5 + "\" style=\"color: blue; text-decoration:underline; \">" + ono.onO_5 + "</a></td>" +
+                            "<td></td>" +
+                            "<td></td></tr>");
+
+        foreach(LaboratoryCompare labHeader in header)
+        {
+            table.Append("<tr><td><b>" + labHeader.tesT_NM + "</b></td>" +
+                                "<td><b>" + labHeader.onO_1 + "</b></td>" +
+                                "<td><b>" + labHeader.onO_2 + "</b></td>" +
+                                "<td><b>" + labHeader.onO_3 + "</b></td>" +
+                                "<td><b>" + labHeader.onO_4 + "</b></td>" +
+                                "<td><b>" + labHeader.onO_5 + "</b></td>" +
+                                "<td><b>" + labHeader.unit + "</b></td>" +
+                                "<td><b>" + labHeader.reF_RANGE + "</b></td></tr>");
+            var item = data.FindAll(x => x.ordeR_TESTNM == labHeader.ordeR_TESTNM && x.isInfo == 0 && x.IsHeader == 0);
+            foreach(LaboratoryCompare itemData in item)
+            {
+                table.Append("<tr><td>"+itemData.tesT_NM+"</td>" +
+                                "<td>"+itemData.onO_1+"</td>" +
+                                "<td>"+itemData.onO_2+"</td>" +
+                                "<td>"+itemData.onO_3+"</td>" +
+                                "<td>"+itemData.onO_4+"</td>" +
+                                "<td>"+itemData.onO_5+"</td>" +
+                                "<td>"+itemData.unit+"</td>" +
+                                "<td>"+itemData.reF_RANGE+"</td></tr>");
+            }
+        }
+        table.Append("</table></div>");
+        tbl_compare.InnerHtml = table.ToString();
+    }
+
+    void getCompareResult(String patientID, String orderTestName)
+    {
+        List<LaboratoryCompare> labCompareTestGroup = new List<LaboratoryCompare>();
+
+        try
+        {
+            log.Debug(LogLibrary.Logging("S", "getlabCompareTestGroup", Helper.GetLoginUser(this), ""));
+            var dataLaboratory = clsResult.getlabCompareTestGroup(patientID, orderTestName);
+            var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryCompare>(dataLaboratory.Result.ToString());
+            labCompareTestGroup = JsonLaboratory.list;
+            log.Debug(LogLibrary.Logging("E", "getlabCompareTestGroup", Helper.GetLoginUser(this), JsonLaboratory.ToString()));
+            setTableCompare(labCompareTestGroup, orderTestName);
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getlabCompareTestGroup", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getlabCompareTestGroup", Helper.GetLoginUser(this), ""));
+    }
+
+    protected void btn_compare_Click(object sender, EventArgs e)
+    {
+        List<HeaderData> gridDataHeader = (List<HeaderData>)Session[Helper.ViewStateHeaderChecklist];
+        var temp = gridDataHeader.FindAll(x => x.statusCheck == true);
+        lbl_count_paging.Text = "1";
+        getCompareResult(hfPatientId.Value, gridDataHeader[0].ordeR_TESTNM);
+        btnPrev.Enabled = false;
+
+        if (gridDataHeader.FindAll(x => x.statusCheck == true).Count == 1)
+        {
+            btnNext.Enabled = false;
+        }
+        else
+        {
+            btnNext.Enabled = true;
+        }
+
+        compareResult.Visible = true;
+    }
+
+    protected void btnPrev_Click(object sender, EventArgs e)
+    {
+        List<HeaderData> gridDataHeader = (List<HeaderData>)Session[Helper.ViewStateHeaderChecklist];
+        var currentPaging = Int64.Parse(lbl_count_paging.Text);
+
+        var gridChecked = gridDataHeader.FindAll(x => x.statusCheck == true);
+        lbl_count_paging.Text = (currentPaging - 1).ToString();
+        List<LaboratoryCompare> labCompareTestGroup = new List<LaboratoryCompare>();
+        getCompareResult(hfPatientId.Value, gridChecked[(int)currentPaging - 2].ordeR_TESTNM);
+
+        if (gridChecked.Count != 1)
+        {
+            btnNext.Enabled = true;
+        }
+
+        if (currentPaging - 1 == 1)
+        {
+            btnPrev.Enabled = false;
+        }
+        
+    }
+
+    protected void btnNext_Click(object sender, EventArgs e)
+    {
+        List<HeaderData> gridDataHeader = (List<HeaderData>)Session[Helper.ViewStateHeaderChecklist];
+        var currentPaging = Int64.Parse(lbl_count_paging.Text);
+
+        var gridChecked = gridDataHeader.FindAll(x => x.statusCheck == true);
+        lbl_count_paging.Text = (currentPaging + 1).ToString();
+        List<LaboratoryCompare> labCompareTestGroup = new List<LaboratoryCompare>();
+        getCompareResult(hfPatientId.Value, gridChecked[(int)currentPaging].ordeR_TESTNM);
+
+        if (currentPaging == gridChecked.Count-1)
+        {
+            btnNext.Enabled = false;
+        }
+        btnPrev.Enabled = true;
+    }
+
+    protected void btn_lab_result_Click(object sender, EventArgs e)
+    {
+        List<LaboratoryResult> listlaboratory = new List<LaboratoryResult>();
+        var dataLaboratory = clsResult.getLabByOno(hfPatientId.Value, hfAdmissionId.Value, hf_ono_id.Value);
+        var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryResult>(dataLaboratory.Result.ToString());
+        listlaboratory = new List<LaboratoryResult>();
+        listlaboratory = JsonLaboratory.list;
+
+        StdLabResult.initializevalue(listlaboratory);
+    }
+}

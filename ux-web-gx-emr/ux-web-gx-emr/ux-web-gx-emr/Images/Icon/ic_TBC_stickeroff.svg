@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" viewBox="0 0 40 32">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#cdced9}
+        </style>
+    </defs>
+    <g id="ic_TBC" transform="translate(-272 -323)">
+        <path id="Rectangle_2179" d="M0 0h40v32H0z" class="cls-1" data-name="Rectangle 2179" transform="translate(272 323)"/>
+        <g id="round-table_chart-24px" transform="translate(280 326)">
+            <rect id="Rectangle_12941" width="32" height="20" class="cls-2" data-name="Rectangle 12941" rx="10" transform="translate(-4 3)"/>
+            <g id="Bounding_Boxes">
+                <path id="Path_3217" d="M0 0h24v24H0z" class="cls-1" data-name="Path 3217"/>
+            </g>
+        </g>
+    </g>
+</svg>

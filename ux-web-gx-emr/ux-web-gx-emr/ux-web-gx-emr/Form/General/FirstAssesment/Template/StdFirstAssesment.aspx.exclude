@@ -1,0 +1,179 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" MasterPageFile="~/Site.master" CodeFile="StdFirstAssesment.aspx.cs" Inherits="Form_General_FirstAssesment_Template_StdFirstAssesment" %>
+<%@ Register Src="~/Form/General/Control/PatientCard.ascx" TagPrefix="uc1" TagName="PatientCard" %>
+<%@ Register Src="~/Form/General/FirstAssesment/Control_Template/StdCurrentMedication.ascx" TagName="StdCurrentMedication" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/General/FirstAssesment/Control_Template/StdGeneralCheckup.ascx" TagName="StdGeneralCheckup" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/General/FirstAssesment/Control_Template/KebutuhanInformasi.ascx" TagName="KebutuhanInformasi" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/General/FirstAssesment/Control_Template/SosialBudaya.ascx" TagName="SosialBudaya" TagPrefix="uc1"%>
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
+<script type="text/javascript">
+    function ShowHidePkj() {
+        var chkYes = document.getElementById("<%=rbPkj2.ClientID %>");
+        var dvPassport = document.getElementById("dvPkj");
+        if (chkYes.checked) {
+            dvPassport.style.display = "";
+        }
+    }
+
+    function HidePkj() {
+        var chkYes = document.getElementById("<%=rbPkj1.ClientID %>");
+        var dvPassport = document.getElementById("dvPkj");
+        if (chkYes.checked) {
+            dvPassport.style.display = "none";
+        }
+    }
+    function txtOnKeyPress()   
+    {   
+       var c = event.keyCode;  
+       if (c == 13)   
+       {     
+           return false;
+       }        
+    }   
+</script>
+<style>
+
+    .itemsave{
+     width:185px;
+     height:43px;
+     margin-left:auto;
+     padding: 10px;
+     display: block;
+     font-size: 16px;
+     color: black;
+     background:#4d9b35;
+     border-radius: 25px 0 0 25px;
+ }
+ .itemsave:hover{
+   width:300px;
+   height:43px;
+   -webkit-transition: width 2s; /* Safari */
+   transition: width 0.2s;
+   background:#4d9b35;
+   color: white;
+    }
+ .itemsave>span{
+     margin-right:20px;
+     margin-left:5px;
+ }
+
+    .itemcontainersave > div {
+    padding-top:0px;
+    padding-bottom:2px;
+}
+
+</style>
+<asp:UpdatePanel runat="server">
+<ContentTemplate>
+
+
+    <div style="height:76px;position:fixed;background-color:white; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+        <asp:HiddenField ID="hfPatientId" runat="server" />
+        <asp:HiddenField ID="hfEncounterId" runat="server" />
+        <asp:HiddenField ID="hfAdmissionId" runat="server" />
+        <asp:HiddenField ID="hfPagefaId" runat="server" />
+        <asp:HiddenField ID="hfPageSoapId" runat="server" />
+        <uc1:PatientCard runat="server" ID="PatientCard" />
+    </div>
+
+    <div style="height:40px;position:fixed;top:19%;background-color:#e7e8ed; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+        <div class="row" style="padding-left:15px;padding-top:8px">
+            <label style="font-family:Helvetica;font-size:12px;">Form Type</label>
+                <asp:DropDownList style="cursor:pointer;border-radius: 2px;border: solid 1px #cdced9;" ID="ddlForm_Type" Width="100%" Height="25px" runat="server">
+                </asp:DropDownList>
+            <asp:Button runat="server" Text="Choose" Style="width: 71px;height: 25px;border-radius: 4px;background-color: #4d9b35;font-family:Helvetica;font-size:12px;color:#ffffff" OnClick="btnChoose_onClick" />
+        </div>
+    </div>
+
+    <asp:UpdateProgress ID="uProgLogin" runat="server" AssociatedUpdatePanelID="upSave">
+            <ProgressTemplate>
+                <div class="modal-backdrop" style="background-color:transparent;vertical-align:central;text-align:center">
+                    <div class="login-logo"><img src="" style="visibility:collapse" width="30%" /> <br /></div>
+                    <div class="login-box">
+                        <div> 
+                            <img alt="" height="200px" width="200px" style="background-color:transparent;vertical-align:middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                        </div>
+                    </div>
+                </div>
+            </ProgressTemplate>
+        </asp:UpdateProgress>
+
+    <asp:UpdatePanel runat="server" ID="upSave">
+        <ContentTemplate>
+            <div class="itemcontainersave" style="position:fixed; right:-140px;top:70%; transform:translate(0,-50%); text-align:left; z-index:1" >
+                <div>
+                    <asp:LinkButton runat="server" CssClass="itemsave" ID="BtnSaveAsDraft" OnClick="BtnSaveAsDraft_onClick" ><span><img src="<%= Page.ResolveClientUrl("~/Images/S/ic_SaveAsDraft.png") %>" /></span>Save as Draft</asp:LinkButton>
+                </div>
+            </div>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+
+    
+
+<div style="padding-top:130px;padding-right:30px">
+    <asp:UpdatePanel runat="server" ID="upStdFA">
+        <ContentTemplate>
+            <div class="row">
+                <div class="col-lg-6" style="padding-left:32px">
+                    <div style="height:110px;background-color:white; width:100%;border:1px; border-radius: 7px;box-shadow: 0px 2px 5px #9293A0;margin-top:0px" class="modal-dialog center-block">
+                        <div>
+                            <label style="background-color:white;color:#000000;font-family:Helvetica, Arial, sans-serif;font-weight:bold;font-size:14px;border-top-left-radius: 7px;border-top-right-radius: 7px;" class="form-control">Keluhan Utama</label>
+                        </div>
+                        <div class="modal-body">
+                            <asp:TextBox runat="server" style="outline-color:transparent;max-width:100%;width:100%;resize:none" placeholder="Type here..." Font-Names="Helvetica, Arial, sans-serif" BorderColor="transparent" ID="txtAnamnesis" TextMode="MultiLine" Rows="2" />
+                        </div>
+                    </div>
+                </div>
+
+            <div class="col-lg-6">
+                <div style="height:110px;background-color:white; width:100%;border:1px; border-radius: 7px;box-shadow: 0px 2px 5px #9293A0;margin-top:0px" class="modal-dialog center-block">
+                    <div>
+                        <label style="background-color:white;color:#000000;font-family:Helvetica, Arial, sans-serif;font-weight:bold;font-size:14px;border-top-left-radius: 7px;border-top-right-radius: 7px;" class="form-control">Pengkajian Diperoleh Dari</label>
+                    </div>
+                    <div class="modal-body" style="padding-top:0px">
+                        <div>
+                            <label style="font-size:12px;font-family: Helvetica, Arial, sans-serif;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="pengkajian1"  Value="0" id="rbPkj1" Checked="true" onclick="HidePkj()"/> Autoanamnesis </label>
+                            <label style="font-size:12px;font-family: Helvetica, Arial, sans-serif;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="pengkajian1"  Value="1" id="rbPkj2" onclick="ShowHidePkj()" /> Alloanamnesis </label>
+                        </div>
+                        <div class="col-xs-12" style="display:none;padding-top:5px" id="dvPkj">
+                           <asp:UpdatePanel runat="server" ID="upHubungan" UpdateMode="Conditional">
+                                <ContentTemplate>
+                                    <asp:TextBox runat="server" style="border-radius: 2px;border: solid 1px #cdced9;max-width:180px;width:180px;height:24px" placeholder="Type here..."  Font-Names="Helvetica, Arial, sans-serif" Font-Size="12px"  ID="txtNamaPkj" onkeydown="return txtOnKeyPress();" />
+                                    <label style="font-family:Helvetica;font-size:12px">Hubungan:</label>
+                                    <asp:TextBox runat="server" style="border-radius: 2px;border: solid 1px #cdced9;max-width:180px;width:180px;height:24px"  Font-Names="Helvetica, Arial, sans-serif" Font-Size="12px"  ID="txtHubunganPkj" onkeydown="return txtOnKeyPress();" />
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+                        
+        <div class="row">
+            <div class="col-lg-12">
+                <uc1:StdCurrentMedication runat="server" id="StdCurrentMedication"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <uc1:StdGeneralCheckup runat="server" id="StdGeneralCheckup"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <uc1:KebutuhanInformasi runat="server" id="KebutuhanInformasi"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <uc1:SosialBudaya runat="server" id="SosialBudaya"/>
+            </div>
+        </div>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+</div>
+
+</ContentTemplate>
+</asp:UpdatePanel>
+
+</asp:Content>

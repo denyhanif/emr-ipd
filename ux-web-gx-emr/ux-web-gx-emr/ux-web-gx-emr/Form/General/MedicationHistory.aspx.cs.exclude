@@ -1,0 +1,284 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls;
+using static PatientHistory;
+using static MedicalHistory;
+
+public partial class Form_General_MedicationHistory : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            if (Request.QueryString["idPatient"] == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+
+                var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+
+                ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+                PatientHeader header = JsongetPatientHistory.header;
+                if (header != null)
+                {
+                    PatientCard.initializevalue(header);
+                    getMedicalHistory(1, "1");
+                }
+            }
+        }
+
+
+    }
+
+    protected void getMedicalHistory(Int64 type, String value)
+    {
+        List<MedicalHistory> listData = new List<MedicalHistory>();
+        var dataMedical = clsMedicalHistory.getMedicalHistory(hfPatientId.Value, type, value);
+        var JsonMedical = JsonConvert.DeserializeObject<ResultMedicalHistory>(dataMedical.Result.ToString());
+        listData = JsonMedical.list;
+
+        Panel prescriptionPanel = new Panel();
+        Panel compoundPanel = new Panel();
+        Panel consumePanel = new Panel();
+        Int64 countPrescription = 0;
+        Int64 countCompound = 0;
+        Int64 countConsume = 0;
+
+        foreach (MedicalHistory data in listData)
+        {
+
+            if (data.isConsumables == "0" && data.isCompound == "0") // Prescription
+            {
+                countPrescription++;
+                if (countPrescription == 1)
+                {
+                    Label labelPrescription = new Label();
+                    labelPrescription.Text = "<br /><div class=" + "container-fluid" + " style=" + "font-size:20px;" + "><b> Drugs Prescription </b></div>&nbsp;";
+                    prescriptionPanel.Controls.Add(labelPrescription);
+                }
+
+                Label drugs_name = new Label();
+                if ((countPrescription % 3) + 1 == 2 || countPrescription == 1)
+                {
+                    //if (data.isPrescription == "1")
+                    //{
+                    drugs_name.Text = "<div class=" + "col-sm-12" + " style=" + "padding-left:5px" + "> <div class=" + "col-sm-4" + "> " +
+                        "<div class=" + "shadows" + " style = " + "background-color:white " + " ><div style=" + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    prescriptionPanel.Controls.Add(drugs_name);
+                    //}
+                    //else
+                    //{
+                    //drugs_name.Text = "<div class=" + "col-sm-12" + " style=" + "padding-left:5px" + "> <div class=" + "col-sm-4" + "> " +
+                    //        "<div class=" + "shadows" + " style = " + "background-color:lightgreen " + " ><div style=" + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    //    prescriptionPanel.Controls.Add(drugs_name);
+                    //}
+                }
+                else
+                {
+                    //if (data.isPrescription == "1")
+                    //{
+                        drugs_name.Text = "<div class=" + "col-sm-4" + "> <div class=" + "shadows" + " style = " + "background-color:white " + ">" +
+                            "<div style = " + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                        prescriptionPanel.Controls.Add(drugs_name);
+                    //}
+                    //else
+                    //{
+                    //    drugs_name.Text = "<div class=" + "col-sm-4" + "> <div class=" + "shadows" + " style = " + "background-color:lightgreen " + ">" +
+                    //        "<div style = " + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    //    prescriptionPanel.Controls.Add(drugs_name);
+                    //}
+                }
+
+                Label medicationDoctor = new Label();
+                medicationDoctor.Text = "<div style = " + "font-size:11px" + ">" + data.medicationDoctor + "</div><br>" + data.admissionDate;
+                prescriptionPanel.Controls.Add(medicationDoctor);
+
+                Label instruction = new Label();
+
+                var inst = "";
+
+                if (data.instruction == "")
+                {
+                    if (data.isRoutine == "1")
+                        inst = "Routine";
+                    else
+                        inst = "Not Routine";
+                }
+                else
+                {
+                    if (data.isRoutine == "1")
+                        inst = data.instruction + ", Routine";
+                    else
+                        inst = data.instruction + ", Not Routine";
+                }
+
+                if (countPrescription % 3 == 0)
+                {
+                    instruction.Text = inst + "</div></div></div><div class=" + "col-sm-12" + " style=" + "height:55px" + "></div>";
+                    prescriptionPanel.Controls.Add(instruction);
+                }
+                else
+                {
+                    instruction.Text = inst + "</div></div>";
+                    prescriptionPanel.Controls.Add(instruction);
+                }
+            }
+            else if (data.isCompound == "1" && data.isConsumables == "0") // Compound
+            {
+                countCompound++;
+                if (countCompound == 1)
+                {
+                    Label labelCompound = new Label();
+                    labelCompound.Text = "<br /><div class=" + "container-fluid" + " style=" + "font-size:20px;" + "><b>Compound</b></div>&nbsp;";
+                    compoundPanel.Controls.Add(labelCompound);
+                }
+
+                Label drugs_name = new Label();
+                if ((countCompound % 3) + 1 == 2 || countCompound == 1)
+                {
+                    drugs_name.Text = "<div class=" + "col-sm-12" + " style=" + "padding-left:5px" + "> <div class=" + "col-sm-4" + "> " +
+                        "<div class=" + "shadows" + " style = " + "background-color:white " + " ><div style=" + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    compoundPanel.Controls.Add(drugs_name);
+                }
+                else
+                {
+                    drugs_name.Text = "<div class=" + "col-sm-4" + "> <div class=" + "shadows" + " style = " + "background-color:white " + ">" +
+                        "<div style = " + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    compoundPanel.Controls.Add(drugs_name);
+                }
+
+
+
+                Label medicationDoctor = new Label();
+                medicationDoctor.Text = "<div style = " + "font-size:11px" + ">" + data.medicationDoctor + " </div><br>" + data.admissionDate;
+                compoundPanel.Controls.Add(medicationDoctor);
+
+                Label instruction = new Label();
+
+                var inst = "";
+
+                if (data.instruction == "")
+                {
+                    if (data.isRoutine == "1")
+                        inst = "Routine";
+                    else
+                        inst = "Not Routine";
+                }
+                else
+                {
+                    if (data.isRoutine == "1")
+                        inst = data.instruction + ", Routine";
+                    else
+                        inst = data.instruction + ", Not Routine";
+                }
+
+                if (countCompound % 3 == 0)
+                {
+                    instruction.Text = inst + "</div></div></div><div class=" + "col-sm-12" + " style=" + "height:55px" + "></div>";
+                    compoundPanel.Controls.Add(instruction);
+                }
+                else
+                {
+                    instruction.Text = inst + "</div></div>";
+                    compoundPanel.Controls.Add(instruction);
+                }
+            }
+            else if (data.isConsumables == "1" && data.isCompound == "0")  //Consume
+            {
+                countConsume++;
+                if (countConsume == 1)
+                {
+                    Label labelConsume = new Label();
+                    labelConsume.Text = "<br /><div class=" + "container-fluid" + " style=" + "font-size:20px;" + "><b>Consumables</b></div>&nbsp;";
+                    consumePanel.Controls.Add(labelConsume);
+                }
+
+                Label drugs_name = new Label();
+                if ((countConsume % 3) + 1 == 2 || countConsume == 1)
+                {
+                    drugs_name.Text = "<div class=" + "col-sm-12" + " style=" + "padding-left:5px" + "> <div class=" + "col-sm-4" + "> " +
+                        "<div class=" + "shadows" + " style = " + "background-color:white " + " ><div style=" + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    consumePanel.Controls.Add(drugs_name);
+                }
+                else
+                {
+                    drugs_name.Text = "<div class=" + "col-sm-4" + "> <div class=" + "shadows" + " style = " + "background-color:white " + ">" +
+                        "<div style = " + "font-size:14px" + "><b>" + data.itemName + "</b></div>";
+                    consumePanel.Controls.Add(drugs_name);
+                }
+
+
+
+                Label medicationDoctor = new Label();
+                medicationDoctor.Text = "<div style = " + "font-size:11px" + ">" + data.medicationDoctor + "</div><br>" + data.admissionDate;
+                consumePanel.Controls.Add(medicationDoctor);
+
+                Label instruction = new Label();
+
+                var inst = "";
+
+                if (data.instruction == "")
+                {
+                    if (data.isRoutine == "1")
+                        inst = "Routine";
+                    else
+                        inst = "Not Routine";
+                }
+                else
+                {
+                    if (data.isRoutine == "1")
+                        inst = data.instruction + ", Routine";
+                    else
+                        inst = data.instruction + ", Not Routine";
+                }
+
+                if (countConsume % 3 == 0)
+                {
+                    instruction.Text = inst + "</div></div></div><div class=" + "col-sm-12" + " style=" + "height:55px" + "></div>";
+                    consumePanel.Controls.Add(instruction);
+                }
+                else
+                {
+                    instruction.Text = inst + "</div></div>";
+                    consumePanel.Controls.Add(instruction);
+                }
+            }
+
+
+        }
+        prescription.Controls.Add(prescriptionPanel);
+        compound.Controls.Add(compoundPanel);
+        consume.Controls.Add(consumePanel);
+    }
+
+
+
+    protected void btnSearch_Click(object sender, EventArgs e)
+    {
+        if (txt_admissionNo_doctorName.Text.ToString() != "")
+        {
+            getMedicalHistory(2, txt_admissionNo_doctorName.Text);
+            ddlEncounterMode.SelectedIndex = 0;
+            txt_admissionNo_doctorName.Text = "";
+        }
+        else
+        {
+            getMedicalHistory(1, ddlEncounterMode.SelectedValue);
+            ddlEncounterMode.SelectedIndex = 0;
+        }
+    }
+}

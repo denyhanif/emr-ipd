@@ -1,0 +1,286 @@
+﻿using log4net;
+using Microsoft.Ajax.Utilities;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using static PatientHistory;
+
+[Serializable]
+public class compareData
+{
+    public String ordeR_TESTNM { get; set; }
+    public String disP_SEQ { get; set; }
+    public String tesT_NM { get; set; }
+    public Boolean statusCheck { get; set; }
+}
+
+public partial class Form_General_Result_CompareLaboratory : System.Web.UI.Page
+{
+
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_General_Result_CompareLaboratory));
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["PagefaId"], Request.QueryString["PageSoapId"]);
+            hfPatientId.Value = Request.QueryString["idPatient"];
+            hfEncounterId.Value = Request.QueryString["EncounterId"];
+            hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+            hfPagefaId.Value = Request.QueryString["PagefaId"];
+            hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+            getHeader();
+            getDataItem();
+            src_item_txt.Text = "";
+        }
+    }
+
+    void getHeader()
+    {
+        try
+        {
+            log.Debug(LogLibrary.Logging("S", "GetPatientHeader", Helper.GetLoginUser(this), ""));
+
+            var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+            ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+            log.Debug(LogLibrary.Logging("E", "GetPatientHeader", Helper.GetLoginUser(this), JsongetPatientHistory.ToString()));
+            PatientHeader header = JsongetPatientHistory.header;
+            PatientCard.initializevalue(header);
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("GetPatientHeader", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "GetPatientHeader", Helper.GetLoginUser(this), ""));
+    }
+
+    void getDataItem()
+    {
+        DataTable dt = new DataTable();
+        List<LaboratoryCompare> listLabCompare = new List<LaboratoryCompare>();
+
+        try {
+            log.Debug(LogLibrary.Logging("S", "getLabItem", Helper.GetLoginUser(this), ""));
+            var dataLaboratory = clsResult.getLabCompareItem(hfPatientId.Value, ddlEncounterMode.SelectedValue);
+            var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryCompare>(dataLaboratory.Result.ToString());
+            listLabCompare = JsonLaboratory.list.FindAll(x => x.isInfo != 1);
+            log.Debug(LogLibrary.Logging("E", "getLabItem", Helper.GetLoginUser(this), listLabCompare.ToString()));
+        }
+        catch (Exception ex) {
+            log.Error(LogLibrary.Error("getLabItem", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getLabItem", Helper.GetLoginUser(this), ""));
+
+        ViewState["dataItem"] = listLabCompare;
+
+        var groupLaboratoryCompareItem = listLabCompare.FindAll(x => x.isInfo != 2).Select(
+                    x => new compareData
+                    {
+                        ordeR_TESTNM = x.ordeR_TESTNM,
+                    }).DistinctBy( p => p.ordeR_TESTNM);
+
+        List<compareData> data = groupLaboratoryCompareItem.ToList();
+        dt = Helper.ToDataTable(data);
+        gv_item.DataSource = dt;
+        gv_item.DataBind();
+
+    }
+
+    protected void src_item_txt_TextChanged(object sender, EventArgs e)
+    {
+        DataTable dt = new DataTable();
+        List<LaboratoryCompare> listLabCompare = (List<LaboratoryCompare>)ViewState["dataItem"];
+        List<compareData> listItemCheck = new List<compareData>();
+        listItemCheck = (List<compareData>)ViewState["itemList"];
+        List<compareData> data = new List<compareData>();
+
+        if (listItemCheck != null) {
+            var groupLaboratorySearch1 = listItemCheck.FindAll(x => x.ordeR_TESTNM.Contains(src_item_txt.Text)).Select(
+                   x => new compareData
+                   {
+                       ordeR_TESTNM = x.ordeR_TESTNM,
+                       tesT_NM = x.tesT_NM,
+                       statusCheck = x.statusCheck
+                   });
+            data = groupLaboratorySearch1.ToList();
+
+        }
+        else
+        {
+            var groupLaboratorySearch2 = listLabCompare.FindAll(x => x.ordeR_TESTNM.Contains(src_item_txt.Text)).Select(
+                    x => new compareData
+                    {
+                        ordeR_TESTNM = x.ordeR_TESTNM,
+                        tesT_NM = x.tesT_NM,
+                        statusCheck = false
+                    });
+            data = groupLaboratorySearch2.ToList();
+        }
+
+        dt = Helper.ToDataTable(data);
+        gv_item.DataSource = dt;
+        gv_item.DataBind();
+    }
+
+    protected void btnSearch_Click(object sender, EventArgs e)
+    {
+        getDataItem();
+    }
+
+    protected void slt_item_CheckedChanged(object sender, EventArgs e)
+    {
+        List<compareData> temp1 = new List<compareData>();
+        List<compareData> temp = new List<compareData>();
+        List<LaboratoryCompare> itemGrid = new List<LaboratoryCompare>();
+        List<compareData> chkItem = new List<compareData>();
+        List<LaboratoryCompare> listLabCompare = (List<LaboratoryCompare>)ViewState["dataItem"];
+
+        listLabCompare = listLabCompare.FindAll(x => x.isInfo != 2);
+        temp1 = (List<compareData>)ViewState["ChkItem"];
+        if (temp1 == null)
+        {
+            temp = new List<compareData>();
+        }
+        else {
+            temp.AddRange(temp1);
+        }
+
+        int count = temp.Count;
+        foreach (GridViewRow data in gv_item.Rows)
+        {
+            CheckBox ch = (CheckBox)data.FindControl("slt_item");
+            if (ch.Checked) {
+                if (temp1 == null)
+                {
+                    temp.Add(new compareData { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                    chkItem.Add(new compareData { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                }
+                else {
+                    var saya = ((Label)data.FindControl("txt_item_name")).Text;
+                    if (temp.Find(x => x.ordeR_TESTNM == ((Label)data.FindControl("txt_item_name")).Text) == null)
+                    {
+                        temp.Add(new compareData { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                        chkItem.Add(new compareData { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                    }
+                }
+            }
+        }
+
+        temp1 = new List<compareData>();
+        List<compareData> temp2 = new List<compareData>();
+        int j = 0;
+        foreach (compareData data in temp) {
+            if (j == 0)
+            {
+                temp1 = new List<compareData>();
+                temp1.AddRange(listLabCompare.FindAll(x => x.ordeR_TESTNM != data.ordeR_TESTNM).Select(
+                x => new compareData
+                {
+                    tesT_NM = x.tesT_NM,
+                    ordeR_TESTNM = x.ordeR_TESTNM,
+                    statusCheck = false
+                }
+                ));
+            }
+            else {
+                temp2 = new List<compareData>();
+                temp2.AddRange(temp1.FindAll(x => x.ordeR_TESTNM != data.ordeR_TESTNM));
+                temp1 = new List<compareData>();
+                temp1.AddRange(temp2);
+            }
+            j++;
+            
+        }
+        temp.AddRange(temp1.ToList().DistinctBy(p => p.ordeR_TESTNM));
+
+        DataTable dt = Helper.ToDataTable(temp);
+        gv_item.DataSource = dt;
+        gv_item.DataBind();
+        
+        ViewState["ChkItem"] = chkItem;
+        ViewState["itemList"] = temp;
+    }
+
+    protected void btn_compare_Click(object sender, EventArgs e)
+    {
+        List<LaboratoryCompare> temp = new List<LaboratoryCompare>();
+        
+        List<LaboratoryCompare> compResult = (List<LaboratoryCompare>)ViewState["dataItem"];
+
+        try {
+            log.Info(LogLibrary.Logging("S", "getLabCompareItem", Helper.GetLoginUser(this), ""));
+
+            var dataLaboratory = clsResult.getLabCompareItem(hfPatientId.Value, ddlEncounterMode.SelectedValue);
+            var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryCompare>(dataLaboratory.Result.ToString());
+            compResult = JsonLaboratory.list;
+            log.Info(LogLibrary.Logging("S", "getLabCompareItem ", Helper.GetLoginUser(this), JsonLaboratory.ToString()));
+
+        }
+        catch (Exception ex) {
+            log.Error(LogLibrary.Error("getLabCompareItem", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getLabCompareItem", Helper.GetLoginUser(this), ""));
+
+
+        List<compareData> itemGrid = new List<compareData>();
+
+        foreach (GridViewRow grid in gv_item.Rows)
+        {
+            CheckBox chkItem = (CheckBox)grid.FindControl("slt_item");
+            if (chkItem.Checked)
+            {
+                itemGrid.Add(new compareData { ordeR_TESTNM = ((Label)grid.FindControl("txt_item_name")).Text });
+            }
+        }
+
+        foreach (compareData data in itemGrid)
+        {
+            temp.AddRange(compResult.FindAll(x => x.ordeR_TESTNM.Equals(data.ordeR_TESTNM) && x.reF_RANGE != ""));
+        }
+
+        DataTable dt = Helper.ToDataTable(temp.OrderBy(p => p.disP_SEQ).ToList());
+        gv_compare_result.DataSource = dt;
+        gv_compare_result.DataBind();
+
+        LaboratoryCompare dateOno = new LaboratoryCompare();
+        dateOno = compResult.Find(x => x.isInfo == 2);
+
+        if (dateOno != null)
+        {
+            gv_compare_result.HeaderRow.Cells[1].Text = dateOno.onO_1;
+            gv_compare_result.HeaderRow.Cells[2].Text = dateOno.onO_2;
+            gv_compare_result.HeaderRow.Cells[3].Text = dateOno.onO_3;
+            gv_compare_result.HeaderRow.Cells[4].Text = dateOno.onO_4;
+            gv_compare_result.HeaderRow.Cells[5].Text = dateOno.onO_5;
+        }
+
+
+    }
+
+    protected void slt_all_item_CheckedChanged(object sender, EventArgs e)
+    {
+        CheckBox chkAll = (CheckBox)gv_item.HeaderRow.FindControl("slt_all_item");
+
+        foreach(GridViewRow data in gv_item.Rows)
+        {
+            CheckBox chkItem = (CheckBox)data.FindControl("slt_item");
+
+            if (chkAll.Checked)
+            {
+                chkItem.Checked = true;
+            }
+            else
+                chkItem.Checked = false;
+        }
+
+    }
+
+    protected void img_compare_Click(object sender, EventArgs e)
+    {
+        Response.Redirect(String.Format("~/Form/General/Result/ResultTest.aspx?idPatient={0}&EncounterId={1}&AdmissionId={2}&PagefaId={3}&PageSoapId={4}", hfPatientId.Value, hfEncounterId.Value, hfAdmissionId.Value, hfPagefaId.Value, hfPageSoapId.Value));
+    }
+}

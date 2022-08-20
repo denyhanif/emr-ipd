@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="ic_SaveAsDraft" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#fff}
+        </style>
+    </defs>
+    <g id="Bounding_Boxes">
+        <path id="Path_3183" d="M0 0h24v24H0z" class="cls-1" data-name="Path 3183"/>
+    </g>
+    <path id="Path_4097" d="M15.969 3.524A1.783 1.783 0 0 0 14.707 3H4.778A1.777 1.777 0 0 0 3 4.778v12.444A1.783 1.783 0 0 0 4.778 19h12.444A1.783 1.783 0 0 0 19 17.222V7.293a1.748 1.748 0 0 0-.524-1.253zM11 17.222a2.667 2.667 0 1 1 2.667-2.667A2.663 2.663 0 0 1 11 17.222zm.889-8.889H6.556a1.783 1.783 0 0 1-1.778-1.777 1.783 1.783 0 0 1 1.778-1.778h5.333a1.783 1.783 0 0 1 1.778 1.778 1.783 1.783 0 0 1-1.778 1.777z" class="cls-2" data-name="Path 4097" transform="translate(1 1)"/>
+</svg>

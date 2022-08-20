@@ -1,0 +1,614 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" MasterPageFile="~/Site.master" CodeFile="SoapPage.aspx.cs" Inherits="Form_SOAP_Template_soapPage" %>
+<%@ Register Src="~/Form/SOAP/Control_Template/SubjectivePage.ascx" TagName="subjectiveControl" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/SOAP/Control_Template/ObjectivePage.ascx" TagName="objectiveControl" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/SOAP/Control_Template/AnalysisPage.ascx" TagName="analysisControl" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/SOAP/Control_Template/PlanningPage.ascx" TagName="planningControl" TagPrefix="uc1"%>
+<%@ Register Src="~/Form/General/Control/PatientCard.ascx" TagPrefix="uc1" TagName="PatientCard" %>
+<%@ Register Src="~/Form/SOAP/PreviewTemplate/SoapPagePreview.ascx" TagPrefix="uc1" TagName="Preview" %>
+
+
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
+
+    <style>
+
+body, html {
+    width: 100%;
+    height: 100%;
+}
+.item{
+     width:100px;
+     margin-left:auto;
+     padding: 10px;
+     display: block;
+     font-size: 18px;
+     color: black;
+     background:#b3b7d1;
+     border-radius: 25px 0 0 25px;
+     
+ }
+ .item:hover{
+   width:200px;
+   -webkit-transition: width 2s; /* Safari */
+   transition: width 0.2s;
+   background:#2c3794;
+   color: white;
+    }
+ .item>span{
+     margin-right:20px;
+     margin-left:5px;
+ }
+
+.itemcontainer > div {
+    padding-top:0px;
+    padding-bottom:2px;
+}
+
+.itemsave{
+     width:185px;
+     height:43px;
+     margin-left:auto;
+     padding: 10px;
+     display: block;
+     font-size: 14px;
+     color: black;
+     background:#4d9b35;
+     border-radius: 25px 0 0 25px;
+ }
+ .itemsave:hover{
+   width:300px;
+   height:43px;
+   -webkit-transition: width 2s; /* Safari */
+   transition: width 0.2s;
+   background:#4d9b35;
+   color: white;
+    }
+ .itemsave>span{
+     margin-right:20px;
+     margin-left:5px;
+ }
+
+ .itempreview{
+     width:210px;
+     height:43px;
+     margin-left:auto;
+     padding: 10px;
+     display: block;
+     font-size: 14px;
+     color: black;
+     background:#8ba303;
+     border-radius: 25px 0 0 25px;
+ }
+ .itempreview:hover{
+   width:340px;
+   height:43px;
+   -webkit-transition: width 2s; /* Safari */
+   transition: width 0.2s;
+   background:#8ba303;
+   color: white;
+    }
+ .itempreview>span{
+     margin-right:20px;
+     margin-left:5px;
+ }
+
+
+ 
+ .itemappt{
+     width:210px;
+     height:43px;
+     margin-left:auto;
+     padding: 10px;
+     display: block;
+     font-size: 14px;
+     color: black;
+     background:#f88805;
+     border-radius: 25px 0 0 25px;
+ }
+ .itemappt:hover{
+   width:370px;
+   height:43px;
+   -webkit-transition: width 2s; /* Safari */
+   transition: width 0.2s;
+   background:#f88805;
+   color: white;
+    }
+ .itemappt>span{
+     margin-right:20px;
+     margin-left:5px;
+ }
+
+ 
+ .itemsign{
+     width:210px;
+     height:43px;
+     margin-left:auto;
+     padding: 10px;
+     display: block;
+     font-size: 14px;
+     color: black;
+     background:#c43d32;
+     border-radius: 25px 0 0 25px;
+ }
+ .itemsign:hover{
+   width:330px;
+   height:43px;
+   -webkit-transition: width 2s; /* Safari */
+   transition: width 0.2s;
+   background:#c43d32;
+   color: white;
+    }
+ .itemsign>span{
+     margin-right:20px;
+     margin-left:5px;
+ }
+
+.itemcontainersave > div {
+    padding-top:0px;
+    padding-bottom:2px;
+}
+
+</style>
+    <script type="text/javascript">
+        function Preview() {
+            $('#modalPreview').modal('show');
+            var Button = "<%=btnPreview.ClientID %>";
+            document.getElementById(Button).click();
+            return true;
+        }
+
+        function ModalSubmit() {
+            $('#modalsubmit').modal('show');
+            return true;
+        }
+        function enableref() {
+            $("[id$='txtreferal']").removeAttr("Disabled");
+        }
+        function disableref() {
+            $("[id$='txtreferal']").attr('disabled', 'disabled');
+        }
+        function freecharges() {
+            $("[id$='txtDiscount']").attr('disabled', 'disabled');
+            $("[id$='txttotalfee']").val('0');
+        }
+
+        function normalcharges() {
+            $("[id$='txtDiscount']").attr('disabled', 'disabled');
+            var x = $("[id$='ddl_consultationfee'] option:selected").text();
+            $("[id$='txttotalfee']").val(x);
+        }
+        function CheckNumericnumber() {
+            return event.keyCode >= 48 && event.keyCode <= 57;
+        }
+        function enabledisc() {
+            var totalfee = $("[id$='ddl_consultationfee'] option:selected").text();
+            $("[id$='txttotalfee']").val(totalfee);
+            $("[id$='txtDiscount']").val('');   
+            $("[id$='txtDiscount']").removeAttr("Disabled");
+        }
+        function CalculateTotalFee() {
+            var totalfee = $("[id$='ddl_consultationfee'] option:selected").text();
+            var disc = $("[id$='txtDiscount']").val();
+            if (disc.length > 0) {
+                var parsedisc = parseInt(disc);
+                if (totalfee.length < 4) {
+                    var parsefee = parseInt(totalfee);
+                    var parsedisc = parseInt(disc);
+                    if (parsedisc > parsefee) {
+                        alert('discount greater than consultation fee');
+                    }
+                    else {
+                        var cal = parsefee - parsedisc;
+                        $("[id$='txttotalfee']").val(cal);
+                    }
+                }
+                else if (totalfee.length >= 5 && totalfee.length <= 7) {
+                    var splitfee = totalfee.split('.');
+                    var combinefee = splitfee[0] + splitfee[1];
+                    var parsefee = parseInt(combinefee);
+                    if (parsedisc > parsefee) {
+                        alert('discount greater than consultation fee');
+                    }
+                    else {
+                        var cal = parsefee - parsedisc;
+                        var totalcalculate = cal.toLocaleString().replace(',', '.');
+                        $("[id$='txttotalfee']").val(totalcalculate);
+                    }
+                }
+                else if (totalfee.length > 9 && totalfee.length < 11) {
+                    var splitfee = totalfee.split('.');
+                    var combinefee = splitfee[0] + splitfee[1] + splitfee[2];
+                    var parsefee = parseInt(combinefee);
+                    if (parsedisc > parsefee) {
+                        alert('discount greater than consultation fee');
+                    }
+                    else {
+                        var cal = parsefee - parsedisc;
+                        var totalcalculate = cal.toLocaleString().replace(',', '.');
+                        $("[id$='txttotalfee']").val(totalcalculate);
+                    }
+                }
+            }
+            else {
+                 $("[id$='txttotalfee']").val(totalfee);
+            }
+            
+        }
+    </script>
+
+<body>
+    <div style="height:76px;position:fixed;background-color:white; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+        <asp:HiddenField ID="hfPatientId" runat="server" />
+        <asp:HiddenField ID="hfEncounterId" runat="server" />
+        <asp:HiddenField ID="hfAdmissionId" runat="server" />
+        <asp:HiddenField ID="hfPagefaId" runat="server" />
+        <asp:HiddenField ID="hfPageSoapId" runat="server" />
+        <uc1:PatientCard runat="server" ID="PatientCard" />
+    </div>
+
+    <div style="height:40px;position:fixed;top:19%;background-color:#e7e8ed; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+        <div class="row" style="padding-left:15px;padding-top:8px">
+            <label style="font-family:Helvetica;font-size:12px;">Poli Selection</label>
+                <asp:DropDownList style="cursor:pointer;border-radius: 2px;border: solid 1px #cdced9;" ID="ddlForm_Type" Width="100%" Height="25px" runat="server">
+                </asp:DropDownList>
+            <asp:Button runat="server" Text="Choose" Style="width: 71px;height: 25px;border-radius: 4px;background-color: #4d9b35;font-family:Helvetica;font-size:12px;color:#ffffff" OnClick="btnChoose_onClick" />
+        </div>
+    </div>
+
+<div class="itemcontainer" style="position:fixed; right:-60px;top:40%; transform:translate(0,-50%); text-align:left; z-index:1" >
+   <div>
+       <a class="item" href="#subjective"><span><strong>S</strong></span>Subjective</a>
+   </div>
+   <div>
+       <a class="item" href="#objective"><span><strong>O</strong></span>Objective</a>
+   </div>
+   <div>
+       <a class="item" href="#analysis"><span><strong>A</strong></span>Analysis</a>
+   </div>
+   <div>
+       <a class="item" href="#planning"><span><strong>P</strong></span>Planning</a>
+   </div>
+ </div>
+
+    
+<div class="itemcontainersave" style="position:fixed; right:-140px;top:70%; transform:translate(0,-50%); text-align:left; z-index:1" >
+   <div>
+       <asp:LinkButton runat="server" CssClass="itemsave" OnClick="btnsave_click"><span><img src="<%= Page.ResolveClientUrl("~/Images/S/ic_SaveAsDraft.png") %>" /></span>Save as Draft</asp:LinkButton>
+   </div>
+</div>
+<div class="itemcontainersave" style="position:fixed; right:-165px;top:77%; transform:translate(0,-50%); text-align:left; z-index:1" >
+    <div>
+       <a href="javascript:Preview();" class="itempreview" ><span><img src="<%= Page.ResolveClientUrl("~/Images/S/ic_PreviewResume.png") %>" /></span>Resume Preview</a>
+   </div>
+</div>
+<div class="itemcontainersave" style="position:fixed; right:-165px;top:84%; transform:translate(0,-50%); text-align:left; z-index:1" >
+    <div>
+       <asp:LinkButton runat="server" CssClass="itemappt" ><span><img src="<%= Page.ResolveClientUrl("~/Images/S/ic_CreateAppointment.png") %>" /></span>Create Appointment</asp:LinkButton>
+   </div>
+</div>
+<div class="itemcontainersave" style="position:fixed; right:-165px;top:91%; transform:translate(0,-50%); text-align:left; z-index:1" >
+    <div>
+       <%--<a href="javascript:ModalSubmit();" class="itemsign" ><span><img src="<%= Page.ResolveClientUrl("~/Images/S/ic_SubmitSign.png") %>" /></span>Submit & Sign</a>--%>
+        <asp:UpdatePanel runat="server">
+            <ContentTemplate>
+                <asp:LinkButton runat="server" CssClass="itemsign" OnClick="btnSubmitModal_click"><span><img src="<%= Page.ResolveClientUrl("~/Images/S/ic_SubmitSign.png") %>" /></span>Submit & Sign</asp:LinkButton>
+            </ContentTemplate>
+        </asp:UpdatePanel>
+        
+    </div>
+</div>
+
+
+<%--    <div class="panel-group" id="accordion" style="padding-top:120px">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+        Collapsible Group 1</a>
+      </h4>
+    </div>
+    <div id="collapse1" class="panel-collapse collapse in">
+      <div class="panel-body">
+
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+        Collapsible Group 2</a>
+      </h4>
+    </div>
+    <div id="collapse2" class="panel-collapse collapse">
+      <div class="panel-body">Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+      minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+      commodo consequat.</div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">
+        Collapsible Group 3</a>
+      </h4>
+    </div>
+    <div id="collapse3" class="panel-collapse collapse">
+      <div class="panel-body">Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+      minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+      commodo consequat.</div>
+    </div>
+  </div>
+</div>--%>
+
+
+
+<%--    <div style="padding-top:100px">--%>
+        <%--<div style="padding-top:120px"></div>--%>
+
+        <section id="subjective" style="padding-top:150px; margin-top:-30px">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-lg-8 mx-auto" style="height:100%;width:100%;">
+                  <h3><strong>SUBJECTIVE</strong></h3>
+                  <asp:UpdatePanel runat="server">
+                      <ContentTemplate>
+                          <uc1:subjectiveControl runat="server" id="subjectiveControl"/>
+                      </ContentTemplate>
+                  </asp:UpdatePanel>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="objective" style="padding-top:150px; margin-top:-150px" >
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-lg-8 mx-auto" style="height:100%;width:100%">
+               <h3><strong>OBJECTIVE</strong></h3>
+               <uc1:objectiveControl runat="server" id="objectiveControl" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="analysis" style="padding-top:150px; margin-top:-150px">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-lg-8 mx-auto"  style="height:100%;width:100%">
+                  <h3><strong>ASSESSMENT</strong></h3>
+                  <uc1:analysisControl runat="server" id="analysisControl" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="planning" style="padding-top:150px; margin-top:-150px">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-lg-8 mx-auto"  style="height:100%;width:100%">
+                  <h3><strong>PLANNING</strong></h3>
+                  <uc1:planningControl runat="server" id="planningControl1" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+    <div class="modal fade" id="modalPreview" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div style="width:80%;height:85%;vertical-align:middle" class="container-fluid">
+                <div class="modal-content">
+                    <div class="modal-header" style="height:40px;padding-top:10px;padding-bottom:5px">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" style="text-align:left"><asp:Label ID="lblModalTitle" style="font-family:Helvetica, Arial, sans-serif;font-weight:bold" runat="server" Text="Medical Resume"></asp:Label></h4>
+                        <div style="text-align:center;background-color:lightgray;"">
+                            <asp:HyperLink runat="server" ID="email" CssClass="btn btn-primary" NavigateUrl="~/Form/SOAP/PreviewTemplate/EmailSoap.aspx" Target="_blank">Send as Email</asp:HyperLink>
+                            <asp:HyperLink runat="server" ID="preview" CssClass="btn btn-primary" NavigateUrl="~/Form/SOAP/PreviewTemplate/PrintSoap.aspx" Target="_blank">Save as PDF</asp:HyperLink>
+                        </div>
+                        <br />
+                    </div>
+                    <br />
+                    <br />
+                   <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional"><ContentTemplate>
+                        <div style="overflow-y: auto; height:500px;width:98%;padding-left:15px;padding-top:10px">
+                            <asp:Button runat="server" CssClass="hidden" ID="btnPreview" OnClick="btnPreview_click"/>
+                            <uc1:Preview runat="server" id="SoapPagePreview" />
+                        </div>
+                    </ContentTemplate></asp:UpdatePanel>
+                    <br />
+                </div>
+            </div>
+    </div>
+
+
+    <%-- ============================================= MODAL SUBMIT AND SIGN ============================================== --%>
+<div class="modal fade" id="modalsubmit" tabindex="-1"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <asp:UpdatePanel ID="UpdatePanel1" runat="server"><ContentTemplate>
+    <div class="modal-dialog" style="position:fixed;top: 5%;left: 25%;width:40%;">
+        <div class="modal-content" style="border-radius: 6px;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.24);">
+            <div class="modal-header" style="height:30px;padding-top:5px;padding-bottom:5px">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5 class="modal-title"><asp:Label ID="Label1" style="font-family:Helvetica;font-weight:bold;font-size:14px" runat="server" Text="Submit & Sign"></asp:Label></h5>
+            </div>
+            <div class="modal-body">
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-weight:bold;font-family:Helvetica">Referral</label>
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal;padding-left:10px"> <asp:RadioButton runat="server" GroupName="referral"  Value="0" id="rbreferral1" Checked="true" onclick="disableref()"/> No </label>
+                    </div>
+                    <div class="col-sm-2" style="padding-right:0px;margin-right:0px">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="referral"  Value="1" id="rbreferral2" onclick="enableref()" /> Yes </label>
+                    </div>
+                    <div class="col-sm-3" style="padding-left:0px;margin-left:0px">
+                        <asp:TextBox runat="server" style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal;height:23px;width: 240px;border-radius: 2px;border: solid 1px #cdced9;" ID="txtreferal" Disabled="true"> </asp:TextBox>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:10px;font-family:Helvetica">Consultation fee</label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <%--<asp:TextBox runat="server" style="font-size:14px;font-weight:bold;font-family:Helvetica;height:32px;width:170px;border-radius: 4px;border: solid 1px #9293a0;padding-left:11px">RP 300.000</asp:TextBox>--%>
+                        <asp:DropDownList ID="ddl_consultationfee" runat="server" style="font-size:14px;font-weight:bold;font-family:Helvetica;height:32px;width:170px;border-radius: 4px;border: solid 1px #9293a0;padding-left:11px"></asp:DropDownList>
+                    </div>
+                </div>
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:10px;font-weight:bold;font-family:Helvetica">Special Price</label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="price"  Value="0" id="rbPrice1" Checked="true" onclick="normalcharges();" /> Normal Price </label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="price"  Value="1" id="rbPrice2" onclick="freecharges();" /> Free of Charge </label>
+                    </div>
+                </div>
+
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="price"  Value="2" id="rbPrice3" onclick="enabledisc()" /> Discount </label>
+                    </div>
+                    <div class="col-sm-3">
+                        <asp:TextBox runat="server" style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal;height:23px;width: 150px;border-radius: 2px;border: solid 1px #cdced9;" Disabled="true" ID="txtDiscount" onkeypress="return CheckNumericnumber();" onblur="CalculateTotalFee();"></asp:TextBox>
+                    </div>
+                </div>
+
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:10px;font-family:Helvetica">Procedure notes</label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%;padding-right:5%">
+                    <div class="col-sm-12">
+                        <asp:TextBox runat="server" style="outline-color:gray;max-width:100%;width:100%;resize:none;font-family:Helvetica, Arial, sans-serif" placeholder="Type here..."  BorderColor="gray" ID="txtProcedure" TextMode="MultiLine" Rows="3" />
+                    </div>
+                </div>
+
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%;padding-right:5%">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6" style="text-align:right">
+                        <label style="font-size:12px;font-family:Helvetica;text-align:right">Total Fee:</label><asp:TextBox runat="server" ID="txttotalfee" BorderColor="Transparent" style="outline-color:transparent;font-weight:bold;font-size:26px;font-family:Helvetica;width:100px;text-align:right" ></asp:TextBox>
+                    </div>
+                </div>
+
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%;padding-right:5%">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-8" style="text-align:right">
+                        <Button runat="server" style="width: 112px;height: 32px;border-radius: 4px;background-color: #171717;color:white" data-dismiss="modal">Cancel</Button>
+                        <asp:Button runat="server" style="width: 112px;height: 32px;border-radius: 4px;background-color: #c43d32;color:white" Text="Submit & Sign" OnClick="btnSubmit_click" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </ContentTemplate></asp:UpdatePanel>
+</div>
+<%-- ============================================= END MODAL SUBMIT AND SIGN ============================================== --%>
+
+<%-- ============================================= MODAL SUBMIT AND SIGN DISABLE ============================================== --%>
+<div class="modal fade" id="modaldisable" tabindex="-1"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <asp:UpdatePanel ID="UpdatePanel2" runat="server"><ContentTemplate>
+    <div class="modal-dialog" style="position:fixed;top: 5%;left: 25%;width:40%;">
+        <div class="modal-content" style="border-radius: 6px;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.24);">
+            <div class="modal-header" style="height:30px;padding-top:5px;padding-bottom:5px">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5 class="modal-title"><asp:Label ID="Label2" style="font-family:Helvetica;font-weight:bold;font-size:14px" runat="server" Text="Submit & Sign"></asp:Label></h5>
+            </div>
+            <div class="modal-body">
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-weight:bold;font-family:Helvetica">Referral</label>
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal;padding-left:10px"> <asp:RadioButton runat="server" GroupName="referral"  Value="0" id="RadioButton1" Checked="true" onclick="disableref()"/> No </label>
+                    </div>
+                    <div class="col-sm-2" style="padding-right:0px;margin-right:0px">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="referral"  Value="1" id="RadioButton2" onclick="enableref()" /> Yes </label>
+                    </div>
+                    <div class="col-sm-3" style="padding-left:0px;margin-left:0px">
+                        <asp:TextBox runat="server" style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal;height:23px;width: 240px;border-radius: 2px;border: solid 1px #cdced9;" ID="TextBox1" Disabled="true"> </asp:TextBox>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:10px;font-family:Helvetica">Consultation fee</label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <%--<asp:TextBox runat="server" style="font-size:14px;font-weight:bold;font-family:Helvetica;height:32px;width:170px;border-radius: 4px;border: solid 1px #9293a0;padding-left:11px">RP 300.000</asp:TextBox>--%>
+                        <asp:DropDownList ID="DropDownList1" runat="server" style="font-size:14px;font-weight:bold;font-family:Helvetica;height:32px;width:170px;border-radius: 4px;border: solid 1px #9293a0;padding-left:11px"></asp:DropDownList>
+                    </div>
+                </div>
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:10px;font-weight:bold;font-family:Helvetica">Special Price</label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="price"  Value="0" id="RadioButton3" Checked="true" onclick="normalcharges();" /> Normal Price </label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="price"  Value="1" id="RadioButton4" onclick="freecharges();" /> Free of Charge </label>
+                    </div>
+                </div>
+
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal"> <asp:RadioButton runat="server" GroupName="price"  Value="2" id="RadioButton5" onclick="enabledisc()" /> Discount </label>
+                    </div>
+                    <div class="col-sm-3">
+                        <asp:TextBox runat="server" style="font-size:12px;font-family: Helvetica;color: #171717;font-weight:normal;height:23px;width: 150px;border-radius: 2px;border: solid 1px #cdced9;" Disabled="true" ID="TextBox2" onkeypress="return CheckNumericnumber();" onblur="CalculateTotalFee();"></asp:TextBox>
+                    </div>
+                </div>
+
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%">
+                    <div class="col-sm-3">
+                        <label style="font-size:10px;font-family:Helvetica">Procedure notes</label>
+                    </div>
+                </div>
+                <div class="row" style="padding-left:5%;padding-right:5%">
+                    <div class="col-sm-12">
+                        <asp:TextBox runat="server" style="outline-color:gray;max-width:100%;width:100%;resize:none;font-family:Helvetica, Arial, sans-serif" placeholder="Type here..."  BorderColor="gray" ID="TextBox3" TextMode="MultiLine" Rows="3" />
+                    </div>
+                </div>
+
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%;padding-right:5%">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6" style="text-align:right">
+                        <label style="font-size:12px;font-family:Helvetica;text-align:right">Total Fee:</label><asp:TextBox runat="server" ID="TextBox4" BorderColor="Transparent" style="outline-color:transparent;font-weight:bold;font-size:26px;font-family:Helvetica;width:100px;text-align:right" ></asp:TextBox>
+                    </div>
+                </div>
+
+                <div>&nbsp</div>
+                <div class="row" style="padding-left:5%;padding-right:5%">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-8" style="text-align:right">
+                        <Button runat="server" style="width: 112px;height: 32px;border-radius: 4px;background-color: #171717;color:white" data-dismiss="modal">Cancel</Button>
+                        <asp:Button runat="server" style="width: 112px;height: 32px;border-radius: 4px;background-color: #c43d32;color:white" Text="Submit & Sign" OnClick="btnSubmit_click" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </ContentTemplate></asp:UpdatePanel>
+</div>
+<%-- ============================================= END MODAL SUBMIT AND SIGN DISABLE ============================================== --%>
+
+</body>
+</asp:Content>
+

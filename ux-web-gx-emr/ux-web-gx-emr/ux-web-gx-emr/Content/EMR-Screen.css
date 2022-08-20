@@ -1,0 +1,27 @@
+﻿@media screen and (max-width: 1919px) {
+    .font-header-dashboard {
+        font-size: 20px !important;
+    }
+
+    .font-subheader-dashboard {
+        font-size: 16px !important;
+    }
+
+    .font-content-dashboard {
+        font-size: 14px !important;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .font-header-dashboard {
+        font-size:22px !important;
+    }
+
+    .font-subheader-dashboard {
+        font-size: 18px !important;
+    }
+
+    .font-content-dashboard {
+        font-size: 16px !important;
+    }
+}

@@ -1,0 +1,289 @@
+﻿<%@ Page Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true" CodeFile="ResultTest.aspx.cs" Inherits="Form_General_Result" %>
+<%@ Register Src="~/Form/General/Control/PatientCard.ascx" TagPrefix="tag1" TagName="PatientCard" %>
+<%@ Register Src="~/Form/General/Control/StdLabResult.ascx" TagPrefix="tag1" TagName="StdLabResult" %>
+
+
+<asp:Content ID="Result" ContentPlaceHolderID="MainContent" runat="server">
+    <script type="text/javascript">
+        function addOnoList(content, count) {
+            var temp = document.getElementById('<%=hflistOno.ClientID%>').value;
+            var countListOno = document.getElementById('<%=hfListOnoCount.ClientID%>').value;
+            var header = document.getElementById("tbl_date_lab");
+            var trs = document.getElementById("tbl_date_lab").getElementsByTagName("tr");
+            var bg_color = trs[1].cells[count].style.backgroundColor;
+            
+
+            
+            if (bg_color == "mediumpurple") {
+                if (countListOno == "5") {
+                    alert("Maximal 5 date choosen");
+                } else {
+                    trs[1].cells[count].style.backgroundColor = "gray";
+                    document.getElementById('<%=hflistOno.ClientID%>').value = temp + content;
+                    document.getElementById('<%=hfListOnoCount.ClientID%>').value = parseInt(countListOno) + 1;
+                }
+
+            } else {
+                trs[1].cells[count].style.backgroundColor = "mediumpurple";
+                var sSplit = temp.split(content);
+                var listOno = "";
+
+                for (var i = 0; i < sSplit.length; i++) {
+                    if (sSplit[i] != "") {
+                        listOno = listOno + sSplit[i];
+                    }
+                }
+                document.getElementById('<%=hflistOno.ClientID%>').value = listOno;
+                document.getElementById('<%=hfListOnoCount.ClientID%>').value = parseInt(countListOno) - 1;
+            }
+        }
+
+        function remove() {
+            var myNode = document.getElementById('<%=paging_data.ClientID%>');
+            console.log("Before", myNode);
+            myNode.removeChild(myNode.firstChild);
+            console.log("After", myNode);
+        }
+
+        function searchLab() {
+            document.getElementById('<%=hfListOnoCount.ClientID%>').value = 0;
+        }
+
+        <%--function paging(content) {
+            var sSplit = content.split('-');
+            var ListOno = [];
+            var userId = document.getElementById('<%=hfPatientId.ClientID%>').value;
+
+            var myNode = document.getElementById('<%=paging.ClientID%>');
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild);
+            }
+
+            for (var i = 1; i < sSplit.length; i++) {
+                ListOno.push(sSplit[i].split('#')[1]);
+            }
+
+            var onoPaging = [];
+            var page = "";
+
+            for (var i = 0; i < ListOno.length; i++) {
+                if (((i + 1) % 5 == 0 || i == ListOno.length - 1)) {
+                    if (i != 0) {
+                        onoPaging.push(page + ListOno[i]);
+                        page = page + ListOno[i];
+                    } else {
+                        onoPaging.push(page + "," + ListOno[i]);
+                        page = page + "," + ListOno[i];
+                    }
+                    var a = document.createElement('a');
+                        var linkText = document.createTextNode(i);
+                        a.appendChild(linkText);
+                        a.href = "http://10.85.129.55:5506/annuallabcompare/" + page;
+                        document.getElementById('<%=paging.ClientID%>').appendChild(a);
+                        page = "";
+            }
+                else
+            {
+                if (i == 0 || i % 5 == 0) {
+                    page = ListOno[i];
+                }
+                else {
+                    page = page + "," + ListOno[i];
+                }
+            }
+        }
+            
+            console.log("test", onoPaging);
+
+        }--%>
+    </script>
+<style type="text/css">
+    .shadows {
+            border: 1px; 
+            border-radius: 10px;
+            box-shadow: 0px 1px 5px #9293A0;
+            margin-top: 0px;
+        }
+
+        .shadows-search {
+            border: 1px; 
+            border-radius: 10px;
+            box-shadow: 0px 1px 5px #9293A0;
+            padding: 7px 7px 7px 7px;
+            width: 200px;
+        }
+
+        .itemcontainersave > div {
+            padding-top:0px;
+            padding-bottom:2px;
+        }
+
+        .btn-compare {
+            width:80px;
+            margin-right: 0px;
+            margin-left: 100px;
+        }
+
+        
+</style>
+    <script type="text/javascript">
+    </script>
+    <body>
+    <asp:UpdateProgress ID="uProgWorklist" runat="server" AssociatedUpdatePanelID="UPlabResult">
+        <ProgressTemplate>
+            <div class="modal-backdrop" style="background-color:transparent;vertical-align:central;text-align:center;">
+                <div class="login-logo"><img src="" style="visibility:collapse" width:"30%" /> <br /></div>
+                <div class="login-box">
+                    <div> 
+                        <img alt="" height="200px" width="200px" style="background-color:transparent;vertical-align:middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                    </div>
+                </div>
+            </div>
+        </ProgressTemplate>
+    </asp:UpdateProgress>
+    <div style="background-color:transparent">
+        <div style="height:90px;position:fixed;background-color:white; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+            <asp:HiddenField ID="hfPatientId" runat="server" />
+            <asp:HiddenField ID="hfEncounterId" runat="server" />
+            <asp:HiddenField ID="hfAdmissionId" runat="server" />
+            <asp:HiddenField ID="hfPagefaId" runat="server" />
+            <asp:HiddenField ID="hfPageSoapId" runat="server" />
+            <tag1:PatientCard runat="server" ID="PatientCard"/>
+        </div>
+        <br /><br />
+        <asp:UpdatePanel runat="server" ID="UPlabResult" UpdateMode="Always"><ContentTemplate>
+            <%--<div class="col-sm-2"> </div>--%>
+            <div style="padding-top:60px;width:100%; height:100px; transform:translate(0,-0%); background-color:whitesmoke" class="col-sm-10">
+               <asp:Label runat="server" Width="50px">Show : </asp:Label>
+                <asp:LinkButton ID="labResult" runat="server" OnClick="labResult_Click" style="margin-right:30px;"><span><img src="<%= Page.ResolveClientUrl("~/Images/Icon/labE.png") %>" style="height:25px;width:25px;margin-right:3px;" /></span><b> Laboratory </b></asp:LinkButton>
+                <asp:LinkButton ID="radResult" runat="server" OnClick="radResult_Click" style="margin-right:30px;"><span><img src="<%= Page.ResolveClientUrl("~/Images/Icon/radE.png") %>" style="height:25px;width:25px;margin-right:3px;" /></span><b> Radiology </b></asp:LinkButton>
+                <asp:LinkButton ID="diagResult" runat="server" OnClick="diagResult_Click"  style="margin-right:30px;"><span><img src="<%= Page.ResolveClientUrl("~/Images/Icon/ic_Diag.png") %>" style="height:25px;width:25px;margin-right:3px;" /></span><b> Diagnosis </b></asp:LinkButton>
+            </div>
+            &nbsp;&nbsp;
+        <div class="container-fluid" style="height:100%;">
+            <div style="width:100%;transform:translate(0,-0%); background-color:white; margin-bottom:20px" class="shadows col-sm-12">
+                <asp:MultiView ID="MainView" runat="server">
+                    <asp:View ID="View1" runat="server">
+                        <div style="width:100%; height:200px; padding-top:10px">
+                            <div class="btn-group btn-group-justified" style="background-color:whitesmoke;height:50px" role="group" aria-label="...">
+                              <div class="btn-group" role="group" style="width:2%" runat="server">
+                                  <div class="container-fluid" style="font-size:large; font-weight:bold">
+                                    Laboratory History <br />
+                                  </div>
+                              </div>
+                              
+                              <div class="btn-group" role="group" style="width:0.2%">
+                                  <div class="container-fluid" style="padding-right:1px">
+                                      <asp:Button CssClass="btn btn-success" ID="searchLabCompare" runat="server" Text="Search" OnClick="searchLabCompare_Click" OnClientClick="searchLab();"/>
+                                  </div>
+                               </div>
+                            </div>
+                            <div class="btn-group btn-group-justified" style="background-color:transparent;height:30px; padding-top:20px" role="group" aria-label="...">
+                                <asp:UpdatePanel runat="server"><ContentTemplate>
+                                <div style="text-align:center">
+                                    <div class="btn-group" role="group" aria-label="..." style="height:40px">
+                                        <asp:Button runat="server" CssClass="btn btn-default" BorderColor="Black" style="border-radius:5px" Font-Size="20px" ID="btnPrev" Text="<" Font-Bold="true" OnClick="btnPrev_Click"/>
+                                        <div class="btn" style="border-color:transparent;background-color:transparent"></div>
+                                        <asp:Label runat="server" CssClass="btn btn-default" Font-Size="20px" Font-Bold="true" BorderColor="Transparent" ID="lblYear"></asp:Label>
+                                        <div class="btn" style="border-color:transparent;background-color:transparent"></div>
+                                        <asp:Button runat="server" BorderColor="Black" style="border-radius:5px" CssClass="btn btn-default" Font-Size="20px" ID="btnNext" Text=">" Font-Bold="true" OnClick="btnNext_Click"/>
+                                    </div>
+                                </div>
+                                <br />
+                                <div style="text-align:center;width:99.9%;" class="container-fluid">
+                                    <div id="divContentReport" runat="server"></div>   
+                                </div>
+                                </ContentTemplate></asp:UpdatePanel>
+                            </div>
+                        </div>
+                        <input type="hidden" id="hflistOno" runat="server" value=""/>
+                        <input type="hidden" id="hfListOnoCount" runat="server" value="0"/>
+                        <asp:GridView runat="server" ID="gvw_list_ono" Visible="false"></asp:GridView>
+                        <asp:GridView runat="server" ID="gvw_paging_ono"  Visible="false"></asp:GridView>
+                        <div class="col-sm-12" style="width:100%; height:400px" role="group" aria-label="...">
+            <div style="height:350px; background-color:ghostwhite; width:25%" id="compare_div" runat="server" class="col-sm-3">
+                &nbsp;
+                <div>
+                    <asp:Label runat="server" Text="Select Item" ID="lblCompare" Font-Bold="true"></asp:Label>
+                    <asp:Button ID="btn_compare" runat="server" Width="40%" Text="Compare" CssClass="btn btn-danger btn-compare" OnClick="btn_compare_Click" OnClientClick="remove();"/>
+
+                </div>
+                <br />
+                <div>
+                    <asp:TextBox runat="server" ID="src_item_txt" AutoPostBack="true" Width="90%" OnTextChanged="src_item_txt_TextChanged"></asp:TextBox>
+                </div>
+                &nbsp;
+                <div style="width:100%; height:230px; overflow-x:hidden; overflow-y:scroll;">
+                    <asp:UpdatePanel runat="server" UpdateMode="Always">
+                        <ContentTemplate>
+                    <asp:GridView runat="server" ID="gv_item" AutoGenerateColumns="false" CssClass="table table-striped table-condensed" BorderColor="Transparent">
+                       <Columns>
+                            <asp:TemplateField>
+                                <HeaderTemplate>
+                                    <th><asp:CheckBox runat="server" ID="slt_all_item" OnCheckedChanged="slt_all_item_CheckedChanged" AutoPostBack="true" Checked="true"/><span>Select All</span></th>
+                                    <th>Item</th>
+                                </HeaderTemplate>
+                                <ItemTemplate>
+                                    <td><asp:CheckBox runat="server" ID="slt_item" OnCheckedChanged="slt_item_CheckedChanged" AutoPostBack="true" Checked='<%# Eval("statusCheck") %>'/></td>
+                                    <td><asp:Label runat="server" Text='<%# Bind("ordeR_TESTNM")%>' ID="txt_item_name" ReadOnly="true"></asp:Label></td>
+                                </ItemTemplate>
+                            </asp:TemplateField>    
+                       </Columns>
+                    </asp:GridView>
+                    <asp:GridView runat="server" ID="dg_item_copare" Visible="true" AutoGenerateColumns="false">
+                        <Columns>
+                            <asp:TemplateField>
+                                <ItemTemplate>
+                                    <asp:Label runat="server" Text='<%# Bind("tesT_NM")%>' ID="hf_item_name" ReadOnly="true"></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                    </asp:GridView>
+
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+            <div class="col-sm-7" style="height:350px; width:75%; background-color:ghostwhite;" id="compare_result" runat="server">
+                <div class="btn-group" role="group" aria-label="..." style="height:40px; margin-left: 0px;right: auto;left: 75%;top: 8px;">
+                    <%--<asp:HiddenField ID="hf_paging_number" runat="server" />--%>
+                    <asp:Button runat="server" CssClass="btn btn-default" BorderColor="Black" style="border-radius:5px" Font-Size="10px" ID="btn_prev_ono" Text="<" Font-Bold="true" OnClick="btn_prev_ono_Click" Enabled="false" OnClientClick="remove();"/>
+                    <asp:TextBox runat="server" Width="45px" style="padding-left: 0px;margin-left: 5px;padding-right: 0px;padding-top: 0px;padding-bottom: 0px;" Height="27px" ID="hf_paging_number" CssClass="btn" BorderColor="GrayText" OnTextChanged="hf_paging_number_TextChanged"></asp:TextBox>
+                    <asp:Label CssClass="btn" runat="server" style="padding-left: 5px; padding-right: 5px; " ID="lbl_count_paging" Text="of 20" ></asp:Label>
+                    <asp:Button runat="server" BorderColor="Black" style="border-radius:5px" CssClass="btn btn-default" Font-Size="10px" ID="btn_next_ono" Text=">" Font-Bold="true" OnClick="btn_next_ono_Click" OnClientClick="remove();"/>
+                </div>
+                &nbsp;
+                    <asp:UpdatePanel runat="server" UpdateMode="Always">
+                    <ContentTemplate>
+                        <div runat="server" id="paging_data" style="width:20%;"></div>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+                    </asp:View>
+                    <asp:View ID="View2" runat="server">
+                        <h1>Page for Radiology</h1>
+                    </asp:View>
+                    <asp:View ID="View3" runat="server">
+                        <h1>Page for Diagnosis</h1>
+                    </asp:View>
+                    <asp:View ID="View4" runat="server">
+                        <h1>Page For Compare</h1>
+                    </asp:View>
+                </asp:MultiView>
+            </div>
+        </div>
+            </ContentTemplate>
+        </asp:UpdatePanel>
+    </div>
+
+        <%--<table border="1" style="background-color:mediumpurple">
+                        <tr>
+                            <td style="height:40px; padding:0;"><input type="button" value="saya" style=" border:none; padding-top:20px" onclick="test();"/></td>
+                            <td style="padding-right:0;padding-left:0;">kamu</td>
+                            <td style="padding-right:0;padding-left:0;">dia</td>
+                        </tr>
+                    </table>--%>
+    </body>
+    
+</asp:Content>

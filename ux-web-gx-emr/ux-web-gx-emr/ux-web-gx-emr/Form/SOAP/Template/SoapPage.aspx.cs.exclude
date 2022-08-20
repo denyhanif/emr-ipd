@@ -1,0 +1,301 @@
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using log4net;
+using System.Globalization;
+using static PatientHistory;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Xsl;
+using System.Text;
+using System.IO;
+using static FirstAssesment;
+using System.Web.UI.HtmlControls;
+
+public partial class Form_SOAP_Template_soapPage : System.Web.UI.Page
+{
+    public List<ListChecked> listchecked, listcheckedtemp = new List<ListChecked>();
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_SOAP_Template_soapPage));
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            Session[Helper.SessionLabPathologyChecked] = null;
+            Session[Helper.SessionSurgerySubjective] = null;
+            Session[Helper.SessionAllergySubjective] = null;
+            //Link Binder
+            HyperLink test = Master.FindControl("SOAPLink") as HyperLink;
+            test.Style.Add("background-color", "#D6DBFF");
+
+            if (Helper.GetLoginUser(this) == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            if (Request.QueryString["EncounterId"] == null || Helper.GetDoctorID(this) == "")
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                log.Info(LogLibrary.Logging("S", "Page_Load", Helper.GetLoginUser(this), ""));
+
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["PagefaId"], Request.QueryString["PageSoapId"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+                hfPagefaId.Value = Request.QueryString["PagefaId"];
+                hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+
+                log.Debug(LogLibrary.Logging("S", "GetPatientHeader", Helper.GetLoginUser(this), "(param:"+long.Parse(hfPatientId.Value)+","+hfEncounterId.Value.ToString()+")"));
+                var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+                ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+                log.Debug(LogLibrary.Logging("E", "GetPatientHeader", Helper.GetLoginUser(this), JsongetPatientHistory.ToString()));
+
+                //log.Debug(LogLibrary.Logging("S", "GetPatientHeader", Helper.GetLoginUser(this), "(param:" + long.Parse(hfPatientId.Value) + "," + hfEncounterId.Value.ToString() + ")"));
+                var varResultconsultation = clsSOAP.GetConsultationFee(long.Parse(Helper.GetDoctorID(this)), Helper.organizationId, long.Parse(hfAdmissionId.Value), Guid.Parse(hfEncounterId.Value));
+                ResultConsultFee JsongetResultconsultation = JsonConvert.DeserializeObject<ResultConsultFee>(varResultconsultation.Result.ToString());
+                //log.Debug(LogLibrary.Logging("E", "GetPatientHeader", Helper.GetLoginUser(this), JsongetPatientHistory.ToString()));
+                List<ConsultFeestring> consfee = new List<ConsultFeestring>();
+                if (JsongetResultconsultation.list.Count > 0)
+                {
+                    foreach (var x in JsongetResultconsultation.list)
+                    {
+                        ConsultFeestring temp = new ConsultFeestring();
+                        //x.consultation_fee = decimal.Parse(x.consultation_fee.ToString("#,##0"));
+                        string a=String.Format("{0:n0}", x.consultation_fee);
+                        temp.consultation_fee = a;
+                        temp.sales_item_id = x.sales_item_id;
+                        temp.sales_item_name = x.sales_item_name;
+                        consfee.Add(temp);
+                    }
+                }
+                
+
+
+                PatientHeader header = JsongetPatientHistory.header;
+                PatientCard.initializevalue(header);
+
+                if (Session[Helper.SessionItemDrugPres] == null)
+                {
+                    DataTable dt = clsSOAP.getItemPres(2, header.AdmissionTypeId);
+                    Session[Helper.SessionItemDrugPres] = dt;
+                }
+
+                DataTable pagedatadt;
+                if (Session[Helper.Sessionpolidata] == null)
+                {
+                    List<PageSpecialty> listpagedata = new List<PageSpecialty>();
+                    //var frequencyData = clsOrderSet.getFrequency();
+
+                    log.Debug(LogLibrary.Logging("S", "GetPageSpecialty", Helper.GetLoginUser(this), "(param:2000000732,1)"));
+                    var pagedata = clsFirstAssesment.GetPageSpecialty(2000000732, 1);
+                    var Jsonpagedata = JsonConvert.DeserializeObject<ResultPageSpecialty>(pagedata.Result.ToString());
+                    log.Debug(LogLibrary.Logging("E", "GetPageSpecialty", Helper.GetLoginUser(this), Jsonpagedata.ToString()));
+
+                    listpagedata = Jsonpagedata.list;
+                    pagedatadt = Helper.ToDataTable(listpagedata);
+                    Session[Helper.Sessionpolidata] = pagedatadt;
+                }
+                else
+                    pagedatadt = (DataTable)Session[Helper.Sessionpolidata];
+
+                ddlForm_Type.DataSource = pagedatadt;
+                ddlForm_Type.DataTextField = "page_specialty_name";
+                ddlForm_Type.DataValueField = "page_specialty_id";
+                ddlForm_Type.DataBind();
+
+                ddl_consultationfee.DataSource = Helper.ToDataTable(consfee);
+                ddl_consultationfee.DataTextField = "consultation_fee";
+                ddl_consultationfee.DataValueField = "sales_item_id";
+                ddl_consultationfee.DataBind();
+
+                txttotalfee.Text = ddl_consultationfee.SelectedItem.Text;
+
+                if (hfPageSoapId.Value == "00000000-0000-0000-0000-000000000000")
+                {
+                    ddlForm_Type.SelectedValue = "7ccd0a7e-9001-48ff-8052-ed07cf5716bb";
+                }
+                else
+                    ddlForm_Type.SelectedValue = hfPageSoapId.Value;
+
+
+                log.Debug(LogLibrary.Logging("S", "getSOAP", Helper.GetLoginUser(this), "(param:"+hfEncounterId.Value+","+long.Parse(hfPatientId.Value) + "," + long.Parse(hfAdmissionId.Value) + "," + Helper.organizationId + "," + long.Parse(Helper.GetDoctorID(this))));
+                var getsoap = clsSOAP.getSOAP(hfEncounterId.Value, long.Parse(hfPatientId.Value), long.Parse(hfAdmissionId.Value), Helper.organizationId, long.Parse(Helper.GetDoctorID(this)));
+                ResultSOAP Jsongetsoap = JsonConvert.DeserializeObject<ResultSOAP>(getsoap.Result.ToString());
+                log.Debug(LogLibrary.Logging("E", "getSOAP", Helper.GetLoginUser(this), Jsongetsoap.ToString()));
+
+                Session[Helper.Sessionsoapmodel] = Jsongetsoap.list;
+                subjectiveControl.initializevalue(Jsongetsoap.list.subjective,Jsongetsoap.list.patient_disease,Jsongetsoap.list.patient_surgery, Jsongetsoap.list.patient_allergy,Jsongetsoap.list.patient_medication);
+                objectiveControl.initializevalue(Jsongetsoap.list.objective);
+                analysisControl.initializevalue(Jsongetsoap.list.assessment);
+                planningControl1.initializevalue(Jsongetsoap,header);
+
+                preview.NavigateUrl = preview.NavigateUrl + "?idPatient=" + hfPatientId.Value.ToString() + "&AdmissionId=" + hfAdmissionId.Value.ToString() + "&EncounterId=" + hfEncounterId.Value.ToString();
+                email.NavigateUrl = email.NavigateUrl + "?idPatient=" + hfPatientId.Value.ToString() + "&AdmissionId=" + hfAdmissionId.Value.ToString() + "&EncounterId=" + hfEncounterId.Value.ToString();
+
+                log.Info(LogLibrary.Logging("E", "Page_Load", Helper.GetLoginUser(this), ""));
+            }
+        }
+    }
+
+    protected void btnSubmitModal_click(object sender, EventArgs e)
+    {
+        SOAP soapmodel = (SOAP)Session[Helper.Sessionsoapmodel];
+        if (soapmodel.save_mode == 1)
+        {
+
+        }
+        else
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalsubmit", "$('#modalsubmit').modal();", true);
+        }
+        
+    }
+    protected void btnChoose_onClick(object sender, EventArgs e)
+    {
+        Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["pagefaid"], ddlForm_Type.SelectedValue);
+        Helper.ResponseRedirectSOAP(Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["pagefaid"], ddlForm_Type.SelectedValue);
+    }
+    protected void btnPreview_click(object sender, EventArgs e)
+    {
+        SoapPagePreview.initializevalue(Helper.organizationId, long.Parse(hfPatientId.Value), long.Parse(hfAdmissionId.Value), Guid.Parse(hfEncounterId.Value));
+    }
+
+    protected void btnSubmit_click(object sender, EventArgs e)
+    {
+        try
+        {
+            bool qty_flag = planningControl1.CheckQuantityPrescription(1);
+            bool qtycomp_flag = planningControl1.CheckQuantityPrescription(2);
+            bool qtycomp_detail_flag = planningControl1.CheckQuantityPrescription(3);
+            bool qtycons_flag = planningControl1.CheckQuantityPrescription(4);
+            if (!qty_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Drugs Qty');", true);
+            }
+            else if (!qtycomp_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Compound Qty');", true);
+            }
+            else if (!qtycomp_detail_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Compound Detail Qty');", true);
+            }
+            else if (!qtycons_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Consumables Qty');", true);
+            }
+            else
+            {
+                Submit_SOAP();
+            }
+        }
+        catch {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+    protected void btnsave_click(object sender, EventArgs e)
+    {
+        //listchecked = (List<ListChecked>)Session[Helper.SessionLabPathologyChecked];
+        try
+        {
+            bool qty_flag = planningControl1.CheckQuantityPrescription(1);
+            bool qtycomp_flag = planningControl1.CheckQuantityPrescription(2);
+            bool qtycomp_detail_flag = planningControl1.CheckQuantityPrescription(3);
+            bool qtycons_flag = planningControl1.CheckQuantityPrescription(4);
+            if (!qty_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Drugs Qty');", true);
+            }
+            else if (!qtycomp_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Compound Qty');", true);
+            }
+            else if(!qtycomp_detail_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Compound Detail Qty');", true);
+            }
+            else if (!qtycons_flag)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Please Check Consumables Qty');", true);
+            }
+            else
+            {
+                SaveDraft_SOAP();
+            }
+            //var getMapJson = JsonConvert.DeserializeObject<ResultListChecked>(getMap.Result.ToString());
+
+            //var getMap = clsCpoeMapping.SaveAsDraft(listchecked);
+            //var getMapJson = JsonConvert.DeserializeObject<ResultListChecked>(getMap.Result.ToString());
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+
+    }
+
+    public void Submit_SOAP()
+    {
+        log.Info(LogLibrary.Logging("S", "SaveDraft_SOAP", Helper.GetLoginUser(this), ""));
+        
+        SOAP soapmodel = (SOAP)Session[Helper.Sessionsoapmodel];
+        soapmodel = subjectiveControl.GetSubjectiveValues(soapmodel);
+        soapmodel = planningControl1.GetPlanningValues(soapmodel);
+        soapmodel = objectiveControl.GetObjectiveValues(soapmodel);
+        soapmodel = analysisControl.GetAssessmentValues(soapmodel);
+        soapmodel.save_mode = 1;
+
+        long itemid = long.Parse(ddl_consultationfee.SelectedValue);
+        double ConsultationAmount = double.Parse(ddl_consultationfee.SelectedItem.Text);
+        double discountamount = 0;
+        if (rbPrice2.Checked)
+        {
+            discountamount = double.Parse(ddl_consultationfee.SelectedItem.Text);
+        }
+        else if (rbPrice3.Checked)
+        {
+            discountamount = double.Parse(txtDiscount.Text);
+        }
+        
+
+        log.Debug(LogLibrary.Logging("S", "SaveAsDraftSOAP", Helper.GetLoginUser(this), soapmodel.ToString()));
+        //var getMap = clsSOAP.SubmitSOAP(soapmodel,itemid,ConsultationAmount,discountamount,txtProcedure.Text);
+        //log.Debug(LogLibrary.Logging("E", "SaveAsDraftSOAP", Helper.GetLoginUser(this), getMap.ToString()));
+
+        Response.Redirect(Request.RawUrl);
+
+        log.Info(LogLibrary.Logging("E", "SaveDraft_SOAP", Helper.GetLoginUser(this), ""));
+    }
+
+    public void SaveDraft_SOAP()
+    {
+        log.Info(LogLibrary.Logging("S", "SaveDraft_SOAP", Helper.GetLoginUser(this), ""));
+        SOAP soapmodel = (SOAP)Session[Helper.Sessionsoapmodel];
+        soapmodel = subjectiveControl.GetSubjectiveValues(soapmodel);
+        soapmodel = planningControl1.GetPlanningValues(soapmodel);
+        soapmodel = objectiveControl.GetObjectiveValues(soapmodel);
+        soapmodel = analysisControl.GetAssessmentValues(soapmodel);
+        
+        log.Debug(LogLibrary.Logging("S", "SaveAsDraftSOAP", Helper.GetLoginUser(this), soapmodel.ToString()));
+        //var getMap = clsSOAP.SaveAsDraftSOAP(soapmodel);
+        //log.Debug(LogLibrary.Logging("E", "SaveAsDraftSOAP", Helper.GetLoginUser(this), getMap.ToString()));
+        
+        Response.Redirect(Request.RawUrl);
+        log.Info(LogLibrary.Logging("E", "SaveDraft_SOAP", Helper.GetLoginUser(this), ""));
+    }
+
+
+    
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="ic_PreviewResume" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#fff}
+        </style>
+    </defs>
+    <path id="Path_1413" d="M0 0h24v24H0z" class="cls-1" data-name="Path 1413"/>
+    <path id="Path_1414" d="M12 4.5A11.827 11.827 0 0 0 1 12a11.817 11.817 0 0 0 22 0 11.827 11.827 0 0 0-11-7.5zM12 17a5 5 0 1 1 5-5 5 5 0 0 1-5 5z" class="cls-2" data-name="Path 1414"/>
+    <circle id="Ellipse_1114" cx="3" cy="3" r="3" class="cls-2" data-name="Ellipse 1114" transform="translate(9 9)"/>
+</svg>

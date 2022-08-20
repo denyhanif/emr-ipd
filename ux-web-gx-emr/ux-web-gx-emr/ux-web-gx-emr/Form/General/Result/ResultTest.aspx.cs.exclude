@@ -1,0 +1,883 @@
+﻿using log4net;
+using Microsoft.Ajax.Utilities;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using static PatientHistory;
+
+public class onoListGrid
+{ 
+    public String month { get; set; }
+    public String week { get; set; }
+    public String IdMonthWeek { get; set; }
+    public String onoList { get; set; }
+}
+
+[Serializable]
+public class pagingOno
+{
+    public int Id { get; set; }
+    public String ono { get; set; }
+}
+public class onoDate
+{
+    public DateTime Date { get; set; }
+    public String Ono { get; set; }
+}
+
+[Serializable]
+public class compareDataList
+{
+    public String ordeR_TESTNM { get; set; }
+    public String disP_SEQ { get; set; }
+    public String tesT_NM { get; set; }
+    public Boolean statusCheck { get; set; }
+}
+
+//Session[Helper.ViewStateOnoPaging]
+//Session[Helper.ViewStateDataItem]
+//Session[Helper.ViewStateItemList]
+//Session[Helper.ViewStateHeaderChecklist]
+
+public partial class Form_General_Result : System.Web.UI.Page
+{
+    List<LaboratoryResult> listlaboratory = new List<LaboratoryResult>();
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_General_Result));
+    
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            log4net.Config.XmlConfigurator.Configure();
+            btn_compare.Style.Add("margin-left", "30px");
+            //src_item_txt.Style.Add("")
+            if (Request.QueryString["idPatient"] == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["PagefaId"], Request.QueryString["PageSoapId"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+                hfPagefaId.Value = Request.QueryString["PagefaId"];
+                hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+                getHeader();
+                MainView.ActiveViewIndex = 0;
+            }
+
+            lblYear.Text = DateTime.Now.Year.ToString();
+            btnNext.Enabled = false;
+            compare_div.Style.Add("display", "none");
+            compare_result.Style.Add("display", "none");
+
+            try
+            {
+                log.Info(LogLibrary.Logging("S", "getLaboratoryByDate", Helper.GetLoginUser(this), ""));
+
+                var varResult = clsResult.getLaboratoryByDate(hfPatientId.Value, lblYear.Text);
+                if (varResult != null)
+                {
+                    ResultLaboratoryByWeek JsongetLaboratoryByDate = JsonConvert.DeserializeObject<ResultLaboratoryByWeek>(varResult.Result.ToString());
+                    if (JsongetLaboratoryByDate != null)
+                    {
+                        List<laboratoryByWeek> data = JsongetLaboratoryByDate.list;
+
+                        if (data != null)
+                        {
+                            groupLaboratoryByWeek(data);
+                        }
+                    }
+                    log.Info(LogLibrary.Logging("S", "labresult/", Helper.GetLoginUser(this), JsongetLaboratoryByDate.ToString()));
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(LogLibrary.Error("getLaboratoryByDate", Helper.GetLoginUser(this), ex.InnerException.Message));
+            }
+            log.Info(LogLibrary.Logging("E", "getLaboratoryByDate", Helper.GetLoginUser(this), ""));
+            
+        }
+
+    }
+
+    void getHeader ()
+    {
+        try
+        {
+            log.Info(LogLibrary.Logging("S", "GetPatientHeader ", hfPatientId.Value + " " + hfEncounterId.Value, ""));
+
+            var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+            ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+            PatientHeader header = JsongetPatientHistory.header;
+            PatientCard.initializevalue(header);
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+            LogLibrary.Error("GetPatientHeader", hfPatientId.Value.ToString() + " " + hfEncounterId.Value, ex.Message.ToString());
+        }
+        
+    }
+
+    protected void labResult_Click(object sender, EventArgs e)
+    {
+        MainView.ActiveViewIndex = 0;
+        MainView.Visible = true;
+    }
+
+    protected void radResult_Click(object sender, EventArgs e)
+    {
+        MainView.ActiveViewIndex = 1;
+        MainView.Visible = true;
+    }
+
+    protected void diagResult_Click(object sender, EventArgs e)
+    {
+        MainView.ActiveViewIndex = 2;
+        MainView.Visible = true;
+    }
+
+    protected void btnPrev_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            int existingYear = int.Parse(lblYear.Text.ToString());
+            lblYear.Text = (existingYear - 1).ToString();
+            btnNext.Enabled = true;
+
+            log.Info(LogLibrary.Logging("S", "getLaboratoryByDate", Helper.GetLoginUser(this), ""));
+            var varResult = clsResult.getLaboratoryByDate(hfPatientId.Value, lblYear.Text);
+            ResultLaboratoryByWeek JsongetLaboratoryByDate = JsonConvert.DeserializeObject<ResultLaboratoryByWeek>(varResult.Result.ToString());
+            log.Info(LogLibrary.Logging("S", "labresult/", Helper.GetLoginUser(this), JsongetLaboratoryByDate.ToString()));
+
+            List<laboratoryByWeek> data = JsongetLaboratoryByDate.list;
+
+            if (data != null)
+            {
+                groupLaboratoryByWeek(data);
+            }
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getLaboratoryByDate", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getLaboratoryByDate", Helper.GetLoginUser(this), ""));
+    }
+
+    protected void btnNext_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            int existingYear = int.Parse(lblYear.Text.ToString());
+            lblYear.Text = (existingYear + 1).ToString();
+            if ((int.Parse(lblYear.Text.ToString())) == DateTime.Now.Year)
+            {
+                btnNext.Enabled = false;
+            }
+
+            log.Info(LogLibrary.Logging("S", "getLaboratoryByDate", Helper.GetLoginUser(this), ""));
+            var varResult = clsResult.getLaboratoryByDate(hfPatientId.Value, lblYear.Text);
+            ResultLaboratoryByWeek JsongetLaboratoryByDate = JsonConvert.DeserializeObject<ResultLaboratoryByWeek>(varResult.Result.ToString());
+            log.Info(LogLibrary.Logging("S", "labresult/", Helper.GetLoginUser(this), JsongetLaboratoryByDate.ToString()));
+
+            List<laboratoryByWeek> data = JsongetLaboratoryByDate.list;
+
+            if (data != null)
+            {
+                groupLaboratoryByWeek(data);
+            }
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getLaboratoryByDate", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getLaboratoryByDate", Helper.GetLoginUser(this), ""));
+    }
+
+    void getPagingLab(List<laboratoryByWeek> data)
+    {
+        List<Int64> month = new List<Int64>();
+        List<laboratoryByWeek> month_data = new List<laboratoryByWeek>();
+        month.AddRange(data.DistinctBy(p => p.requestMonth).Select(x => x.requestMonth)); // take distinct single month
+
+        List<onoListGrid> dataGrid = new List<onoListGrid>();
+
+
+        foreach (Int64 month_ in month)
+        {
+            month_data = new List<laboratoryByWeek>();
+            month_data.AddRange(data.ToList().FindAll(x => x.requestMonth.Equals(month_))); // take distinct data foreaceh month
+
+            List<Int64> week = new List<Int64>();
+            week.AddRange(month_data.DistinctBy(x => x.requestWeek).Select(x => x.requestWeek)); // take distinct single week foreaceh month data
+
+            foreach (Int64 week_ in week)
+            {
+                List<laboratoryByWeek> week_data = new List<laboratoryByWeek>();
+                week_data.AddRange(month_data.FindAll(x => x.requestWeek == week_ & x.requestMonth == month_));
+
+                int i = 1;
+                int idGrid = 1;
+                var onoString = "";
+                int count = 1;
+                foreach (laboratoryByWeek data_ in week_data)
+                {
+                    if (i == 1)
+                    {
+                        onoString = data_.ono;
+                    }
+                    else
+                    {
+                        onoString = onoString + "," + data_.ono;
+                    }
+
+                    if (i % 5 == 0 || count == week_data.Count)
+                    {
+                        String dataId = data_.requestMonth + "" + data_.requestWeek + "" + idGrid;
+                        dataGrid.Add(new onoListGrid { month = data_.requestMonth.ToString(), week = data_.requestWeek.ToString(), IdMonthWeek = dataId, onoList = onoString });
+                        i = 1;
+                        onoString = "";
+                        idGrid++;
+                        count++;
+                    }
+                    else
+                    {
+                        i++;
+                        count++;
+                    }
+                }
+            }
+        }
+
+        DataTable dt = Helper.ToDataTable(dataGrid);
+
+        gvw_list_ono.DataSource = dt;
+        gvw_list_ono.DataBind();
+    }
+
+    void groupLaboratoryByWeek(List<laboratoryByWeek> data)
+    {
+        log.Info(LogLibrary.Logging("S", "Insert Data To Date Table per Year", Helper.GetLoginUser(this), ""));
+        //------------------------------- Create Table --------------------------------
+        StringBuilder result = new StringBuilder();
+        result.Append("<table border=\"1\" style=\"width:100%;border-color:lightgray;border-style:solid;\" id=\"tbl_date_lab\"><tr>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>January</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>February</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>March</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>April</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>May</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>June</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>July</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>August</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>September</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>October</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>November</b></td>" +
+            "<td style=\"width:100px\" colspan=\"4\"><b>December</b></td></tr>");
+
+
+        //------------------------------------------ INSERT DATA TO MONTH BOX WEEK BY WEEK ------------------------------------------------
+        int count = 0;
+        for (int k = 1; k <= 12; k++)
+        {
+            for (int j = 1; j <= 4; j++) {
+                if(data.Find(x => x.requestMonth == k & x.requestWeek == j) != null)
+                {
+                    var ono = "";
+                    var date = "";
+                    List<laboratoryByWeek> temp = data.FindAll(x => x.requestMonth == k & x.requestWeek == j).OrderByDescending(x => x.ono).ToList();
+                    foreach (laboratoryByWeek m in temp)
+                    {
+                        ono = ono +"@"+ m.ono;
+                        date = date + "-" + m.requestDate + "#"+ m.ono;
+                    }
+
+                    var link = "javascript:addOnoList('" + date + "'," + count + ")";
+                    result.Append("<td style=\"background-color:mediumpurple; height:40px; padding:0;\"><a style=\"display:inline-block;min-height:100%; width:100%; padding-top:11px\" href=\"" + link + ";\">" + j + "</a></td>");
+                    //result.Append("<td style=\"padding-right:0; padding-left:0;\"><input type=\"button\" value="+j+" style=\"background-color:mediumpurple; border: none\" onclick=\""+link+";\"/></td>");
+                    count++;
+                }
+                else
+                {
+                    result.Append("<td style=\"height:40px; padding:0;\">" + j+"</td>");
+                    count++;
+                }
+            }
+        }
+        result.Append("</tr></table>");
+        divContentReport.InnerHtml = result.ToString();
+        compare_result.Visible = true;
+        //------------------------------------------ INSERT DATA TO MONTH BOX WEEK BY WEEK ------------------------------------------------
+    }
+
+    void dataPerPaging(String listOno, List<compareDataList> listHeader) {
+        try
+        {
+            log.Info(LogLibrary.Logging("S", "getOnoData", Helper.GetLoginUser(this), ""));
+            List<LaboratoryCompare> test = new List<LaboratoryCompare>();
+            List<LaboratoryCompare> resultPerPaging = new List<LaboratoryCompare>();
+            var dataLaboratory = clsResult.getOnoData(hfPatientId.Value, listOno);
+            var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryCompare>(dataLaboratory.Result.ToString());
+            log.Info(LogLibrary.Logging("S", "annuallabcompare/", Helper.GetLoginUser(this), JsonLaboratory.ToString()));
+
+            resultPerPaging.AddRange(JsonLaboratory.list);
+            test.AddRange(JsonLaboratory.list);
+
+            if (listHeader != null)
+            {
+                test = new List<LaboratoryCompare>();
+                test.AddRange(resultPerPaging.FindAll(x => x.isInfo != 0));
+                foreach (compareDataList data in listHeader)
+                {
+                    var tempSem = test.FindAll(x => x.ordeR_TESTNM.Equals(data.ordeR_TESTNM));
+                    if (resultPerPaging.FindAll(x => x.ordeR_TESTNM.Equals(data.ordeR_TESTNM)).Count == 0)
+                    {
+                        test.Add(new LaboratoryCompare { ordeR_TESTNM = data.ordeR_TESTNM, tesT_NM = data.ordeR_TESTNM, reF_RANGE = "", unit = "", onO_1 = "", onO_2 = "", onO_3 = "", onO_4 = "", onO_5 = "" });
+                    }
+                    else
+                    {
+                        test.AddRange(resultPerPaging.FindAll(x => x.ordeR_TESTNM.Equals(data.ordeR_TESTNM)));
+                    }
+                }
+
+                test.OrderByDescending(x => x.reF_RANGE);
+            }
+            List<pagingData> test_paging_data = new List<pagingData>();
+            int Count = 1;
+            var ono_no_1 = "";
+            var date_no_1 = "";
+            var ono_no_2 = "";
+            var date_no_2 = "";
+            var ono_no_3 = "";
+            var date_no_3 = "";
+            var ono_no_4 = "";
+            var date_no_4 = "";
+            var ono_no_5 = "";
+            var date_no_5 = "";
+
+            StringBuilder compareResultHtml = new StringBuilder();
+
+            foreach (LaboratoryCompare data_paging in test)
+            {
+
+                if (data_paging.isInfo == 0)
+                {
+                    test_paging_data.Add(new pagingData { ordeR_TESTNM = data_paging.ordeR_TESTNM, tesT_NM = data_paging.tesT_NM, reF_RANGE = data_paging.reF_RANGE, unit = data_paging.unit, onO_1 = data_paging.onO_1, onO_2 = data_paging.onO_2, onO_3 = data_paging.onO_3, onO_4 = data_paging.onO_4, onO_5 = data_paging.onO_5 });
+                    if (Count == test.Count)
+                    {
+                        compareResultHtml.Append("<div style=\"height:300px; width:68%; position:fixed; overflow-x:hidden; overflow-y:auto;\" ><table class=\"table table-striped table-condensed\" style=\"overflow-x:hidden; overflow-y:auto;\"><tr>" +
+                            "<td style=\"font-size:14px;\"><b>Test</b></td>" +
+                            "<td style=\"font-size:14px;\"><b>" + date_no_1 + "</b></td>" +
+                            "<td style=\"font-size:14px;\"><b>" + date_no_2 + "</b></td>" +
+                            "<td style=\"font-size:14px;\"><b>" + date_no_3 + "</b></td>" +
+                            "<td style=\"font-size:14px;\"><b>" + date_no_4 + "</b></td>" +
+                            "<td style=\"font-size:14px;\"><b>" + date_no_5 + "</b></td>" +
+                            "<td style=\"font-size:14px;\"><b>Unit</td>" +
+                            "<td style=\"font-size:14px;\"><b>Reference</td></tr>");
+
+                        var headerLab = "";
+                        foreach (pagingData data in test_paging_data)
+                        {
+                            if (headerLab != data.ordeR_TESTNM)
+                            {
+                                compareResultHtml.Append("<tr>" +
+                                //"<td style=\"font-size:14px;\"><b>" + data.ordeR_TESTNM + "</b></td>" +
+                                "<td style=\"font-size:13px;\"><b>" + data.tesT_NM + "</b></td>" +
+                                "<td><b>" + data.onO_1 + "</b></td>" +
+                                "<td><b>" + data.onO_2 + "</b></td>" +
+                                "<td><b>" + data.onO_3 + "</b></td>" +
+                                "<td><b>" + data.onO_4 + "</b></td>" +
+                                "<td><b>" + data.onO_5 + "</b></td>" +
+                                "<td><b>" + data.unit + "</b></td>" +
+                                "<td><b>" + data.reF_RANGE + "</b></td></tr>");
+
+                                headerLab = data.ordeR_TESTNM;
+                            }
+                            else
+                            {
+                                compareResultHtml.Append("<tr>" +
+                               //"<td>" + data.ordeR_TESTNM + "</td>" +
+                               "<td>" + data.tesT_NM + "</td>" +
+                               "<td>" + data.onO_1 + "</td>" +
+                               "<td>" + data.onO_2 + "</td>" +
+                               "<td>" + data.onO_3 + "</td>" +
+                               "<td>" + data.onO_4 + "</td>" +
+                               "<td>" + data.onO_5 + "</td>" +
+                               "<td>" + data.unit + "</td>" +
+                               "<td>" + data.reF_RANGE + "</td></tr>");
+                            }
+
+                        }
+                        compareResultHtml.Append("</table></div>");
+
+                        paging_data.InnerHtml = compareResultHtml.ToString();
+                    }
+                }
+                else
+                {
+                    if (data_paging.isInfo == 1)
+                    {
+                        ono_no_1 = data_paging.onO_1;
+                        ono_no_2 = data_paging.onO_2;
+                        ono_no_3 = data_paging.onO_3;
+                        ono_no_4 = data_paging.onO_4;
+                        ono_no_5 = data_paging.onO_5;
+                    }
+                    else if (data_paging.isInfo == 3)
+                    {
+                        date_no_1 = data_paging.onO_1;
+                        date_no_2 = data_paging.onO_2;
+                        date_no_3 = data_paging.onO_3;
+                        date_no_4 = data_paging.onO_4;
+                        date_no_5 = data_paging.onO_5;
+                    }
+                }
+                Count++;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getOnoData", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getOnoData", Helper.GetLoginUser(this), ""));
+
+        
+    }
+    protected void searchLabCompare_Click(object sender, EventArgs e)
+    {
+        log.Info(LogLibrary.Logging("S", "searchLabCompare", Helper.GetLoginUser(this), ""));
+        var tempSementara = "";
+        tempSementara = hflistOno.Value;
+        hflistOno.Value = "";
+        String[] tempStringDate = null;
+        tempStringDate = tempSementara.Split('-');
+        String[] tempStringOno;
+        List<onoDate> tempOnoDate = new List<onoDate>();
+
+        for (int i=1; i < tempStringDate.Length; i++)
+        {
+            tempStringOno = tempStringDate[i].Split('#');
+            tempOnoDate.Add(new onoDate { Date = DateTime.Parse(tempStringOno[0]), Ono = tempStringOno[1]});
+
+        }
+        if (tempOnoDate.Count != 0)
+        {
+            splitOnoPaging(tempOnoDate);
+        }
+        
+        //Remove Session 
+        Session.Remove(Helper.ViewStateOnoPaging);
+        Session.Remove(Helper.ViewStateDataItem);
+        Session.Remove(Helper.ViewStateItemList);
+        Session.Remove(Helper.ViewStateHeaderChecklist);
+
+    }
+
+    void splitOnoPaging(List<onoDate> data)
+    {
+        try
+        {
+            log.Info(LogLibrary.Logging("S", "getOnoData", Helper.GetLoginUser(this), ""));
+            var temp = data.OrderByDescending(x => x.Date).OrderByDescending(x => x.Ono).ToList();
+            List<pagingOno> onoPaging = new List<pagingOno>();
+
+            var page = "";
+            int count = 1, id = 1;
+
+            for (int i = 0; i < temp.Count; i++)
+            {
+                if (((i + 1) % 5 == 0 || i == temp.Count - 1))
+                {
+                    if (i != 0 && count == 1)
+                    {
+                        onoPaging.Add(new pagingOno { Id = id, ono = page + temp[i].Ono });
+                    }
+                    else
+                    {
+                        onoPaging.Add(new pagingOno { Id = id, ono = page + "," + temp[i].Ono });
+                    }
+                    id++;
+                    page = "";
+                    count = 1;
+                }
+                else
+                {
+                    if (i == 0 || i % 5 == 0)
+                    {
+                        page = temp[i].Ono;
+                    }
+                    else
+                    {
+                        page = page + "," + temp[i].Ono;
+                    }
+                    count++;
+                }
+            }
+
+            hf_paging_number.Text = "1";
+
+            btn_next_ono.Enabled = true;
+            lbl_count_paging.Text = "of " + onoPaging.Count.ToString();
+
+            if (onoPaging.Count == 1)
+            {
+                btn_next_ono.Enabled = false;
+                btn_prev_ono.Enabled = false;
+            }
+
+            Session[Helper.ViewStateOnoPaging] = onoPaging;
+            List<LaboratoryCompare> test = new List<LaboratoryCompare>();
+
+            foreach (pagingOno ono_data in onoPaging)
+            {
+                var dataLaboratory = clsResult.getOnoData(hfPatientId.Value, ono_data.ono);
+                var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryCompare>(dataLaboratory.Result.ToString());
+                log.Info(LogLibrary.Logging("S", "annuallabcompare/", Helper.GetLoginUser(this), JsonLaboratory.ToString()));
+                test.AddRange(JsonLaboratory.list);
+            }
+
+            getDataItem(test); // Menampilkan header dengan semua header checked
+
+            List<compareDataList> listHeader = (List<compareDataList>)Session[Helper.ViewStateHeaderChecklist];
+
+            dataPerPaging(onoPaging[0].ono, listHeader); // Menampilkan data hasil compare dan header ketika load page pertama kali 
+
+            // Add Style css for header item 
+            compare_div.Style.Add("display", "block");
+            compare_result.Style.Add("display", "block");
+
+            DataTable dt = Helper.ToDataTable(test);
+            gvw_list_ono.DataSource = dt;
+            gvw_list_ono.DataBind();
+
+            dt = Helper.ToDataTable(onoPaging.ToList());
+            gvw_paging_ono.DataSource = dt;
+            gvw_paging_ono.DataBind();
+
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getOnoData", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getOnoData", Helper.GetLoginUser(this), ""));
+
+        
+    }
+
+    void getDataItem(List<LaboratoryCompare> listLabCompare )
+    {
+        log.Info(LogLibrary.Logging("S", "Get Header Item", Helper.GetLoginUser(this), ""));
+        var groupLaboratoryCompareItem = listLabCompare.FindAll(x => x.isInfo == 0 ).Select(
+                    x => new compareDataList
+                    {
+                        ordeR_TESTNM = x.ordeR_TESTNM,
+                        statusCheck = true
+                    }).DistinctBy(p => p.ordeR_TESTNM);
+
+        List<compareDataList> data = groupLaboratoryCompareItem.ToList();
+        Session[Helper.ViewStateDataItem] = listLabCompare.FindAll(x => x.isInfo != 1);
+        Session[Helper.ViewStateHeaderChecklist] = data;
+        Session[Helper.ViewStateItemList] = data;
+        DataTable dt = Helper.ToDataTable(data);
+        gv_item.DataSource = dt;
+        gv_item.DataBind();
+    }
+
+    protected void src_item_txt_TextChanged(object sender, EventArgs e)
+    {
+        log.Info(LogLibrary.Logging("S", "Search Header Item", Helper.GetLoginUser(this), ""));
+        DataTable dt = new DataTable();
+        List<LaboratoryCompare> listLabCompare = (List<LaboratoryCompare>)Session[Helper.ViewStateDataItem];
+        List<compareDataList> listItemCheck = new List<compareDataList>();
+        listItemCheck = (List<compareDataList>)Session[Helper.ViewStateItemList];
+        List<compareDataList> data = new List<compareDataList>();
+
+        if (listItemCheck != null)
+        {
+            var temp = src_item_txt.Text.ToLower().ToString();
+            var temp2 = listLabCompare[2].ordeR_TESTNM.ToLower();
+            var groupLaboratorySearch1 = listItemCheck.FindAll(x => x.ordeR_TESTNM.ToLower().Contains(src_item_txt.Text.ToLower().ToString())).Select(
+                   x => new compareDataList
+                   {
+                       ordeR_TESTNM = x.ordeR_TESTNM,
+                       tesT_NM = x.tesT_NM,
+                       statusCheck = x.statusCheck
+                   });
+            data = groupLaboratorySearch1.ToList();
+
+        }
+        else
+        {
+            var groupLaboratorySearch2 = listLabCompare.FindAll(x => x.ordeR_TESTNM.Contains(src_item_txt.Text) && x.isInfo == 0).Select(
+                    x => new compareDataList
+                    {
+                        ordeR_TESTNM = x.ordeR_TESTNM,
+                        statusCheck = false
+                    }).DistinctBy(x => x.ordeR_TESTNM);
+            data = groupLaboratorySearch2.ToList();
+        }
+
+        dt = Helper.ToDataTable(data);
+        gv_item.DataSource = dt;
+        gv_item.DataBind();
+        src_item_txt.Text = "";
+    }
+
+    protected void btn_compare_Click(object sender, EventArgs e)
+    {
+        log.Info(LogLibrary.Logging("S", "Compare Checked Header", Helper.GetLoginUser(this), ""));
+        List<LaboratoryCompare> temp = new List<LaboratoryCompare>();
+        List<LaboratoryCompare> compResult = (List<LaboratoryCompare>)Session[Helper.ViewStateDataItem];
+        List<compareDataList> itemGrid = new List<compareDataList>();
+        List<pagingOno> tempOnoList = (List<pagingOno>) Session[Helper.ViewStateOnoPaging];
+        List<LaboratoryCompare> test = new List<LaboratoryCompare>();
+        Int64 paging_number = Int64.Parse(hf_paging_number.Text.ToString());
+        String listOno = tempOnoList.Find(x => x.Id == paging_number).ono;
+
+        foreach (GridViewRow grid in gv_item.Rows)
+        {
+            CheckBox chkItem = (CheckBox)grid.FindControl("slt_item");
+            if (chkItem.Checked)
+            {
+                itemGrid.Add(new compareDataList { ordeR_TESTNM = ((Label)grid.FindControl("txt_item_name")).Text });
+            }
+        }
+        
+        dataPerPaging(listOno, itemGrid);
+
+    }
+
+    protected void slt_item_CheckedChanged(object sender, EventArgs e)
+    {
+        List<compareDataList> temp1 = (List<compareDataList>)Session[Helper.ViewStateHeaderChecklist];
+        List<compareDataList> temp = new List<compareDataList>();
+        List<LaboratoryCompare> itemGrid = new List<LaboratoryCompare>();
+        List<compareDataList> chkItem = new List<compareDataList>();
+        List<LaboratoryCompare> listLabCompare = (List<LaboratoryCompare>)Session[Helper.ViewStateDataItem];
+
+        listLabCompare = listLabCompare.FindAll(x => x.isInfo == 0);
+        if (temp1 == null)
+        {
+            temp = new List<compareDataList>();
+        }
+        else
+        {
+            temp.AddRange(temp1);
+        }
+
+        int count = temp.Count;
+        if (gv_item.Rows.Count != 0)
+        {
+            foreach (GridViewRow data in gv_item.Rows)
+            {
+                CheckBox ch = (CheckBox)data.FindControl("slt_item");
+                if (ch.Checked)
+                {
+                    if (temp1 == null)
+                    {
+                        temp.Add(new compareDataList { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                        chkItem.Add(new compareDataList { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                    }
+                    else
+                    {
+                        var saya = ((Label)data.FindControl("txt_item_name")).Text;
+                        if (temp.Find(x => x.ordeR_TESTNM == ((Label)data.FindControl("txt_item_name")).Text) == null)
+                        {
+                            temp.Add(new compareDataList { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                            chkItem.Add(new compareDataList { ordeR_TESTNM = ((Label)data.FindControl("txt_item_name")).Text, statusCheck = true });
+                        }
+                    }
+                }
+                else
+                {
+                    temp = temp.FindAll(x => x.ordeR_TESTNM != ((Label)data.FindControl("txt_item_name")).Text);
+                }
+            }
+
+            temp1 = new List<compareDataList>();
+            List<compareDataList> temp2 = new List<compareDataList>();
+            int j = 0;
+            if (temp.Count > 0)
+            {
+                foreach (compareDataList data in temp)
+                {
+                    if (j == 0)
+                    {
+                        temp1 = new List<compareDataList>();
+                        temp1.AddRange(listLabCompare.FindAll(x => x.ordeR_TESTNM != data.ordeR_TESTNM).Select(
+                        x => new compareDataList
+                        {
+                            tesT_NM = x.tesT_NM,
+                            ordeR_TESTNM = x.ordeR_TESTNM,
+                            statusCheck = false
+                        }
+                        ));
+                    }
+                    else
+                    {
+                        temp2 = new List<compareDataList>();
+                        temp2.AddRange(temp1.FindAll(x => x.ordeR_TESTNM != data.ordeR_TESTNM));
+                        temp1 = new List<compareDataList>();
+                        temp1.AddRange(temp2);
+                    }
+                    j++;
+
+                }
+                temp.AddRange(temp1.ToList().DistinctBy(p => p.ordeR_TESTNM));
+            }
+        }
+        DataTable dt = Helper.ToDataTable(temp);
+        gv_item.DataSource = dt;
+        gv_item.DataBind();
+
+        Session[Helper.ViewStateHeaderChecklist] = chkItem;
+        Session[Helper.ViewStateItemList] = temp;
+    }
+
+    protected void slt_all_item_CheckedChanged(object sender, EventArgs e)
+    {
+        CheckBox chkAll = (CheckBox)gv_item.HeaderRow.FindControl("slt_all_item");
+        List<compareDataList> temp = new List<compareDataList>();
+
+        foreach (GridViewRow data in gv_item.Rows)
+        {
+            CheckBox chkItem = (CheckBox)data.FindControl("slt_item");
+
+            if (chkAll.Checked)
+            {
+                chkItem.Checked = true;
+                var textHeader = ((Label)data.FindControl("txt_item_name")).Text;
+                temp.Add(new compareDataList { ordeR_TESTNM = textHeader, statusCheck = true });
+            }
+            else
+                chkItem.Checked = false;
+        }
+
+        Session[Helper.ViewStateItemList] = temp; 
+
+    }
+
+    protected void btn_prev_ono_Click(object sender, EventArgs e)
+    {
+        List<pagingOno> tempOnoList = (List<pagingOno>)Session[Helper.ViewStateOnoPaging];
+        List<LaboratoryCompare> test = new List<LaboratoryCompare>();
+
+        Int64 paging_number = Int64.Parse(hf_paging_number.Text.ToString());
+        String listOno = tempOnoList.Find(x => x.Id == paging_number - 1).ono;
+        List <compareDataList> ChkItem = new List<compareDataList>();
+
+        foreach (GridViewRow grid in gv_item.Rows)
+        {
+            CheckBox chkItem = (CheckBox)grid.FindControl("slt_item");
+            if (chkItem.Checked)
+            {
+                ChkItem.Add(new compareDataList { ordeR_TESTNM = ((Label)grid.FindControl("txt_item_name")).Text });
+            }
+        }
+
+        dataPerPaging(listOno, ChkItem);
+
+        hf_paging_number.Text = (paging_number - 1).ToString();
+        if (hf_paging_number.Text == "1") {
+            btn_prev_ono.Enabled = false;
+        }
+        btn_next_ono.Enabled = true;
+    }
+
+    protected void btn_next_ono_Click(object sender, EventArgs e)
+    {
+        List<pagingOno> tempOnoList = (List<pagingOno>)Session[Helper.ViewStateOnoPaging];
+        List<LaboratoryCompare> test = new List<LaboratoryCompare>();
+
+        Int64 paging_number = Int64.Parse(hf_paging_number.Text.ToString());
+        String listOno = tempOnoList.Find(x => x.Id == paging_number + 1).ono;
+        List<compareDataList> ChkItem = new List<compareDataList>();
+
+        foreach (GridViewRow grid in gv_item.Rows)
+        {
+            CheckBox chkItem = (CheckBox)grid.FindControl("slt_item");
+            if (chkItem.Checked)
+            {
+                ChkItem.Add(new compareDataList { ordeR_TESTNM = ((Label)grid.FindControl("txt_item_name")).Text });
+            }
+        }
+
+        dataPerPaging(listOno, ChkItem);
+
+        hf_paging_number.Text = (paging_number + 1).ToString();
+        if (hf_paging_number.Text == tempOnoList.Count.ToString())
+        {
+            btn_next_ono.Enabled = false;
+        }
+        btn_prev_ono.Enabled = true;
+    }
+
+    protected void hf_paging_number_TextChanged(object sender, EventArgs e)
+    {
+        List<pagingOno> tempOnoList = (List<pagingOno>)Session[Helper.ViewStateOnoPaging];
+        Int64 paging_number = Int64.Parse(hf_paging_number.Text.ToString());
+
+        if (tempOnoList.Count < paging_number)
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "Paging", "alert('The number inputed is greater then the number of page');", true);
+        }
+        else
+        {
+            List<LaboratoryCompare> test = new List<LaboratoryCompare>();
+
+            String listOno = tempOnoList.Find(x => x.Id == paging_number).ono;
+            List<compareDataList> ChkItem = new List<compareDataList>();
+
+            foreach (GridViewRow grid in gv_item.Rows)
+            {
+                CheckBox chkItem = (CheckBox)grid.FindControl("slt_item");
+                if (chkItem.Checked)
+                {
+                    ChkItem.Add(new compareDataList { ordeR_TESTNM = ((Label)grid.FindControl("txt_item_name")).Text });
+                }
+            }
+
+            dataPerPaging(listOno, ChkItem);
+
+            if (paging_number == 1)
+            {
+                if (tempOnoList.Count != 1)
+                {
+                    btn_prev_ono.Enabled = false;
+                    btn_next_ono.Enabled = true;
+                }
+                else
+                {
+                    btn_prev_ono.Enabled = false;
+                    btn_next_ono.Enabled = false;
+                }
+
+            }
+            else if (paging_number != 1)
+            {
+                if (tempOnoList.Count == paging_number)
+                {
+                    btn_prev_ono.Enabled = true;
+                    btn_next_ono.Enabled = false;
+                }
+                else
+                {
+                    btn_prev_ono.Enabled = true;
+                    btn_next_ono.Enabled = true;
+                }
+            }
+        }
+        
+
+    }
+}
+

@@ -1,0 +1,223 @@
+@font-face {
+  font-family: 'icomoon';
+  src:  url('fonts/icomoon.eot?oit5am');
+  src:  url('fonts/icomoon.eot?oit5am#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?oit5am') format('truetype'),
+    url('fonts/icomoon.woff?oit5am') format('woff'),
+    url('fonts/icomoon.svg?oit5am#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-ic_NextCalendar:before {
+  content: "\e918";
+}
+.icon-ic_PreviousCalendar:before {
+  content: "\e92d";
+}
+.icon-ic_PatientBack:before {
+  content: "\e900";
+}
+.icon-ic_Back .path1:before {
+  content: "\e901";
+  color: rgb(77, 155, 53);
+}
+.icon-ic_Back .path2:before {
+  content: "\e902";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_Compare .path1:before {
+  content: "\e903";
+  color: rgb(29, 204, 117);
+}
+.icon-ic_Compare .path2:before {
+  content: "\e904";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_Compound-orderset:before {
+  content: "\e905";
+  color: #cdd2dd;
+}
+.icon-ic_Diagnostic:before {
+  content: "\e906";
+  color: #7b88ff;
+}
+.icon-ic_DiagnosticEmpty:before {
+  content: "\e907";
+  color: #cdced9;
+}
+.icon-ic_EMR .path1:before {
+  content: "\e908";
+  color: rgb(42, 53, 147);
+}
+.icon-ic_EMR .path2:before {
+  content: "\e909";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_Female:before {
+  content: "\e90a";
+  color: #d625c2;
+}
+.icon-ic_FirstAnalysis:before {
+  content: "\e90b";
+}
+.icon-ic_History .path1:before {
+  content: "\e90c";
+  color: rgb(77, 155, 53);
+}
+.icon-ic_History .path2:before {
+  content: "\e90d";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_History .path3:before {
+  content: "\e90e";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_Lab .path1:before {
+  content: "\e90f";
+  color: rgb(157, 31, 195);
+}
+.icon-ic_Lab .path2:before {
+  content: "\e910";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_LabEmpty:before {
+  content: "\e911";
+  color: #cdced9;
+}
+.icon-ic_LogoEMR .path1:before {
+  content: "\e912";
+  color: rgb(229, 176, 1);
+}
+.icon-ic_LogoEMR .path2:before {
+  content: "\e913";
+  margin-left: -1em;
+  color: rgb(77, 155, 53);
+}
+.icon-ic_LogoEMR .path3:before {
+  content: "\e914";
+  margin-left: -1em;
+  color: rgb(26, 34, 104);
+}
+.icon-ic_LogoEMR .path4:before {
+  content: "\e915";
+  margin-left: -1em;
+  color: none;
+}
+.icon-ic_Male:before {
+  content: "\e916";
+  color: #263ae3;
+}
+.icon-ic_MedicationHistory:before {
+  content: "\e917";
+}
+.icon-ic_NoAllergies:before {
+  content: "\e919";
+  color: #cdced9;
+}
+.icon-ic_NoDrugsPrescription:before {
+  content: "\e91a";
+  color: #cdced9;
+}
+.icon-ic_NoMedicalHistory:before {
+  content: "\e91b";
+  color: #cdced9;
+}
+.icon-ic_NoMedication:before {
+  content: "\e91c";
+  color: #cdced9;
+}
+.icon-ic_NurseSOAP:before {
+  content: "\e91d";
+}
+.icon-ic_OrderSet .path1:before {
+  content: "\e91e";
+  color: rgb(248, 136, 5);
+}
+.icon-ic_OrderSet .path2:before {
+  content: "\e91f";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_OrderSet .path3:before {
+  content: "\e920";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_PatientHistory:before {
+  content: "\e921";
+}
+.icon-ic_Rad .path1:before {
+  content: "\e922";
+  color: rgb(255, 218, 0);
+}
+.icon-ic_Rad .path2:before {
+  content: "\e923";
+  margin-left: -1em;
+  color: rgb(23, 23, 23);
+}
+.icon-ic_Result:before {
+  content: "\e924";
+}
+.icon-ic_ScannedMR .path1:before {
+  content: "\e925";
+  color: rgb(248, 136, 5);
+}
+.icon-ic_ScannedMR .path2:before {
+  content: "\e926";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-ic_SOAP .path1:before {
+  content: "\e927";
+  color: rgb(23, 23, 23);
+}
+.icon-ic_SOAP .path2:before {
+  content: "\e928";
+  margin-left: -1em;
+  color: rgb(23, 23, 23);
+}
+.icon-ic_SOAP .path3:before {
+  content: "\e929";
+  margin-left: -1em;
+  color: rgb(23, 23, 23);
+}
+.icon-ic_SOAP .path4:before {
+  content: "\e92a";
+  margin-left: -1em;
+  color: rgb(23, 23, 23);
+}
+.icon-ic_SOAP .path5:before {
+  content: "\e92b";
+  margin-left: -1em;
+  color: rgb(23, 23, 23);
+}
+.icon-ic_SOAP .path6:before {
+  content: "\e92c";
+  margin-left: -1em;
+  color: rgb(0, 0, 0);
+}
+.icon-ic_Worklist:before {
+  content: "\e92e";
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:#171717}
+        </style>
+    </defs>
+    <path id="ic_Template" d="M1 24a1 1 0 0 1-1-1V1a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm1-2h20V6H2zm12-2v-6h6v6zM4 20v-6h6v6zm0-8V8h16v4z" class="cls-1"/>
+</svg>

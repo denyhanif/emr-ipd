@@ -1,0 +1,173 @@
+﻿using System;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Data;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using static PatientHistory;
+using static FirstAssesment;
+
+public partial class Form_General_FirstAssesment_Template_StdFirstAssesment : System.Web.UI.Page
+{
+    private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        log4net.ThreadContext.Properties["Organization"] = MyUser.GetHopeOrgID();
+
+        if (!IsPostBack)
+        {
+            Log.Info(LogConfig.LogStart());
+
+            HyperLink test = Master.FindControl("FirstAnalysisLink") as HyperLink;
+            test.Style.Add("background-color", "#D6DBFF");
+            if (Request.QueryString["EncounterId"] == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["PagefaId"], Request.QueryString["PageSoapId"], Request.QueryString["AppointmentId"], Request.QueryString["IsTele"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+                hfPagefaId.Value = Request.QueryString["PagefaId"];
+                hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+
+                var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+
+                ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+                PatientHeader header = JsongetPatientHistory.header;
+                PatientCard.initializevalue(header);
+            }
+            Session["famodel"] = null;
+            Session["CurrMedSurgery"] = null;
+            Session["CurrMedAllergy"] = null;
+
+            DataTable pagedatadt;
+            if (Session["pagedata"] == null)
+            {
+                List<PageSpecialty> listpagedata = new List<PageSpecialty>();
+                //var frequencyData = clsOrderSet.getFrequency();
+                var pagedata = clsFirstAssesment.GetPageSpecialty(2000000732,2);
+                var Jsonpagedata = JsonConvert.DeserializeObject<ResultPageSpecialty>(pagedata.Result.ToString());
+                listpagedata = Jsonpagedata.list;
+                pagedatadt = Helper.ToDataTable(listpagedata);
+                Session["pagedata"] = pagedatadt;
+            }
+            else
+                pagedatadt = (DataTable)Session["pagedata"];
+
+            ddlForm_Type.DataSource = pagedatadt;
+            ddlForm_Type.DataTextField = "page_specialty_name";
+            ddlForm_Type.DataValueField = "page_specialty_id";
+            ddlForm_Type.DataBind();
+            if (hfPagefaId.Value == "00000000-0000-0000-0000-000000000000")
+            {
+                ddlForm_Type.SelectedValue = "136219c4-7dff-4490-97f2-62f6667c2346";
+            }
+            else
+                ddlForm_Type.SelectedValue = hfPagefaId.Value;
+            
+            //var getsoap = clsSOAP.getSOAP(hfEncounterId.Value, long.Parse(hfPatientId.Value), long.Parse(hfAdmissionId.Value), Helper.organizationId, long.Parse(Helper.GetDoctorID(this)));
+            var getfa = clsFirstAssesment.getFirstAssesment(hfEncounterId.Value, long.Parse(hfPatientId.Value), long.Parse(hfAdmissionId.Value), Helper.organizationId, long.Parse(Helper.GetDoctorID(this)), hfPagefaId.Value);
+            ResultFirstAnalysis Jsongetfa = JsonConvert.DeserializeObject<ResultFirstAnalysis>(getfa.Result.ToString());
+            Session["famodel"] = Jsongetfa.list;
+
+            StdCurrentMedication.initializevalue(Jsongetfa.list.subjective_fa, Jsongetfa.list.patient_disease_fa, Jsongetfa.list.patient_surgery_fa, Jsongetfa.list.patient_allergy_fa);
+            StdGeneralCheckup.initializevalue(Jsongetfa.list.objective_fa);
+            KebutuhanInformasi.initializevalue(Jsongetfa.list.others_fa);
+            SosialBudaya.initializevalue(Jsongetfa.list.others_fa);
+
+            foreach (SubjectiveFA x in Jsongetfa.list.subjective_fa)
+            {
+                if (x.soap_mapping_id == Guid.Parse("e851f782-8210-49eb-a074-f26c104f5ddf"))
+                {
+                    if (x.remarks != "")
+                    {
+                        txtAnamnesis.Text = x.remarks;
+                    }
+                }
+            }
+
+            foreach (OthersFA x in Jsongetfa.list.others_fa)
+            {
+                if (x.others_mapping_id == Guid.Parse("f6a44fac-945c-4c43-b1ab-64864b270cc6"))
+                {
+                    if (x.value == "Alloanamnesis")
+                    {
+                        string[] temp = x.remarks.Split('#');
+                        txtNamaPkj.Text = temp[0];
+                        txtHubunganPkj.Text = temp[1];
+                        rbPkj2.Checked = true;
+                    }
+                    else
+                        rbPkj1.Checked = true;
+
+                }
+            }
+
+            Log.Info(LogConfig.LogEnd());
+        }
+        CheckVisibleDiv();
+    }
+    protected void btnChoose_onClick(object sender, EventArgs e)
+    {
+        Log.Info(LogConfig.LogStart());
+        Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], ddlForm_Type.SelectedValue, Request.QueryString["PageSoapId"], Request.QueryString["AppointmentId"], Request.QueryString["IsTele"]);
+        Helper.ResponseRedirectFA(Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], ddlForm_Type.SelectedValue, Request.QueryString["PageSoapId"]);
+        Log.Info(LogConfig.LogEnd());
+    }
+
+
+    public void CheckVisibleDiv()
+    {
+        if (rbPkj2.Checked)
+            ScriptManager.RegisterStartupScript(upStdFA, upStdFA.GetType(), "alert1", "ShowHidePkj();", true);
+        else
+            ScriptManager.RegisterStartupScript(upStdFA, upStdFA.GetType(), "alert1", "HidePkj();", true);
+    }
+
+    protected void BtnSaveAsDraft_onClick(object sender, EventArgs e)
+    {
+        Log.Info(LogConfig.LogStart());
+
+        FirstAnalysis fa = (FirstAnalysis)Session["famodel"];
+        fa.page_id = Guid.Parse("136219c4-7dff-4490-97f2-62f6667c2346");
+        foreach (SubjectiveFA x in fa.subjective_fa)
+        {
+            if (x.soap_mapping_id == Guid.Parse("e851f782-8210-49eb-a074-f26c104f5ddf"))
+            {
+                x.remarks = txtAnamnesis.Text;
+            }
+        }
+
+        foreach (OthersFA x in fa.others_fa)
+        {
+            if (x.others_mapping_id == Guid.Parse("f6a44fac-945c-4c43-b1ab-64864b270cc6"))
+            {
+                if (rbPkj2.Checked)
+                {
+                    x.value = "Alloanamnesis";
+                    x.remarks = txtNamaPkj.Text + "#"+ txtHubunganPkj.Text;
+                }
+                else
+                {
+                    x.value = "Autoanamnesis";
+                    x.remarks = "";
+                }
+            }
+        }
+
+        fa = StdCurrentMedication.getvalues(fa);
+        fa = StdGeneralCheckup.getvalues(fa);
+        fa = KebutuhanInformasi.getvalues(fa);
+        fa = SosialBudaya.getvalues(fa);
+
+        var getMap = clsFirstAssesment.SaveAsDraftFA(fa);
+        Response.Redirect(Request.RawUrl);
+
+        Log.Info(LogConfig.LogEnd());
+    }
+}

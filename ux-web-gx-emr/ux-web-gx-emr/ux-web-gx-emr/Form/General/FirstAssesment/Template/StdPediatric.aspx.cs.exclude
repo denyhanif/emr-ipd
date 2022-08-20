@@ -1,0 +1,87 @@
+﻿using System;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Data;
+using System.Web.UI.WebControls;
+using static PatientHistory;
+using static FirstAssesment;
+
+
+public partial class Form_General_FirstAssesment_Template_StdPediatric : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            HyperLink test = Master.FindControl("FirstAnalysisLink") as HyperLink;
+            test.Style.Add("background-color", "#D6DBFF");
+            if (Request.QueryString["EncounterId"] == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], Request.QueryString["PagefaId"], Request.QueryString["PageSoapId"], Request.QueryString["AppointmentId"], Request.QueryString["IsTele"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+                hfPagefaId.Value = Request.QueryString["PagefaId"];
+                hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+
+                var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
+
+                ResultPatientHeader JsongetPatientHistory = JsonConvert.DeserializeObject<ResultPatientHeader>(varResult.Result.ToString());
+                PatientHeader header = JsongetPatientHistory.header;
+                PatientCard.initializevalue(header);
+            }
+            Session["famodel"] = null;
+            Session["CurrMedSurgery"] = null;
+            Session["CurrMedAllergy"] = null;
+
+            DataTable pagedatadt;
+            if (Session["pagedata"] == null)
+            {
+                List<PageSpecialty> listpagedata = new List<PageSpecialty>();
+                //var frequencyData = clsOrderSet.getFrequency();
+                var pagedata = clsFirstAssesment.GetPageSpecialty(2000000732, 2);
+                var Jsonpagedata = JsonConvert.DeserializeObject<ResultPageSpecialty>(pagedata.Result.ToString());
+                listpagedata = Jsonpagedata.list;
+                pagedatadt = Helper.ToDataTable(listpagedata);
+                Session["pagedata"] = pagedatadt;
+            }
+            else
+                pagedatadt = (DataTable)Session["pagedata"];
+
+            ddlForm_Type.DataSource = pagedatadt;
+            ddlForm_Type.DataTextField = "page_specialty_name";
+            ddlForm_Type.DataValueField = "page_specialty_id";
+            ddlForm_Type.DataBind();
+            ddlForm_Type.SelectedValue = hfPagefaId.Value;
+            
+            //var getsoap = clsSOAP.getSOAP(hfEncounterId.Value, long.Parse(hfPatientId.Value), long.Parse(hfAdmissionId.Value), Helper.organizationId, long.Parse(Helper.GetDoctorID(this)));
+            var getfa = clsFirstAssesment.getFirstAssesment(hfEncounterId.Value, long.Parse(hfPatientId.Value), long.Parse(hfAdmissionId.Value), Helper.organizationId, long.Parse(Helper.GetDoctorID(this)), hfPagefaId.Value);
+            ResultFirstAnalysis Jsongetfa = JsonConvert.DeserializeObject<ResultFirstAnalysis>(getfa.Result.ToString());
+            Session["famodel"] = Jsongetfa.list;
+
+            StdCurrentMedication.initializevalue(Jsongetfa.list.subjective_fa, Jsongetfa.list.patient_disease_fa, Jsongetfa.list.patient_surgery_fa, Jsongetfa.list.patient_allergy_fa);
+        }
+    }
+
+    protected void btnChoose_onClick(object sender, EventArgs e)
+    {
+        string a = ddlForm_Type.SelectedValue;
+        Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], ddlForm_Type.SelectedValue, Request.QueryString["PageSoapId"], Request.QueryString["AppointmentId"], Request.QueryString["IsTele"]);
+        Helper.ResponseRedirectFA(Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], ddlForm_Type.SelectedValue, Request.QueryString["PageSoapId"]);
+    }
+
+    protected void BtnSaveAsDraft_onClick(object sender, EventArgs e)
+    {
+        FirstAnalysis fa = (FirstAnalysis)Session["famodel"];
+        fa.page_id = Guid.Parse("fcda0e46-16fd-40bc-b3a4-cc71fe372ef7");
+        
+        fa = StdCurrentMedication.getvalues(fa);
+        var getMap = clsFirstAssesment.SaveAsDraftFA(fa);
+        Response.Redirect(Request.RawUrl);
+    }
+}

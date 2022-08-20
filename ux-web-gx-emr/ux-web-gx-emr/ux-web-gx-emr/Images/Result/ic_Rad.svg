@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:#ffda00}.cls-2{fill:#171717}
+        </style>
+    </defs>
+    <g id="ic_Rad" transform="translate(-152.953 -135.951)">
+        <circle id="Ellipse_944" cx="12" cy="12" r="12" class="cls-1" data-name="Ellipse 944" transform="rotate(90 20.5 156.453)"/>
+        <path id="Subtraction_372" d="M5.579 18.4A9.618 9.618 0 0 1 0 9.663h7.542A2.089 2.089 0 0 0 8.7 11.534L5.579 18.4zm8.058 0l-3.113-6.851a2.089 2.089 0 0 0 1.194-1.888h7.5a9.644 9.644 0 0 1-5.579 8.74zM10.785 7.923a2.09 2.09 0 0 0-2.306 0L4.07 1.754a9.618 9.618 0 0 1 10.358-.462c.222.128.441.267.652.412z" class="cls-2" data-name="Subtraction 372" transform="translate(155.445 138.691)"/>
+    </g>
+</svg>

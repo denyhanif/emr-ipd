@@ -1,0 +1,1165 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using static PatientHistory;
+using log4net;
+using System.Web.Script.Serialization;
+
+public partial class Form_General_PatientDetail : System.Web.UI.Page
+{
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_General_PatientDetail));
+    public string setENG = "none";
+    public string setIND = "none";
+    public string isBahasa = "";
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (Session[Helper.SessionLanguage] == null)
+            Session[Helper.SessionLanguage] = 1;
+
+        if (Session[Helper.SessionLanguage].ToString() == "1")
+        {
+            setENG = "";
+            setIND = "none";
+            isBahasa = "ENG";
+            HFisBahasa.Value = "ENG";
+        }
+        else if (Session[Helper.SessionLanguage].ToString() == "2")
+        {
+            setENG = "none";
+            setIND = "";
+            isBahasa = "IND";
+            HFisBahasa.Value = "IND";
+        }
+        else
+        {
+            setENG = "";
+            setIND = "none";
+            isBahasa = "ENG";
+            HFisBahasa.Value = "ENG";
+        }
+
+        //set bahasa
+        ScriptManager.RegisterStartupScript(this.Page, this.Page.GetType(), "bahasa", "switchBahasa();", true);
+
+        if (!IsPostBack)
+        {
+            if (Session[Helper.SESSIONmarker] == null)
+            {
+                Session[Helper.SESSIONmarker] = Helper.setInitializeMarker();
+            }
+
+            HyperLink test = Master.FindControl("PatientDashboardLink") as HyperLink;
+            test.Style.Add("background-color", "#D6DBFF");
+            log4net.Config.XmlConfigurator.Configure();
+
+            if (Request.QueryString["EncounterId"] == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            if (Helper.GetLoginUser(this) == null)
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            if (Helper.GetDoctorID(this) == "")
+            {
+                Response.Redirect("~/Form/General/Login.aspx", true);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            else
+            {
+                log.Info(LogLibrary.Logging("S", "Page_Load", Helper.GetLoginUser(this), ""));
+
+                //Link Binder
+                Helper.LinkBinder(this, Request.QueryString["idPatient"], Request.QueryString["AdmissionId"], Request.QueryString["EncounterId"], "", Request.QueryString["PageSoapId"], Request.QueryString["AppointmentId"], Request.QueryString["IsTele"]);
+                hfPatientId.Value = Request.QueryString["idPatient"];
+                hfEncounterId.Value = Request.QueryString["EncounterId"];
+                hfAdmissionId.Value = Request.QueryString["AdmissionId"];
+                hfPageSoapId.Value = Request.QueryString["PageSoapId"];
+
+                lblYear.Text = DateTime.Now.Year.ToString();
+                btnNext.Enabled = false;
+                btnNext.Style.Add("cursor", "not-allowed");
+
+                getAdmissionHistory(long.Parse(hfPatientId.Value));
+                getPatientData(long.Parse(Helper.GetDoctorID(this)), long.Parse(hfPatientId.Value),long.Parse(hfAdmissionId.Value), hfEncounterId.Value);
+                getPatientHistorySOAP(long.Parse(hfPatientId.Value));
+                //getReminder();
+
+                log.Info(LogLibrary.Logging("E", "Page_Load", Helper.GetLoginUser(this), ""));
+                
+                List<MarkerConfig> markerlist = (List<MarkerConfig>)Session[Helper.SESSIONmarker];
+                markerlist.Find(x => x.key == "DOBmarker").value = "marked";
+                Session[Helper.SESSIONmarker] = markerlist;
+            }
+        }
+    }
+
+    #region hardcode test for reminder
+    //void getReminder()
+    //{
+    //    DataTable table = new DataTable();
+    //    table.Columns.Add("tgl_dibuat", typeof(DateTime));
+    //    table.Columns.Add("reminder", typeof(string));
+    //    table.Columns.Add("doctor", typeof(string));
+
+    //    table.Rows.Add(DateTime.Parse("2019-08-21"), "Pemberian Obat kolesterol selama 6 bulan", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs");
+    //    table.Rows.Add(DateTime.Parse("2019-08-12"), "Harus kembali seminggu lagi", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs");
+    //    table.Rows.Add(DateTime.Parse("2019-03-08"), "Buka Jahitan seminggu lagi", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs");
+    //    table.Rows.Add(DateTime.Parse("2019-04-20"), "Cek darah tanggal 3 bulan depan", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs");
+
+
+    //    gvw_reminder.DataSource = table;
+    //    gvw_reminder.DataBind();
+
+    //    DataTable outsidedt = new DataTable();
+    //    outsidedt.Columns.Add("tindakan",typeof(string));
+    //    outsidedt.Columns.Add("tanggal", typeof(DateTime));
+
+    //    outsidedt.Rows.Add("CBGA di Singapura", DateTime.Parse("2019-08-21"));
+    //    outsidedt.Rows.Add("CBGA di Panama", DateTime.Parse("2019-08-21"));
+
+    //    gvw_outsideprocedure.DataSource = outsidedt;
+    //    gvw_outsideprocedure.DataBind();
+
+    //    DataTable surgeryhistory = new DataTable();
+    //    surgeryhistory.Columns.Add("operasi", typeof(string));
+    //    surgeryhistory.Columns.Add("tanggal", typeof(DateTime));
+
+    //    surgeryhistory.Rows.Add("Odontektomi", DateTime.Parse("2019-08-21"));
+    //    surgeryhistory.Rows.Add("Appendiktomi", DateTime.Parse("2019-08-21"));
+
+    //    gvw_surgery.DataSource = surgeryhistory;
+    //    gvw_surgery.DataBind();
+
+    //    DataTable proceduredt = new DataTable();
+    //    proceduredt.Columns.Add("tindakan", typeof(string));
+    //    proceduredt.Columns.Add("doctor", typeof(string));
+    //    proceduredt.Columns.Add("tanggal", typeof(DateTime));
+
+    //    proceduredt.Rows.Add("jahit", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs", DateTime.Parse("2019-08-21"));
+    //    proceduredt.Rows.Add("jahit", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs", DateTime.Parse("2019-08-21"));
+    //    proceduredt.Rows.Add("jahit", "Prof Dr. dr. Eka J. Wahjoepramono, SpBs", DateTime.Parse("2019-08-21"));
+
+    //    gvw_procedure.DataSource = proceduredt;
+    //    gvw_procedure.DataBind();
+    //}
+    #endregion
+
+    void getPatientHistorySOAP(long PatientId)
+    {
+        var varResult = clsPatientDetail.getPatientHistorySOAP(Helper.organizationId, PatientId);
+        var JsonResult = JsonConvert.DeserializeObject<ResultPatientHistoryLite>(varResult.Result.ToString());
+
+        List<PatientHistoryLite> patienthistory = JsonResult.list;
+        
+        string labInactive = ResolveClientUrl("~/Images/Icon/ic_Lab_NotActive.svg");
+        string labActive = ResolveClientUrl("~/Images/Icon/ic_Lab.svg");
+        string radInactive = ResolveClientUrl("~/Images/Icon/ic_Rad_NotActive.svg");
+        string radActive = ResolveClientUrl("~/Images/Icon/ic_Rad.svg");
+        string patientInactive = ResolveClientUrl("~/Images/Icon/ic_History_NotActive.svg");
+        string patientActive = ResolveClientUrl("~/Images/Icon/ic_History.svg");
+
+        StringBuilder innerPatientHistorySOAP = new StringBuilder();
+        string modallabresult = "";
+        string modalradresult = "";
+        string modalphresult = "";
+
+        if (patienthistory.Count != 0)
+        {
+            if (isBahasa == "ENG")
+            {
+                innerPatientHistorySOAP.Append("<div class=\"col-sm-12\" style=\"padding-left:0px; padding-right:0px;\"><div id=\"header_SOAP\" class=\"row\" style=\"border: 1px solid #ddd; font-size: 14px; font-family: Helvetica; background-color: #dcdff4\">" +
+                                                "<div id=\"date_header\" class=\"col-sm-2\" style=\"width:11%;\"><b>Date</b></div>" +
+                                                "<div id=\"doctor_header\" class=\"col-sm-2\" style=\"width:11%;\"><b>Doctor</b></div>" +
+                                                "<div id=\"header_s\" class=\"col-sm-1\" style=\"width:13%;\"><b>S</b></div>" +
+                                                "<div id=\"header_o\" class=\"col-sm-1\" style=\"width:13%;\"><b>O</b></div>" +
+                                                "<div id=\"header_a\" class=\"col-sm-1\" style=\"width:13%;\"><b>A</b></div>" +
+                                                "<div id=\"header_p\" class=\"col-sm-1\" style=\"width:13%;\"><b>P</b></div>" +
+                                                "<div id=\"header_resep\" class=\"col-sm-3\" style=\"width:26%;\"><b>Prescription</b></div>" +
+                                            "</div> </div>");
+
+                modallabresult = "Laboratory Result";
+                modalradresult = "Radiology Result";
+                modalphresult = "Patient History";
+            }
+            else if (isBahasa == "IND")
+            {
+                innerPatientHistorySOAP.Append("<div class=\"col-sm-12\" style=\"padding-left:0px; padding-right:0px;\"><div id=\"header_SOAP\" class=\"row\" style=\"border: 1px solid #ddd; font-size: 14px; font-family: Helvetica; background-color: #dcdff4\">" +
+                                                "<div id=\"date_header\" class=\"col-sm-2\" style=\"width:11%;\"><b>Tanggal</b></div>" +
+                                                "<div id=\"doctor_header\" class=\"col-sm-2\" style=\"width:11%;\"><b>Dokter</b></div>" +
+                                                "<div id=\"header_s\" class=\"col-sm-1\" style=\"width:13%;\"><b>S</b></div>" +
+                                                "<div id=\"header_o\" class=\"col-sm-1\" style=\"width:13%;\"><b>O</b></div>" +
+                                                "<div id=\"header_a\" class=\"col-sm-1\" style=\"width:13%;\"><b>A</b></div>" +
+                                                "<div id=\"header_p\" class=\"col-sm-1\" style=\"width:13%;\"><b>P</b></div>" +
+                                                "<div id=\"header_resep\" class=\"col-sm-3\" style=\"width:26%;\"><b>Resep</b></div>" +
+                                            "</div> </div>");
+
+                modallabresult = "Hasil Laboratorium";
+                modalradresult = "Hasil Radiologi";
+                modalphresult = "Riwayat Pasien";
+            }
+
+            innerPatientHistorySOAP.Append("<div class=\"col-sm-12\" style=\"padding-left:0px; padding-right:0px;\">");
+
+            foreach (PatientHistoryLite data in patienthistory)
+            {
+                string linkLaboratory = "javascript:Lab(" + data.AdmissionId + ")";
+                string linkRadiology = "javascript:Rad(" + data.AdmissionId + ")";
+                string linkPatientHistory = "javascript:patientHistory(" + data.PatientId + "," + data.OrganizationId + ", " + data.AdmissionId + ", \"" + data.EncounterId + "\")";
+
+                innerPatientHistorySOAP.Append("<div class=\"row\"> <div style=\"padding : 5px 0px 5px 0px; border: 1px solid #ddd; max-height: 97px;overflow-y: auto; font-family: Helvetica; font-size: 12px;\" class=\"col-sm-12\">" +
+                                                    "<div class=\"col-sm-2\" style=\"width:11%;\">" +
+                                                        "<div style=\"font-size: 16px;\"><b>" + data.AdmissionDate + "</b></div>" +
+                                                        "<div class=\"font-content-dashboard\">" + data.AdmissionNo + "</div><div>");
+
+                if (data.IsLab == "1")
+                {
+                    innerPatientHistorySOAP.Append("<a target=\"_blank\" title=\"" + modallabresult + "\" href=\'" + linkLaboratory + "\'  style=\"color: blue; margin-right:5px; text-decoration:underline; \"><span><img src=\"" + labActive + "\" /></span></a>");
+                }
+                else if (data.IsLab != "1")
+                {
+                    innerPatientHistorySOAP.Append("<span style=\"margin-right:5px;\"><img src=\"" + labInactive + "\" title=\"" + modallabresult + "\"  /></span>");
+                }
+
+                if (data.IsRad == "1")
+                {
+                    innerPatientHistorySOAP.Append("<a target=\"_blank\" title=\"" + modalradresult + "\" href=\'" + linkRadiology + "\'  style=\"color: blue; margin-right:5px; text-decoration:underline; \"><span><img src=\"" + radActive + "\" /></span></a>");
+                }
+                else if (data.IsRad != "1")
+                {
+                    innerPatientHistorySOAP.Append("<span style=\"margin-right:5px;\"><img src=\"" + radInactive + "\" title=\"" + modalradresult + "\"  /></span>");
+                }
+
+                innerPatientHistorySOAP.Append("<a target=\"_blank\" title=\"" + modalphresult + "\" href=\'" + linkPatientHistory + "\'  style=\"color: blue; text-decoration:underline; \"><span><img src=\"" + patientActive + "\" /></span></a>");
+                innerPatientHistorySOAP.Append("</div></div>" +
+                                                    "<div class=\"col-sm-2 font-content-dashboard\" style=\"width:11%;\">" + data.DoctorName + "</div>");
+
+                var subjectPatient = data.Subjective.Replace("\\n", "\n").Split('\n');
+                innerPatientHistorySOAP.Append("<div style=\"overflow-wrap:break-word; width:13%;\" class=\"col-sm-1\">");
+                for (int i = 0; i < subjectPatient.Length; i++)
+                {
+                    innerPatientHistorySOAP.Append(subjectPatient[i] + "<br />");
+                }
+                innerPatientHistorySOAP.Append("</div>");
+
+                //"<div class=\"col-sm-1\">" + data.Subjective.Replace("\\n","<br />") + "</div>" +
+                innerPatientHistorySOAP.Append("<div style=\"overflow-wrap:break-word; width:13%;\" class=\"col-sm-1 font-content-dashboard\">" + data.Objective + "</div>" +
+                                                    "<div style=\"overflow-wrap:break-word; width:13%;\" class=\"col-sm-1 font-content-dashboard\">" + data.Diagnosis + "</div>" +
+                                                    "<div style=\"overflow-wrap:break-word; width:13%;\" class=\"col-sm-1 font-content-dashboard\">" + data.PlanningProcedure + "</div>" +
+                                                    "<div class=\"col-sm-3 font-content-dashboard\" style=\"width:26%\">" + data.Prescription.Replace("\\n", "<br />") + "</div>" +
+                                                    //"<div class=\"col-sm-3 poppop\" style=\"width:26%\" data-content=\"" + data.Prescription.Replace("\\n", "<br />") + "\" rel=\"popover\" data-placement=\"left\" data-container=\"body\" data-html=\"true\" data-original-title=\"Detail Prescription\" data-trigger=\"click\">" + data.Prescription.Replace("\\n", "<br />") + "</div>" +
+                                                "</div></div>");
+            }
+
+            innerPatientHistorySOAP.Append("</div>");
+        }
+        else
+        {
+            //innerPatientHistorySOAP.Append("<label>No Data</label>");
+            divNoSoap.Style.Add("display", "");
+        }
+        
+        SOAP_patientHistory.InnerHtml = innerPatientHistorySOAP.ToString();
+    }
+
+    //protected void styleze()
+    //{
+    //    foreach (GridViewRow rows in gvw_patientHistorySOAP.Rows)
+    //    {
+    //        TextBox txtObat = (TextBox)rows.FindControl("txt_prescription");
+    //        //TextBox txtsubjective = (TextBox)rows.FindControl("txtsubjective");
+    //        //txtObat.Text.Replace("\\n", "\r\n");
+
+    //        string text_str = txtObat.Text;
+    //        text_str = text_str.Replace("\\n", "\r\n");
+    //        txtObat.Text = string.Empty;
+    //        txtObat.Text = text_str;
+
+    //        //string text_strSub = txtsubjective.Text;
+    //        //text_strSub = text_strSub.Replace("\\n", "\r\n");
+    //        //txtsubjective.Text = string.Empty;
+    //        //txtsubjective.Text = text_strSub;
+    //    }
+
+    //    foreach (GridViewRow rows in gvw_patientHistorySOAP.Rows)
+    //    {
+    //        TextBox txtObat = (TextBox)rows.FindControl("txt_prescription");
+    //        //TextBox txtsubjective = (TextBox)rows.FindControl("txtsubjective");
+    //        //TextBox txtobjective = (TextBox)rows.FindControl("txtobjective");
+    //        //TextBox txtanamnesis = (TextBox)rows.FindControl("txtDiagnosa");
+    //        //TextBox txtprocedure = (TextBox)rows.FindControl("txtTindakan");
+
+    //        int heightObat = txtObat.Text.Split('\n').Length * 16;
+    //        //int heightS = txtsubjective.Text.Split('\n').Length * 16;
+    //        //int heightO = txtobjective.Text.Split('\n').Length * 16;
+    //        //int heightA = txtanamnesis.Text.Split('\n').Length * 16;
+    //        //int heightP = txtprocedure.Text.Split('\n').Length * 16;
+
+    //        int[] arr = new int[5];
+
+    //        arr = new int[] { heightObat/*, heightS, heightO, heightA, heightP*/ };
+
+    //        int maxHeight = arr.Max();
+
+    //        txtObat.Height = maxHeight;
+    //        //txtsubjective.Height = maxHeight;
+    //        //txtobjective.Height = maxHeight;
+    //        //txtanamnesis.Height = maxHeight;
+    //        //txtprocedure.Height = maxHeight;
+    //    }
+    //}
+
+    void getAdmissionHistory(long PatientId)
+    {
+        log.Info(LogLibrary.Logging("S", "getAdmissionHistory", Helper.GetLoginUser(this), ""));
+
+        try
+        {
+            divContentReport.InnerHtml = "";
+
+            long DoctorId = long.Parse(Helper.GetDoctorID(this));
+            string Year = lblYear.Text.ToString();
+
+            StringBuilder result = new StringBuilder();
+            //Generate Header
+            if (isBahasa == "ENG")
+            {
+                result.Append("<table border=\"1\" style=\"width:100%;border-color:lightgray;border-style:solid;\" class=\"font-content-dashboard\"><tr><td style=\"width:100px\"><b>Specialities</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>January</b></td><td style=\"width:100px\"colspan=\"4\"><b>February</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>March</b></td><td style=\"width:100px\" colspan=\"4\"><b>April</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>May</b></td><td style=\"width:100px\" colspan=\"4\"><b>June</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>July</b></td><td style=\"width:100px\" colspan=\"4\"><b>August</b></td><td style=\"width:100px\" colspan = \"4\">" +
+                              "<b>September</b></td><td style=\"width:100px\" colspan=\"4\"><b>October</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>November</b></td><td style=\"width:100px\" colspan=\"4\"><b>December</b></td></tr>");
+            }
+            else if(isBahasa == "IND")
+            {
+                result.Append("<table border=\"1\" style=\"width:100%;border-color:lightgray;border-style:solid;\" class=\"font-content-dashboard\"><tr><td style=\"width:100px\"><b>Spesialis</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>Januari</b></td><td style=\"width:100px\"colspan=\"4\"><b>Februari</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>Maret</b></td><td style=\"width:100px\" colspan=\"4\"><b>April</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>Mei</b></td><td style=\"width:100px\" colspan=\"4\"><b>Juni</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>Juli</b></td><td style=\"width:100px\" colspan=\"4\"><b>Agustus</b></td><td style=\"width:100px\" colspan = \"4\">" +
+                              "<b>September</b></td><td style=\"width:100px\" colspan=\"4\"><b>Oktober</b></td><td style=\"width:100px\" colspan=\"4\">" +
+                              "<b>November</b></td><td style=\"width:100px\" colspan=\"4\"><b>Desember</b></td></tr>");
+            }
+
+            log.Debug(LogLibrary.Logging("S", "GetAdmissionHistory", Helper.GetLoginUser(this), ""));
+            var varResult = clsPatientDetail.GetAdmissionHistory(PatientId, DoctorId, int.Parse(Year));
+            ResultAdmissionHistory JsongetAdmissionHistory = JsonConvert.DeserializeObject<ResultAdmissionHistory>(varResult.Result.ToString());
+            List<AdmissionHistory> DataAdmissionHistory = JsongetAdmissionHistory.list;
+            log.Debug(LogLibrary.Logging("S", "GetAdmissionHistory", Helper.GetLoginUser(this), JsongetAdmissionHistory.ToString()));
+
+            DataTable Result = new DataTable();
+            Result = Helper.ToDataTable(DataAdmissionHistory);
+
+            if (Result.Rows.Count > 0)
+            {
+                Labeladmishis.Style.Add("display", "none");
+
+                DataTable dtOPD = new DataTable();
+                DataTable dtIPD = new DataTable();
+                DataTable dtED = new DataTable();
+                DataTable dtProcedure = new DataTable();
+
+                if (Result.Select("Type = 'OPD'").Count() > 0)
+                {
+                    dtOPD = Result.Select("Type = 'OPD'").CopyToDataTable();
+                }
+                if (Result.Select("Type = 'IPD'").Count() > 0)
+                {
+                    dtIPD = Result.Select("Type = 'IPD'").CopyToDataTable();
+                }
+                if (Result.Select("Type = 'ED'").Count() > 0)
+                {
+                    dtED = Result.Select("Type = 'ED'").CopyToDataTable();
+                }
+                if (Result.Select("Type = 'PROCEDURE'").Count() > 0)
+                {
+                    dtProcedure = Result.Select("Type = 'PROCEDURE'").CopyToDataTable();
+                }
+
+                #region DUMMY
+                //dtOPD.Columns.Add("Type");
+                //dtOPD.Columns.Add("Specialty");
+                //dtOPD.Columns.Add("AdmissionNo");
+                //dtOPD.Columns.Add("AdmissionDate");
+                //dtOPD.Columns.Add("AdmissionId");
+                //dtOPD.Columns.Add("AdmissionMonth");
+                //dtOPD.Columns.Add("AdmissionWeek");
+                //dtOPD.Columns.Add("LabSalesOrderNo");
+                //dtOPD.Columns.Add("RadSalesOrderNo");
+                //dtOPD.Columns.Add("OrganizationId");
+                //dtOPD.Columns.Add("OrgCd");
+                //dtOPD.Columns.Add("DoctorName");
+                //dtOPD.Columns.Add("isMyself");
+
+                //dtOPD.Rows.Add(new Object[] { "OPD", "DENTIST", "OPA0000001", "31 January 2018", "12345", "1", "4", "123123", "234234", "2", "Dr.A", "0" });
+                //dtOPD.Rows.Add(new Object[] { "OPD", "DENTIST", "OPA01230001", "1 March 2018", "434", "3", "1", "2342", "123458765", "27", "Dr.ACCC", "0" });
+                //dtOPD.Rows.Add(new Object[] { "OPD", "GENERAL PRACTITIONER", "OPA0003453001", "1 January 2018", "356546", "1", "1", "-", "-", "4", "Dr.WWWW", "0" });
+                //dtOPD.Rows.Add(new Object[] { "OPD", "GENERAL PRACTITIONER", "OPA234450001", "2 December 2018", "353", "12", "1", "-", "-", "21", "Dr.ZZsklvndkjfvndkjfnksjdfksdjfnksjdfnskjdfnksjdfnZZ", "0" });
+                //dtOPD.Rows.Add(new Object[] { "OPD", "MEDICAL REHABILITATION", "OPA0045601", "12 December 2018", "2342344", "12", "2", "-", "-", "3", "Dr.B", "1" });
+                //dtOPD.Rows.Add(new Object[] { "OPD", "MEDICAL REHABILITATION", "OPA00456301", "13 December 2018", "22342344", "12", "2", "-", "23434", "2", "Dr.B", "1" });
+                #endregion
+
+                if (dtOPD.Rows.Count > 0)
+                {
+                    //Generate OPD
+                    result.Append("<tr style=\"background-color:#CDD2DD\"><td style=\"text-aligh:left\"><b>OPD</b></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td></tr>");
+
+                    DataTable GetSpecialty = dtOPD.DefaultView.ToTable(true, "Specialty");
+
+                    //int numberr = 0;
+                    for (int i = 0; i < GetSpecialty.Rows.Count; i++)
+                    {
+                        result.Append("<tr><td style=\"text-align:left;padding-left:5px; text-transform:capitalize;\">" + GetSpecialty.Rows[i]["Specialty"].ToString().ToLower() + "</td>");
+
+                        DataTable LoopAdmission = dtOPD.Select("Specialty = '" + GetSpecialty.Rows[i]["Specialty"].ToString() + "'").CopyToDataTable();
+
+                        for (int month = 1; month <= 12; month++)
+                        {
+                            if (LoopAdmission.Select("AdmissionMonth = " + month).Count() > 0)
+                            {
+                                for (int week = 1; week <= 4; week++)
+                                {
+                                    if (LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).Count() > 0)
+                                    {
+                                        DataTable LoopContent = LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).CopyToDataTable();
+
+                                        var ListAdmission = "";
+
+                                        int CheckColor = 0;
+                                        //numberr++;
+
+                                        for (int loopcontent = 0; loopcontent < LoopContent.Rows.Count; loopcontent++)
+                                        {
+                                            if (loopcontent != 0)
+                                            {
+                                                ListAdmission += "|";
+                                            }
+
+                                            if (LoopContent.Rows[loopcontent]["isMyself"].ToString() == "1")
+                                            {
+                                                CheckColor = 1;
+                                            }
+
+                                            ListAdmission += DateTime.Parse( LoopContent.Rows[loopcontent]["AdmissionDate"].ToString()).ToString("dd MMM yyyy") + "#";
+
+                                            if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() != "-")
+                                            {
+                                                ListAdmission += LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() + "#";
+                                            }
+                                            else if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() == "-")
+                                            {
+                                                ListAdmission += "-#";
+                                            }
+                                            if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() != "-")
+                                            {
+                                                ListAdmission += LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() + "#";
+                                            }
+                                            else if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() == "-")
+                                            {
+                                                ListAdmission += "-#";
+                                            }
+                                            ListAdmission += LoopContent.Rows[loopcontent]["encounterId"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["AdmissionId"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["DoctorName"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["isMyself"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["Diagnosis"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["organizationId"].ToString();
+                                        }
+
+                                        string link = "javascript:Open('" + ListAdmission + "')";
+
+                                        if (CheckColor == 0)
+                                        {
+                                            result.Append("<td style=\"width:20px;background-color:gray\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%; background-color:gray;border:none;margin:0 0 0 0\">&nbsp;</button>  </td>");
+                                        }
+                                        else
+                                        {
+                                            result.Append("<td style=\"width:20px;background-color:cornflowerblue\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%; background-color:cornflowerblue;border:none;margin:0 0 0 0\">&nbsp;</button> </td>");
+                                        }
+
+                                        //string link = "javascript:Open('" + ListAdmission + "','" + numberr + "')";
+                                        //if (CheckColor == 0)
+                                        //{
+                                        //    result.Append("<td style=\"width:20px;background-color:gray\"><button type=\"button\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:gray;border:none;margin:0 0 0 0\">&nbsp;</button> <button id=\"mybtn" + numberr + "\" type=\"button\"  data-toggle=\"popover-x\" data-target=\"#myPopover" + numberr + "\" data-placement=\"top\">o</button> </td>");
+                                        //}
+                                        //else
+                                        //{
+                                        //    result.Append("<td style=\"width:20px;background-color:cornflowerblue\"><button type=\"button\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:cornflowerblue;border:none;margin:0 0 0 0\">&nbsp;</button> <button id=\"mybtn" + numberr + "\" type=\"button\" data-toggle=\"popover-x\" data-target=\"#myPopover" + numberr + "\" data-placement=\"top\">o</button> </td>");
+                                        //}
+                                    }
+                                    else
+                                    {
+                                        result.Append("<td style=\"width:20px;\"></td>");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                result.Append("<td style=\"width:20px;\"></td>" +
+                                              "<td style=\"width:20px;\"></td>" +
+                                              "<td style=\"width:20px;\"></td>" +
+                                              "<td style=\"width:20px;\"></td>");
+                            }
+                        }
+
+                        result.Append("</tr>");
+                    }
+                }
+                if (dtIPD.Rows.Count > 0)
+                {
+                    //Generate IPD
+                    result.Append("<tr style=\"background-color:#CDD2DD\"><td style=\"text-aligh:left\"><b>IPD</b></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td></tr>");
+
+                    result.Append("<tr><td style=\"text-align:left;padding-left:5px; text-transform:capitalize;\"><b>-</b></td>");
+
+                    DataTable LoopAdmission = dtIPD.Select().CopyToDataTable();
+
+                    for (int month = 1; month <= 12; month++)
+                    {
+                        if (LoopAdmission.Select("AdmissionMonth = " + month).Count() > 0)
+                        {
+                            for (int week = 1; week <= 4; week++)
+                            {
+                                if (LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).Count() > 0)
+                                {
+                                    DataTable LoopContent = LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).CopyToDataTable();
+
+                                    var ListAdmission = "";
+
+                                    int CheckColor = 0;
+
+                                    for (int loopcontent = 0; loopcontent < LoopContent.Rows.Count; loopcontent++)
+                                    {
+                                        if (loopcontent != 0)
+                                        {
+                                            ListAdmission += "|";
+                                        }
+
+                                        if (LoopContent.Rows[loopcontent]["isMyself"].ToString() == "1")
+                                        {
+                                            CheckColor = 1;
+                                        }
+
+                                        ListAdmission += LoopContent.Rows[loopcontent]["AdmissionDate"].ToString() + "#";
+
+                                        if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() != "-")
+                                        {
+                                            ListAdmission += LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() + "#";
+                                        }
+                                        else if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() == "-")
+                                        {
+                                            ListAdmission += "-#";
+                                        }
+                                        if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() != "-")
+                                        {
+                                            ListAdmission += LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() + "#";
+                                        }
+                                        else if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() == "-")
+                                        {
+                                            ListAdmission += "-#";
+                                        }
+                                        ListAdmission += LoopContent.Rows[loopcontent]["encounterId"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["AdmissionId"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["DoctorName"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["isMyself"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["Diagnosis"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["organizationId"].ToString();
+                                    }
+
+                                    string link = "javascript:Open('" + ListAdmission + "')";
+
+                                    if (CheckColor == 0)
+                                    {
+                                        result.Append("<td style=\"width:20px;background-color:gray\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:gray;border:none;margin:0 0 0 0\">&nbsp;</button></td>");
+                                    }
+                                    else
+                                    {
+                                        result.Append("<td style=\"width:20px;background-color:cornflowerblue\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:cornflowerblue;border:none;margin:0 0 0 0\">&nbsp;</button></td>");
+                                    }
+                                }
+                                else
+                                {
+                                    result.Append("<td style=\"width:20px;\"></td>");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            result.Append("<td style=\"width:20px;\"></td>" +
+                                          "<td style=\"width:20px;\"></td>" +
+                                          "<td style=\"width:20px;\"></td>" +
+                                          "<td style=\"width:20px;\"></td>");
+                        }
+                    }
+
+                    result.Append("</tr>");
+
+                }
+                if (dtED.Rows.Count > 0)
+                {
+                    //Generate ED
+                    result.Append("<tr style=\"background-color:#CDD2DD\"><td style=\"text-aligh:left\"><b>ED</b></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td></tr>");
+
+                    result.Append("<tr><td style=\"text-align:left;padding-left:5px; text-transform:capitalize;\"><b>-</b></td>");
+
+                    DataTable LoopAdmission = dtED.Select().CopyToDataTable();
+
+                    for (int month = 1; month <= 12; month++)
+                    {
+                        if (LoopAdmission.Select("AdmissionMonth = " + month).Count() > 0)
+                        {
+                            for (int week = 1; week <= 4; week++)
+                            {
+                                if (LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).Count() > 0)
+                                {
+                                    DataTable LoopContent = LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).CopyToDataTable();
+
+                                    var ListAdmission = "";
+
+                                    int CheckColor = 0;
+
+                                    for (int loopcontent = 0; loopcontent < LoopContent.Rows.Count; loopcontent++)
+                                    {
+                                        if (loopcontent != 0)
+                                        {
+                                            ListAdmission += "|";
+                                        }
+
+                                        if (LoopContent.Rows[loopcontent]["isMyself"].ToString() == "1")
+                                        {
+                                            CheckColor = 1;
+                                        }
+
+                                        ListAdmission += LoopContent.Rows[loopcontent]["AdmissionDate"].ToString() + "#";
+
+                                        if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() != "-")
+                                        {
+                                            ListAdmission += LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() + "#";
+                                        }
+                                        else if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() == "-")
+                                        {
+                                            ListAdmission += "-#";
+                                        }
+                                        if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() != "-")
+                                        {
+                                            ListAdmission += LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() + "#";
+                                        }
+                                        else if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() == "-")
+                                        {
+                                            ListAdmission += "-#";
+                                        }
+                                        ListAdmission += LoopContent.Rows[loopcontent]["encounterId"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["AdmissionId"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["DoctorName"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["isMyself"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["Diagnosis"].ToString() + "#"
+                                            + LoopContent.Rows[loopcontent]["organizationId"].ToString();
+                                    }
+
+                                    string link = "javascript:Open('" + ListAdmission + "')";
+
+                                    if (CheckColor == 0)
+                                    {
+                                        result.Append("<td style=\"width:20px;background-color:gray\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:gray;border:none;margin:0 0 0 0\">&nbsp;</button></td>");
+                                    }
+                                    else
+                                    {
+                                        result.Append("<td style=\"width:20px;background-color:cornflowerblue\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:cornflowerblue;border:none;margin:0 0 0 0\">&nbsp;</button></td>");
+                                    }
+                                }
+                                else
+                                {
+                                    result.Append("<td style=\"width:20px;\"></td>");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            result.Append("<td style=\"width:20px;\"></td>" +
+                                          "<td style=\"width:20px;\"></td>" +
+                                          "<td style=\"width:20px;\"></td>" +
+                                          "<td style=\"width:20px;\"></td>");
+                        }
+                    }
+
+                    result.Append("</tr>");
+                }
+                if (dtProcedure.Rows.Count > 0)
+                {
+                    //Generate Procedure
+                    result.Append("<tr style=\"background-color:#CDD2DD\"><td style=\"text-aligh:left\"><b>PROCEDURE</b></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td><td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td>" +
+                                  "<td style=\"width:100px;\" colspan=\"4\"></td></tr>");
+
+                    DataTable GetSpecialty = dtProcedure.DefaultView.ToTable(true, "Specialty");
+
+                    for (int i = 0; i < GetSpecialty.Rows.Count; i++)
+                    {
+                        result.Append("<tr><td style=\"text-align:left;padding-left:5px; text-transform:capitalize;\">" + GetSpecialty.Rows[i]["Specialty"].ToString().ToLower() + "</td>");
+
+                        DataTable LoopAdmission = dtProcedure.Select("Specialty = '" + GetSpecialty.Rows[i]["Specialty"].ToString() + "'").CopyToDataTable();
+
+                        for (int month = 1; month <= 12; month++)
+                        {
+                            if (LoopAdmission.Select("AdmissionMonth = " + month).Count() > 0)
+                            {
+                                for (int week = 1; week <= 4; week++)
+                                {
+                                    if (LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).Count() > 0)
+                                    {
+                                        DataTable LoopContent = LoopAdmission.Select("AdmissionMonth = " + month + " AND AdmissionWeek = " + week).CopyToDataTable();
+
+                                        var ListAdmission = "";
+
+                                        int CheckColor = 0;
+
+                                        for (int loopcontent = 0; loopcontent < LoopContent.Rows.Count; loopcontent++)
+                                        {
+                                            if (loopcontent != 0)
+                                            {
+                                                ListAdmission += "|";
+                                            }
+
+                                            if (LoopContent.Rows[loopcontent]["isMyself"].ToString() == "1")
+                                            {
+                                                CheckColor = 1;
+                                            }
+
+                                            ListAdmission += LoopContent.Rows[loopcontent]["AdmissionDate"].ToString() + "#";
+
+                                            if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() != "-")
+                                            {
+                                                ListAdmission += LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() + "#";
+                                            }
+                                            else if (LoopContent.Rows[loopcontent]["LabSalesOrderNo"].ToString() == "-")
+                                            {
+                                                ListAdmission += "-#";
+                                            }
+                                            if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() != "-")
+                                            {
+                                                ListAdmission += LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() + "#";
+                                            }
+                                            else if (LoopContent.Rows[loopcontent]["RadSalesOrderNo"].ToString() == "-")
+                                            {
+                                                ListAdmission += "-#";
+                                            }
+                                            ListAdmission += LoopContent.Rows[loopcontent]["encounterId"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["AdmissionId"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["DoctorName"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["isMyself"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["Diagnosis"].ToString() + "#"
+                                                + LoopContent.Rows[loopcontent]["organizationId"].ToString();
+                                        }
+
+                                        string link = "javascript:Open('" + ListAdmission + "')";
+
+                                        if (CheckColor == 0)
+                                        {
+                                            result.Append("<td style=\"width:20px;background-color:gray\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:gray;border:none;margin:0 0 0 0\">&nbsp;</button></td>");
+                                        }
+                                        else
+                                        {
+                                            result.Append("<td style=\"width:20px;background-color:cornflowerblue\"><button type=\"button\" title=\"click for detail\" onclick=\"" + link + "\" style=\"height:100%; width:100%;background-color:cornflowerblue;border:none;margin:0 0 0 0\">&nbsp;</button></td>");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        result.Append("<td style=\"width:20px;\"></td>");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                result.Append("<td style=\"width:20px;\"></td>" +
+                                              "<td style=\"width:20px;\"></td>" +
+                                              "<td style=\"width:20px;\"></td>" +
+                                              "<td style=\"width:20px;\"></td>");
+                            }
+                        }
+
+                        result.Append("</tr>");
+                    }
+                }
+            }
+            else
+            {
+                Labeladmishis.Style.Add("display", "");
+            }
+            result.Append("</table>");
+            divContentReport.InnerHtml = result.ToString();
+
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getAdmissionHistory", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getAdmissionHistory", Helper.GetLoginUser(this), ""));
+
+    }
+
+    void getPatientData(long doctorId, long PatientId, long admissionId, string EncounterId)
+    {
+        log.Info(LogLibrary.Logging("S", "getPatientData", Helper.GetLoginUser(this), ""));
+
+        try
+        {
+            log.Debug(LogLibrary.Logging("S", "GetPatientHistory", Helper.GetLoginUser(this), ""));
+            var varResult = clsPatientDetail.GetPatientDashboard(Helper.organizationId, PatientId, admissionId, EncounterId);
+            var JsongetMap = (JObject)JsonConvert.DeserializeObject<dynamic>(varResult.Result.ToString());
+            var objectdata = JsongetMap.Property("data").Value.ToString();
+            PatientDashboard JsongetPatientHistory = JsonConvert.DeserializeObject<PatientDashboard>(objectdata);
+            log.Debug(LogLibrary.Logging("E", "GetPatientHistory", Helper.GetLoginUser(this), JsongetPatientHistory.ToString()));
+
+            var hasiltindakan = JsongetPatientHistory.proceduresults;
+            if (hasiltindakan.Count > 0)
+            {
+                //DataTable dthasiltindakan = Helper.ToDataTable(hasiltindakan);
+                gvw_hasiltindakan.DataSource = hasiltindakan;
+                gvw_hasiltindakan.DataBind();
+                divriwayattindakan.Style.Add("display", "");
+            }
+            else
+            {
+                divnotindakan.Style.Add("display", "");
+                divriwayattindakan.Style.Add("display", "none");
+            }         
+
+            var PatientAllergy = JsongetPatientHistory.patienthealthinfo;
+            DataTable dtAllergy = Helper.ToDataTable(PatientAllergy);
+            dtAllergy.Columns[1].ColumnName = "allergy";
+            if (dtAllergy.Select("other_health_info_type = 1").Count() > 0)
+            {
+                DrugAllergy.DataSource = dtAllergy.Select("other_health_info_type = 1").CopyToDataTable();
+                DrugAllergy.DataBind();
+                Lblemptyaledrug.Style.Add("display", "none");
+            }
+            else
+            {
+                DrugAllergy.DataSource = null;
+                DrugAllergy.DataBind();
+            }
+
+            if (dtAllergy.Select("other_health_info_type = 2").Count() > 0)
+            {
+                FoodAllergy.DataSource = dtAllergy.Select("other_health_info_type = 2").CopyToDataTable();
+                FoodAllergy.DataBind();
+                Lblemptyalefood.Style.Add("display", "none");
+            }
+            else
+            {
+                FoodAllergy.DataSource = null;
+                FoodAllergy.DataBind();
+            }
+
+            if (dtAllergy.Select("other_health_info_type = 3").Count() > 0)
+            {
+                DataTable data = dtAllergy.Select("other_health_info_type = 3").CopyToDataTable();
+                //data.Columns[1].DataType = typeof(DateTime);
+                gvw_surgery.DataSource = data;
+                gvw_surgery.DataBind();
+                lblemptysurgery.Style.Add("display", "none");
+            }
+            else
+            {
+                gvw_surgery.DataSource = null;
+                gvw_surgery.DataBind();
+            }
+
+            List<ViewHealthInfo> CurrMedication = JsongetPatientHistory.patienthealthinfo.Where(y => y.other_health_info_type == 6).ToList();
+            DataTable dtroutine = Helper.ToDataTable(CurrMedication);
+            dtroutine.Columns[1].ColumnName = "current_medication";
+            if (CurrMedication.Count() > 0)
+            {
+                RepCurrentMedication.DataSource = dtroutine;
+                RepCurrentMedication.DataBind();
+                lblemptyroutinemed.Style.Add("display", "none");
+            }
+            else
+            {
+                RepCurrentMedication.DataSource = null;
+                RepCurrentMedication.DataBind();
+            }
+
+            List<ViewNotification> listreminder = JsongetPatientHistory.patientnotification;
+            hfjsonreminder.Value = new JavaScriptSerializer().Serialize(listreminder);
+            
+            if (listreminder.Count() > 0)
+            {
+                gvw_reminder.DataSource = Helper.ToDataTable(listreminder);
+                gvw_reminder.DataBind();
+                lblemptyreminder.Style.Add("display", "none");
+            }
+            else
+            {
+                gvw_reminder.DataSource = null;
+                gvw_reminder.DataBind();
+            }
+
+            List<ViewProcedure> listoutsideprocedure = JsongetPatientHistory.patientprocedure.Where(y => y.procedure_type == 1).ToList();
+            List<ViewProcedure> listinsideprocedure = JsongetPatientHistory.patientprocedure.Where(y => y.procedure_type == 2).ToList();
+            if (listoutsideprocedure.Count() > 0)
+            {
+                gvw_outsideprocedure.DataSource = Helper.ToDataTable(listoutsideprocedure);
+                gvw_outsideprocedure.DataBind();
+                lblemptyoutside.Style.Add("display", "none");
+            }
+            else
+            {
+                gvw_outsideprocedure.DataSource = null;
+                gvw_outsideprocedure.DataBind();
+            }
+
+            if (listinsideprocedure.Count() > 0)
+            {
+                gvw_procedure.DataSource = Helper.ToDataTable(listinsideprocedure);
+                gvw_procedure.DataBind();
+                lblemptyinternal.Style.Add("display", "none");
+            }
+            else
+            {
+                gvw_procedure.DataSource = null;
+                gvw_procedure.DataBind();
+            }
+
+            PatientHeader header = new PatientHeader();
+            header.AdmissionNo = JsongetPatientHistory.patientheader.AdmissionNo;
+            header.AdmissionTypeId = JsongetPatientHistory.patientheader.AdmissionTypeId;
+            header.BirthDate = JsongetPatientHistory.patientheader.BirthDate;
+            header.DoctorName = JsongetPatientHistory.patientheader.DoctorName;
+            header.EncounterId = JsongetPatientHistory.patientheader.EncounterId;
+            header.Formularium = JsongetPatientHistory.patientheader.Formularium;
+            header.Gender = JsongetPatientHistory.patientheader.Gender;
+            header.MrNo = JsongetPatientHistory.patientheader.MrNo;
+            header.PatientName = JsongetPatientHistory.patientheader.PatientName;
+            header.PayerId = JsongetPatientHistory.patientheader.PayerId;
+            header.PayerName = JsongetPatientHistory.patientheader.PayerName;
+            header.Religion = JsongetPatientHistory.patientheader.Religion;
+            
+
+            PatientCard.initializevalue(header);
+
+            //var Medication = JsongetPatientHistory.list[0].lastmedication;
+            //if (Medication.Count > 0)
+            //{
+            //    admissionDate.Text = Medication[0].admission_date.ToString("dd MMM yyyy");
+            //    lbldoctordrugpres.Text = Medication[0].doctor_name;
+            //    LastMedication.DataSource = Helper.ToDataTable(Medication);
+            //    LastMedication.DataBind();
+            //    lblemptydrugpres.Style.Add("display", "none");
+            //}
+            //else
+            //{
+            //    admissionDate.Text = "-";
+            //    lbldoctordrugpres.Visible = false;
+            //    LastMedication.DataSource = null;
+            //    LastMedication.DataBind();
+            //}
+
+            //DateTime MedHistoryDate = JsongetPatientHistory.list.medicalhistory.First().AdmissionDate;
+            //if (MedHistoryDate == DateTime.MinValue)
+            //{
+            //    lblMedHistoryDate.Text = "-";
+            //}
+            //else
+            //{
+            //    lblMedHistoryDate.Text = MedHistoryDate.ToString("dd MMM yyyy");
+            //}
+            
+            //lblPrimary.Text = (from a in JsongetPatientHistory.list.medicalhistory
+            //                   where (a.mapping_id == Guid.Parse("D24D0881-7C06-4563-BF75-3A20B843DC47"))
+            //                   select a.remarks == null ? "" : a.remarks).SingleOrDefault().ToString();
+            //if (lblPrimary.Text != "")
+            //{
+            //    Lbldoctormedihis.Text = JsongetPatientHistory.list.medicalhistory.First().doctor_name;
+            //    lblemptymedihis1.Style.Add("display", "none");
+            //}
+            //else
+            //{
+            //    Lbldoctormedihis.Visible = false;
+            //}
+
+            //lblProcedure.Text = (from a in JsongetPatientHistory.list.medicalhistory
+            //                     where (a.mapping_id == Guid.Parse("337a371f-baf5-424a-bdc5-c320c277cac6"))
+            //                     select a.remarks == null ? "" : a.remarks).SingleOrDefault().ToString();
+            //if (lblProcedure.Text != "")
+            //{
+            //    lblemptymedihis2.Style.Add("display", "none");
+            //}
+
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getPatientData", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+        log.Info(LogLibrary.Logging("E", "getPatientData", Helper.GetLoginUser(this), ""));
+    }
+
+    protected void btnFilterReminder_Click(object sender, EventArgs e)
+    {
+        if (chkreminder.Checked)
+        {
+            List<ViewNotification> tempreminder = new JavaScriptSerializer().Deserialize<List<ViewNotification>>(hfjsonreminder.Value);
+            List<ViewNotification> reminderfilter = tempreminder.Where(y => y.doctor_id == long.Parse(Helper.GetDoctorID(this))).ToList();
+            if (reminderfilter.Count() > 0)
+            {
+                gvw_reminder.DataSource = Helper.ToDataTable(reminderfilter);
+                gvw_reminder.DataBind();
+                lblemptyreminder.Style.Add("display", "none");
+            }
+            else
+            {
+                gvw_reminder.DataSource = null;
+                gvw_reminder.DataBind();
+            }
+        }
+        else
+        {
+            List<ViewNotification> tempreminder = new JavaScriptSerializer().Deserialize<List<ViewNotification>>(hfjsonreminder.Value);
+            if (tempreminder.Count() > 0)
+            {
+                gvw_reminder.DataSource = Helper.ToDataTable(tempreminder);
+                gvw_reminder.DataBind();
+                lblemptyreminder.Style.Add("display", "none");
+            }
+            else
+            {
+                gvw_reminder.DataSource = null;
+                gvw_reminder.DataBind();
+            }
+        }
+    }
+
+    protected void btnNext_Click(object sender, EventArgs e)
+    {
+        int existingYear = int.Parse(lblYear.Text.ToString());
+        lblYear.Text = (existingYear + 1).ToString(); 
+        if ((int.Parse(lblYear.Text.ToString())) == DateTime.Now.Year)
+        {
+            btnNext.Enabled = false;
+            btnNext.Style.Add("cursor", "not-allowed");
+        }
+        getAdmissionHistory(long.Parse(hfPatientId.Value));
+    }
+
+    protected void btnPrev_Click(object sender, EventArgs e)
+    {
+        int existingYear = int.Parse(lblYear.Text.ToString());
+        lblYear.Text = (existingYear - 1).ToString();
+        btnNext.Enabled = true;
+        btnNext.Style.Add("cursor", "pointer");
+        getAdmissionHistory(long.Parse(hfPatientId.Value));
+    }
+
+    protected void btnlabModal_Click(object sender, EventArgs e)
+    {
+        string a = hfLab.Value.ToString();
+        List<LaboratoryResult> listlaboratory = new List<LaboratoryResult>();
+        var dataLaboratory = clsResult.getLaboratoryResult(hfLab.Value.ToString());
+        var JsonLaboratory = JsonConvert.DeserializeObject<ResultLaboratoryResult>(dataLaboratory.Result.ToString());
+        listlaboratory = new List<LaboratoryResult>();
+        listlaboratory = JsonLaboratory.list;
+
+        StdLabResult.initializevalue(listlaboratory);
+    }
+
+    protected void btnPreview_Click(object sender, EventArgs e)
+    {
+        SoapPagePreview.initializevalue(long.Parse(EMROrganization.Value.ToString()), long.Parse(hfPatientId.Value), long.Parse(EMRAdmission.Value.ToString()), Guid.Parse(EMREncounter.Value.Replace("/", "")));
+    }
+
+    protected void btnRadDetail_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            log.Info(LogLibrary.Logging("S", "getRadDetail ", Helper.GetLoginUser(this), ""));
+            List<radiologyByWeek> listAdmissionDetail = new List<radiologyByWeek>();
+
+            log.Debug(LogLibrary.Logging("S", "getRadResultAdmissionDetail ", Helper.GetLoginUser(this), ""));
+            var dataAdmissionDetail = clsResult.getRadResultAdmissionDetail(hfRad.Value.ToString());
+            var JsonAdmissionDetail = JsonConvert.DeserializeObject<ResultRadiologyByWeek>(dataAdmissionDetail.Result);
+            log.Debug(LogLibrary.Logging("E", "getRadResultAdmissionDetail ", Helper.GetLoginUser(this), JsonConvert.SerializeObject(JsonAdmissionDetail)));
+
+            if (JsonAdmissionDetail != null)
+                listAdmissionDetail = JsonAdmissionDetail.list;
+
+            StdRadResult.initializevalue(listAdmissionDetail);
+
+            log.Info(LogLibrary.Logging("E", "getRadDetail ", Helper.GetLoginUser(this), ""));
+        }
+        catch(Exception ex)
+        {
+            log.Error(LogLibrary.Error("getRadDetail", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+    }
+
+    protected void btn_patientDetail_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            var userID = Helper.GetLoginUser(this);
+            log.Info(LogLibrary.Logging("S", "getPatientDetail", Helper.GetLoginUser(this), ""));
+
+            log.Debug(LogLibrary.Logging("S", "getPatientHistoryData ", Helper.GetLoginUser(this), ""));
+            var varResult = clsPatientHistory.getPatientHistoryData(Int64.Parse(hf_organizationID.Value), Int64.Parse(hf_patientID.Value), Int64.Parse(hf_admissionID.Value), hf_encounterID.Value);
+            var JsongetPatientHistoryData = JsonConvert.DeserializeObject<ResultPatientHistoryEncounterData>(varResult.Result.ToString());
+            log.Debug(LogLibrary.Logging("E", "getPatientHistoryData", userID, JsonConvert.SerializeObject(JsongetPatientHistoryData)));
+
+            StdPatientHistory.setPatientHistory(userID, JsongetPatientHistoryData);
+            log.Info(LogLibrary.Logging("E", "getPatientDetail", Helper.GetLoginUser(this), ""));
+
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getPatientDetail", Helper.GetLoginUser(this), ex.InnerException.Message));
+        }
+    }
+}

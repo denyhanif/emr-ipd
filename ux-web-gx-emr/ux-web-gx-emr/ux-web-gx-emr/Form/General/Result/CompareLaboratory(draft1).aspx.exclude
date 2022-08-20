@@ -1,0 +1,134 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" MasterPageFile="~/Site.master" CodeFile="CompareLaboratory(Draft1).aspx.cs" Inherits="Form_General_Result_CompareLaboratory" %>
+<%@ Register Src="~/Form/General/Control/PatientCard.ascx" TagPrefix="uc1" TagName="PatientCard" %>
+
+<asp:Content ID="CompareLaboratory" ContentPlaceHolderID="MainContent" runat="server">
+    <div style="height:90px;position:fixed;background-color:white; width:100%;transform:translate(0,-0%);z-index:1;box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.26);" class="container-fluid">
+                <asp:HiddenField ID="hfPatientId" runat="server" />
+                <asp:HiddenField ID="hfEncounterId" runat="server" />
+                <asp:HiddenField ID="hfAdmissionId" runat="server" />
+                <asp:HiddenField ID="hfPagefaId" runat="server" />
+                <asp:HiddenField ID="hfPageSoapId" runat="server" />
+                <uc1:PatientCard runat="server" ID="PatientCard" />
+            </div>
+    <div style="width:100%; height:100px; padding-top:90px">
+        <div class="btn-group btn-group-justified" style="background-color:whitesmoke;height:70px" role="group" aria-label="...">
+            <div class="btn-group" role="group" style="width:10px">
+                <div class="container-fluid">
+                <asp:LinkButton ID="img_compare" runat="server" OnClick="img_compare_Click"><span><img src="<%= Page.ResolveClientUrl("~/Images/REsult/ic_Back.png") %>" style="height:25px;width:25px;margin-right:3px;" /></span><b> Back </b></asp:LinkButton>
+                </div>
+            </div>
+            <div class="btn-group" role="group" style="width:1%">
+                <div class="container-fluid">
+                Select Ono <br />
+                <asp:DropDownList ID="ddlEncounterMode" runat="server" Height="25px" Width="130px" style="border-radius: 2px;border: solid 1px #cdced9;height: 24px;max-width:100%;width:100%;resize:none;">
+                    <asp:ListItem Text="Last Ono" Value="1"></asp:ListItem>
+                    <asp:ListItem Text="Last 5 Ono" Value="5"></asp:ListItem>
+                    <asp:ListItem Text="Last 10 Ono" Value="10"></asp:ListItem>
+                </asp:DropDownList>
+                </div>
+            </div>
+            <div class="btn-group" role="group" style="width:2%">
+            <div class="container-fluid">
+                <br />
+                <asp:Button ID="btnSearch" runat="server" Width="70px" Text="Search" CssClass="btn btn-success" OnClick="btnSearch_Click"/>
+            </div>
+            </div>
+        </div>
+        &nbsp;
+        <div class="col-sm-12" style="width:100%; height:400px" role="group" aria-label="...">
+            <div style=" height:100%; background-color:white; overflow-y: scroll; overflow-x:hidden" class="col-sm-3">
+                &nbsp;
+                <div>
+                    <asp:TextBox runat="server" ID="src_item_txt" OnTextChanged="src_item_txt_TextChanged" AutoPostBack="true"></asp:TextBox>
+                    <asp:Button ID="btn_compare" runat="server" Width="80px" Text="Compare" CssClass="btn btn-success" OnClick="btn_compare_Click"/>
+                </div>
+                &nbsp;
+                <div style="width:100%">
+                    <asp:UpdatePanel runat="server" UpdateMode="Conditional">
+                        <ContentTemplate>
+                    <asp:GridView runat="server" ID="gv_item" AutoGenerateColumns="false"  CssClass="table table-striped table-condensed" BorderColor="Transparent">
+                       <Columns>
+                            <asp:TemplateField>
+                                <HeaderTemplate>
+                                    <th><asp:CheckBox runat="server" ID="slt_all_item" OnCheckedChanged="slt_all_item_CheckedChanged" AutoPostBack="true"/><span>Select All</span></th>
+                                    <th>Item</th>
+                                </HeaderTemplate>
+                                <ItemTemplate>
+                                    <td><asp:CheckBox runat="server" ID="slt_item" OnCheckedChanged="slt_item_CheckedChanged" AutoPostBack="true" Checked='<%# Eval("statusCheck") %>'/></td>
+                                    <td><asp:Label runat="server" Text='<%# Bind("ordeR_TESTNM")%>' ID="txt_item_name" ReadOnly="true"></asp:Label></td>
+                                </ItemTemplate>
+                            </asp:TemplateField>    
+                       </Columns>
+                    </asp:GridView>
+                    <asp:GridView runat="server" ID="dg_item_copare" Visible="true" AutoGenerateColumns="false">
+                        <Columns>
+                            <asp:TemplateField>
+                                <ItemTemplate>
+                                    <asp:Label runat="server" Text='<%# Bind("tesT_NM")%>' ID="hf_item_name" ReadOnly="true"></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                    </asp:GridView>
+
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+            <div class="col-sm-1" style="height:100%; width:10px; background-color:transparent;"> </div>
+            <div class="col-sm-8" style="height:100%; width:910px; background-color:white; overflow-y:scroll;">
+                &nbsp;
+                <asp:UpdatePanel runat="server" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <asp:GridView runat="server" ID="gv_compare_result" CssClass="table table-striped table-condensed" BorderColor="WhiteSmoke" AutoGenerateColumns="false">
+                            <Columns>
+                                <asp:TemplateField HeaderText="Item To Compare" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("tesT_NM")%>' ReadOnly="true" ID="comp_item"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Ono 1" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("onO_1")%>' ReadOnly="true" ID="onO_1"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Ono 2" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("onO_2")%>' ReadOnly="true" ID="onO_2"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Ono 3" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("onO_3")%>' ReadOnly="true" ID="onO_3"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Ono 4" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("onO_4")%>' ReadOnly="true" ID="onO_4"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Ono 5" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("onO_5")%>' ReadOnly="true" ID="onO_5"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Satuan" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("unit")%>' ReadOnly="true" ID="satuan"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Nilai Rujukan" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                    <ItemTemplate>
+                                        <asp:Label runat="server" Text='<%# Bind("reF_RANGE")%>' ReadOnly="true" ID="nilai_rujukan"></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                            </Columns>
+                        </asp:GridView>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+            </div>
+            <div>
+
+            </div>
+        </div>
+    </div>
+</asp:Content>

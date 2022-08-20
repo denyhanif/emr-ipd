@@ -1,0 +1,188 @@
+﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="ClinicalLabPage.ascx.cs" Inherits="Form_CPOE_Control_Template_ClinicalLabPage" %>
+<style>
+    .itemlab {
+    font-size:11px;
+    font-family: Helvetica, Arial, sans-serif;
+    color: #171717;
+    font-weight:normal;
+    padding-top:0px;
+    margin-bottom:0px;
+    }
+</style>
+<asp:Label runat="server" ID ="lblName" Text="test"></asp:Label>
+<div class="row" style="margin:0px;padding-bottom: 0px;">
+    <div class="col-lg-2" style="padding-bottom:0px;padding-left: 0px;padding-right: 0px;margin-right:20px">
+        <asp:HyperLink style="padding: 5px;background: white;border-top-right-radius: 7px;border-top-left-radius:7px;font-family:Helvetica, Arial, sans-serif;color:#4d9b35" Font-Bold="true" Font-Size="12px" ID="lblclinic" runat="server" Text="Clinical Pathology Laboratory"></asp:HyperLink>
+    </div>
+    <div class="col-lg-2" style="padding-bottom:0px;padding-left: 0px;padding-right: 0px;margin-right:0px">
+        <asp:HyperLink style="padding: 5px;border-top-right-radius: 7px;border-top-left-radius:7px;font-family:Helvetica, Arial, sans-serif;" Font-Bold="true" Font-Size="12px" ID="HyperLink1" runat="server" Text="Microbiology Laboratory"></asp:HyperLink>
+    </div>
+    <div class="col-lg-2" style="padding-bottom:0px;margin:0px;padding-left: 0px;padding-right: 0px;">
+        <asp:HyperLink style="padding: 5px;border-top-right-radius: 7px;border-top-left-radius:7px;font-family:Helvetica, Arial, sans-serif;" Font-Bold="true" Font-Size="12px" ID="HyperLink2" runat="server" Text="Clinical Pathology Laboratory"></asp:HyperLink>
+    </div>
+</div>
+
+<div class="row" style="margin:0px;padding-bottom: 0px;background-color:white;padding-top:20px">
+    <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;" Font-Bold="true" Font-Size="12px" runat="server" Text="No. Lab"></asp:Label>
+    </div>
+    <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;" Font-Bold="true" Font-Size="12px" runat="server" Text="Hasil"></asp:Label>
+    </div>
+    <div class="col-sm-1">
+        <asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox9" AutoPostBack="true"/><label style="font-size:12px;font-family: Helvetica, Arial, sans-serif;color: #171717;font-weight:normal;padding-top:0px">CITO</label>
+    </div>
+     <div class="col-sm-4">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;" Font-Bold="true" Font-Size="12px" runat="server" Text="Clinical Diagnosis"></asp:Label>
+    </div>
+</div>
+
+
+<div class="row" style="margin:0px;padding-bottom: 0px;background-color:white;padding-top:5px">
+    <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" runat="server" Text="OPA2018120501"></asp:Label>
+    </div>
+    <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" runat="server" Text="Dokter/Pasien"></asp:Label>
+    </div>
+    <div class="col-sm-1" style="padding-right:0px;">
+        <asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox1" AutoPostBack="true"/><label style="font-size:12px;font-family: Helvetica, Arial, sans-serif;color: #171717;font-weight:normal;padding-top:0px">ROUTINE</label>
+    </div>
+     <div class="col-sm-6">
+        <asp:TextBox style="font-family:Helvetica, Arial, sans-serif;border-radius:6px;width:98%;max-width:98%"  Font-Size="12px" runat="server" CssClass="form-control"></asp:TextBox>
+    </div>
+</div>
+
+<div class="row" style="margin:0px;padding-bottom: 0px;background-color:white;padding-top:5px">
+    <div>&nbsp</div>
+    <div class="col-sm-4">
+    </div>
+    <div class="col-sm-4">
+    </div>
+     <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;border-radius:6px;width:98%;max-width:98%;padding-bottom:0px"  Font-Size="12px" runat="server">&#42Fasting 8-12 hours </asp:Label>
+    </div>
+    <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;border-radius:6px;width:98%;max-width:98%;padding-bottom:0px"  Font-Size="12px" runat="server">1 06:00 - 10:00 </asp:Label>
+    </div>
+</div>
+<div class="row" style="margin:0px;padding-bottom: 0px;background-color:white;padding-top:0px">
+    <div class="col-sm-4">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" runat="server">Please tick (&#10003) Lab test as request</asp:Label>
+    </div>
+    <div class="col-sm-4">
+    </div>
+     <div class="col-sm-2" style="padding-top:0px">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;border-radius:6px;width:98%;max-width:98%;padding-top:0px"  Font-Size="12px" runat="server">&#42&#42Fasting 12 hours </asp:Label>
+    </div>
+    <div class="col-sm-2">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;border-radius:6px;width:98%;max-width:98%;padding-top:0px"  Font-Size="12px" runat="server">2 16:00 - 20:00 </asp:Label>
+    </div>
+</div>
+<div class="row" style="margin:0px;padding-bottom: 0px;padding-top:0px;text-align:center">
+    <div class="col-sm-12">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" Font-Bold="true" runat="server">HEMATOLOGY</asp:Label>
+    </div>
+</div>
+
+<div class="row" style="margin:0px;padding-bottom: 0px;background-color:white;padding-top:0px">
+    <div class="col-sm-4">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" Font-Bold="true" runat="server">HEMATOLOGY - GENERAL</asp:Label>
+    </div>
+    <div class="col-sm-4">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" Font-Bold="true" runat="server">HEMATOLOGY - COAGULATION</asp:Label>
+    </div>
+     <div class="col-sm-4" style="padding-top:0px">
+        <asp:Label style="font-family:Helvetica, Arial, sans-serif;"  Font-Size="12px" Font-Bold="true" runat="server">HEMATOLOGY - COAGULATION</asp:Label>
+    </div>
+</div>
+
+
+<div class="row" style="margin:0px;padding-bottom: 0px;background-color:white;padding-top:0px">
+    <div class="col-sm-4">
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox6" AutoPostBack="true"/>COMPLETE BLOOD COUNT (HB, HT, E, LEUKOCYTE, PLATELET, MCV, MCH, MCHC)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox8" AutoPostBack="true"/>FULL BLOOD COUNT (CBC + DIFF + LED)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox5" AutoPostBack="true"/>RETICULOCYTE COUNT</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox10" AutoPostBack="true"/>EOSINOPHILE COUNT</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox11" AutoPostBack="true"/>BLOOD SMEAR MORPHOLOGY-PHERIPHERAL (X)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox12" AutoPostBack="true"/>LED-ERYTHROCYTE SEDIMEN RATE (ESR)</label>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox3" AutoPostBack="true"/>AT III</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox7" AutoPostBack="true"/>ANTI XA</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox13" AutoPostBack="true"/>PROTEIN C</label>
+        </div>
+                <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox14" AutoPostBack="true"/>PROTEIN S</label>
+        </div>
+                <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox15" AutoPostBack="true"/>LUPUS ANTICOAGULANT</label>
+        </div>
+                <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox16" AutoPostBack="true"/>FAKTOR VON WILLEBRAND</label>
+        </div>
+                <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox17" AutoPostBack="true"/>FACTOR VIII ASSAY</label>
+        </div>
+                <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox18" AutoPostBack="true"/>FACTOR IX ASSAY</label>
+        </div>
+                <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox19" AutoPostBack="true"/>BLEEDING TIME (BT)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox20" AutoPostBack="true"/>CLOTTING TIME (CT)</label>
+        </div>
+    </div>
+     <div class="col-sm-4" style="padding-top:0px">
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox2" AutoPostBack="true"/>PT - INR</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox4" AutoPostBack="true"/>ACTIVATED PARTIAL THROMBOPLASTIN TIME (APTT)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox21" AutoPostBack="true"/>TT (THROMBINE TIME)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox22" AutoPostBack="true"/>SERIAL THROMBINE TIME (STT)</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox23" AutoPostBack="true"/>FIBRINOGEN</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox24" AutoPostBack="true"/>TROMBOTEST OWREN</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox25" AutoPostBack="true"/>D-DIMER</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox26" AutoPostBack="true"/>TAT-PLATELET AGGREGATION TEST**</label>
+        </div>
+        <div>
+            <label class="itemlab"><asp:CheckBox runat="server" style="padding-right:10px"  GroupName="admtype7" Value="10" id="CheckBox27" AutoPostBack="true"/>BLOOD VISCOSITY</label>
+        </div>
+    </div>
+</div>
+
+
+
+
+        

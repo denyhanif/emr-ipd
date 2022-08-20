@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <defs>
+        <style>
+            .cls-1{fill:#fff}.cls-2{fill:#4d9b35}
+        </style>
+    </defs>
+    <g id="ic_call" transform="translate(0 -330)">
+        <circle id="Ellipse_2785" cx="7" cy="7" r="7" class="cls-1" data-name="Ellipse 2785" transform="translate(1.485 331)"/>
+        <path id="Subtraction_531" d="M8 16A8 8 0 0 1 2.343 2.343a8 8 0 1 1 11.314 11.314A7.948 7.948 0 0 1 8 16zM9.93 2.667a.6.6 0 0 0-.6.608v.133a.615.615 0 0 0 .4.566 4.668 4.668 0 0 1 0 8.667.61.61 0 0 0-.4.566v.133a.6.6 0 0 0 .6.605.583.583 0 0 0 .206-.038 5.991 5.991 0 0 0 0-11.2.569.569 0 0 0-.206-.04zm-7.264 3.64A.667.667 0 0 0 2 6.974v2.667a.667.667 0 0 0 .667.667h2L6.86 12.5a.656.656 0 0 0 .466.2.673.673 0 0 0 .674-.673V4.58a.673.673 0 0 0-.674-.669.647.647 0 0 0-.466.2l-2.193 2.2zm6.667-.686v5.366a2.994 2.994 0 0 0 0-5.366z" class="cls-2" data-name="Subtraction 531" transform="translate(0 330)"/>
+    </g>
+</svg>

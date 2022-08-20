@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#171717}
+        </style>
+    </defs>
+    <g id="ic_PatientHistory" transform="translate(-8 -68)">
+        <rect id="Rectangle_2179" width="36" height="36" class="cls-1" data-name="Rectangle 2179" rx="4" transform="translate(8 68)"/>
+        <g id="ic_PatientHistory-2" data-name="ic_PatientHistory" transform="translate(12.5 72.5)">
+            <g id="Bounding_Boxes">
+                <path id="Path_3183" d="M0 0h27v27H0z" class="cls-1" data-name="Path 3183"/>
+            </g>
+            <g id="Rounded" transform="translate(3.375 1.125)">
+                <path id="Path_3184" d="M21 3.25h-4.7a3.362 3.362 0 0 0-6.345 0H5.25A2.257 2.257 0 0 0 3 5.5v15.75a2.257 2.257 0 0 0 2.25 2.25H21a2.257 2.257 0 0 0 2.25-2.25V5.5A2.257 2.257 0 0 0 21 3.25zm-7.875 0A1.125 1.125 0 1 1 12 4.375a1.128 1.128 0 0 1 1.125-1.125zm0 4.5a3.375 3.375 0 1 1-3.375 3.375 3.37 3.37 0 0 1 3.375-3.375zm6.75 13.5h-13.5v-1.575c0-2.25 4.5-3.488 6.75-3.488s6.75 1.238 6.75 3.488z" class="cls-2" data-name="Path 3184" transform="translate(-3 -1)"/>
+            </g>
+        </g>
+    </g>
+</svg>

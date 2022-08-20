@@ -1,0 +1,2043 @@
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using log4net;
+using System.Globalization;
+using System.Data.SqlClient;
+using System.Configuration;
+using static PatientHistory;
+
+public partial class Form_SOAP_Control_Template_PlanningPage : System.Web.UI.UserControl
+{
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_SOAP_Control_Template_PlanningPage));
+
+    List<string> itemname = new List<string>();
+    List<CpoeTrans> listchecked = new List<CpoeTrans>();
+    List<Item> listitem = new List<Item>();
+    List<PrescriptionDrug> listprescriptiondrug,listprescriptioncompound = new List<PrescriptionDrug>();
+
+    List<UOM> listUOM = new List<UOM>();
+    List<Frequency> listfrequency = new List<Frequency>();
+    List<Dose> listdose = new List<Dose>();
+    List<AdministrationRoute> listadministrationRoute = new List<AdministrationRoute>();
+    List<OrderSet> listordersetheader,listordersetlab = new List<OrderSet>();
+    List<FrequentDrug> listfrequentdrugs = new List<FrequentDrug>();
+    
+
+    public DataTable uomdt = new DataTable();
+    public DataTable dosedt = new DataTable();
+    public DataTable frequencydt = new DataTable();
+    public DataTable routedt = new DataTable();
+    public DataTable ordersetdt = new DataTable();
+    public DataTable labsetdt = new DataTable();
+
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+
+        if (!IsPostBack)
+        {
+            //log.Info(LogLibrary.Logging("S", "Page_Load", Helper.GetLoginUser(this), ""));
+
+            var ordersetheader = clsOrderSet.getOrderSet("2000000732", 2, 1);
+            var Jsonordersetheader = JsonConvert.DeserializeObject<ResultOrderSet>(ordersetheader.Result.ToString());
+            listordersetheader = Jsonordersetheader.list;
+            ordersetdt = Helper.ToDataTable(listordersetheader);
+
+            gvw_orderset.DataSource = ordersetdt;
+            gvw_orderset.DataBind();
+
+            var frequentdrugsheader = clsPrescription.GetFrequentDrugs("2000000732", 2);
+            var Jsonfrequentdrugsheader = JsonConvert.DeserializeObject<ResultFrequentDrug>(frequentdrugsheader.Result.ToString());
+            listfrequentdrugs = Jsonfrequentdrugsheader.list;
+            DataTable dtfrequentdrugs = Helper.ToDataTable(listfrequentdrugs);
+            gvw_frequent_drugs.DataSource = dtfrequentdrugs;
+            gvw_frequent_drugs.DataBind();
+
+            var labsetheader = clsOrderSet.getOrderSet("2000000732", 0, 2);
+            var Jsonlabsetheader = JsonConvert.DeserializeObject<ResultOrderSet>(labsetheader.Result.ToString());
+            listordersetlab = Jsonlabsetheader.list;
+            labsetdt = Helper.ToDataTable(listordersetlab);
+            gvw_labset.DataSource = labsetdt;
+            gvw_labset.DataBind();
+            
+
+            //List<Item> listitem = (List<Item>)Session["itempres"];
+            //DataTable dtitem = Helper.ToDataTable(listitem);
+
+            
+
+            DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+            if (hfPayerType.Value != "NORMAL")
+            {
+                chkformularium.Checked = true;
+                gvw_data.DataSource = (dtItem.Select("Formularium = '"+hfPayerType.Value + "'").CopyToDataTable()).Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                gvw_data.DataBind();
+            }
+            else
+            {
+                gvw_data.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                gvw_data.DataBind();
+            }
+
+            DataTable dtfreqtemp = (DataTable)Session[Helper.SessionFrequency];
+            DataTable dtroutetemp = (DataTable)Session[Helper.SessionRoute];
+            if (dtfreqtemp == null)
+            {
+                var frequencyData = clsOrderSet.getFrequency();
+                var Jsonfrequency = JsonConvert.DeserializeObject<ResultFrequency>(frequencyData.Result.ToString());
+                listfrequency = Jsonfrequency.list;
+                frequencydt = Helper.ToDataTable(listfrequency);
+                Session[Helper.SessionFrequency] = frequencydt;
+            }
+
+            if (dtroutetemp == null)
+            {
+                var administrationRouteData = clsOrderSet.getAdministrationRoute();
+                var JsonadministrationRoute = JsonConvert.DeserializeObject<ResultAdministrationRoute>(administrationRouteData.Result.ToString());
+                listadministrationRoute = JsonadministrationRoute.list;
+                routedt = Helper.ToDataTable(listadministrationRoute);
+                Session[Helper.SessionRoute] = routedt;
+            }
+            var getMap = clsCpoeMapping.GetMapping(2);
+            var getMapJson = JsonConvert.DeserializeObject<ResultMapping>(getMap.Result.ToString());
+            Session[Helper.Sessionmaplab] = getMapJson.list;
+            //StdClinicControl.GetMappingClinicLab(getMapJson.list);
+            //StdMicroLabControl.GetMappingMicroLab(getMapJson.list);
+            //StdCitoControl.GetMappingCitoLab(getMapJson.list);
+            //log.Info(LogLibrary.Logging("E", "Page_Load", Helper.GetLoginUser(this), ""));
+        }
+        StdClinicControl.checkIfExist += new Form_CPOE_Control_Template_StdClinicLabPage.customHandler(MyParentMethod);
+        StdMicroLabControl.checkIfExistMicro += new Form_CPOE_Control_Template_StdMicroLab.customHandler(MyParentMethod);
+        StdCitoControl.checkIfExistCito += new Form_CPOE_Control_Template_StdCitoLab.customHandler(MyParentMethod);
+    }
+
+    
+    public void initializevalue(ResultSOAP Jsongetsoap,PatientHeader header)
+    {
+
+        Session[Helper.SessionDrugPres] = null;
+        Session[Helper.SessionCompPres] = null;
+        Session[Helper.SessionCompDetailPres] = null;
+        Session[Helper.SessionCompPresHdn] = null;
+        Session[Helper.SessionCompHeaderHdn] = null;
+        Session[Helper.SessionConsumablesList] = null;
+        List<Planning> listplanning = new List<Planning>();
+        listplanning = Jsongetsoap.list.planning;
+        hfPayerType.Value = header.Formularium;
+        
+        if (listplanning.Count > 0)
+        {
+            foreach (Planning x in listplanning)
+            {
+                if (x.soap_mapping_id == Guid.Parse("337a371f-baf5-424a-bdc5-c320c277cac6"))
+                {
+                    txtPlanning.Text = x.remarks;
+                }
+                if (x.soap_mapping_id == Guid.Parse("0c822444-a7ee-4904-a223-2869e8424579"))
+                {
+                    txtplanningother.Text = x.remarks;
+                }
+                if (x.soap_mapping_id == Guid.Parse("2df0294d-f94e-4ba4-8ba1-f017bfb55d92"))
+                {
+                    txtPresNotes.Text = x.remarks;
+                }
+            }
+        }
+        txtPharmacistNotes.Text = Jsongetsoap.list.pharmacy_notes;
+        List<CpoeTrans> listcpoetrans = new List<CpoeTrans>();
+        listcpoetrans = Jsongetsoap.list.cpoe_trans;
+        if (listcpoetrans.Count > 0)
+        {
+            labempty.Visible = false;
+            linklabbutton.Visible = false;
+            btnEditLab.Visible = true;
+            Session[Helper.SessionLabPathologyChecked] = listcpoetrans;
+            DataTable dt = Helper.ToDataTable(listcpoetrans).Select("isdelete = 0").CopyToDataTable();
+            Repeater1.DataSource = dt;
+            Repeater1.DataBind();
+        }
+
+        List<CpoeNotes> listcpoenotes = new List<CpoeNotes>();
+        listcpoenotes = Jsongetsoap.list.cpoe_notes;
+        if (listcpoenotes.Count > 0)
+        {
+            foreach(CpoeNotes temp in listcpoenotes)
+            {
+                if (temp.notes_type == "ClinicLab")
+                {
+                    StdClinicControl.InitializeNotes(temp);
+                }
+                else if (temp.notes_type == "MicroLab")
+                {
+                    StdMicroLabControl.InitializeNotes(temp);
+                }
+                else if (temp.notes_type == "CitoLab")
+                {
+                    StdCitoControl.InitializeNotes(temp);
+                }
+            }
+        }
+        
+        if (Session[Helper.SessionDrugsConsumables] == null)
+        {
+            DataTable dt = clsSOAP.getItemConsumables(Helper.organizationId, header.AdmissionTypeId);
+            Session[Helper.SessionDrugsConsumables] = dt;
+        }
+
+        gvw_cons.DataSource = ((DataTable)Session[Helper.SessionDrugsConsumables]).Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable(); ;
+        gvw_cons.DataBind();
+        List<Prescription> listprescription,listpressave = new List<Prescription>();
+        listprescription = Jsongetsoap.list.prescription;
+        
+        foreach (var templist in listprescription)
+        {
+            string a = templist.quantity.ToString().Substring(0, 3);
+            string[] tempqty = templist.quantity.ToString().Split('.');
+            if (tempqty[1].Length == 3)
+            {
+                if (tempqty[1] == "000")
+                {
+                    templist.quantity = decimal.Parse(tempqty[0]).ToString();
+                }
+                else if (tempqty[1].Substring(tempqty[1].Length - 2) == "00")
+                {
+                    templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 1);
+                }
+                else if (tempqty[1].Substring(tempqty[1].Length - 1) == "0")
+                {
+                    templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 2);
+                }
+            }
+                
+
+            string[] tempdose = templist.dosage_id.ToString().Split('.');
+
+            if (tempdose[1].Length == 3)
+            {
+                if (tempdose[1] == "000")
+                {
+                    templist.dosage_id = decimal.Parse(tempdose[0]).ToString();
+                }
+                else if (tempdose[1].Substring(tempdose[1].Length - 2) == "00")
+                {
+                    templist.dosage_id = tempdose[0] + "." + tempdose[1].Substring(0, 1);
+                }
+                else if (tempdose[1].Substring(tempdose[1].Length - 1) == "0")
+                {
+                    templist.dosage_id = tempdose[0] + "." + tempdose[1].Substring(0, 2);
+                }
+            }
+        }
+        if (listprescription.Count > 0)
+        {
+            if (Helper.ToDataTable(listprescription).Select("compound_id = '00000000-0000-0000-0000-000000000000' and is_delete = 0 and is_consumables = 0").Count() > 0)
+            {
+                DataTable dtpresdrug = Helper.ToDataTable(listprescription).Select("compound_id = '00000000-0000-0000-0000-000000000000' and is_delete = 0 and is_consumables = 0").CopyToDataTable();
+                Session[Helper.SessionDrugPres] = dtpresdrug;
+                gvw_drug.DataSource = dtpresdrug;
+                gvw_drug.DataBind();
+            }
+            else
+            {
+                Session[Helper.SessionDrugPres] = null;
+                gvw_drug.DataSource = null;
+                gvw_drug.DataBind();
+            }
+
+
+            if (Helper.ToDataTable(listprescription).Select("item_id = 0").Count() > 0)
+            {
+                DataTable dtcompdrug = Helper.ToDataTable(listprescription).Select("item_id = 0").CopyToDataTable();
+                Session[Helper.SessionCompPres] = dtcompdrug;
+                gvw_comp.DataSource = dtcompdrug;
+                gvw_comp.DataBind();
+            }
+            else
+            {
+                Session[Helper.SessionCompPres] = null;
+                gvw_comp.DataSource = null;
+                gvw_comp.DataBind();
+            }
+
+            if (Helper.ToDataTable(listprescription).Select("is_consumables = 1").Count() > 0)
+            {
+                DataTable dtconsumables = Helper.ToDataTable(listprescription).Select("is_consumables = 1").CopyToDataTable();
+                Session[Helper.SessionConsumablesList] = dtconsumables;
+                gvw_consumables.DataSource = dtconsumables;
+                gvw_consumables.DataBind();
+            }
+            else
+
+            {
+                Session[Helper.SessionConsumablesList] = null;
+                gvw_consumables.DataSource = null;
+                gvw_consumables.DataBind();
+            }
+
+            if (Helper.ToDataTable(listprescription).Select("compound_id <> '00000000-0000-0000-0000-000000000000' and item_id <> 0").Count() > 0)
+            {
+                DataTable dtcompdetail = Helper.ToDataTable(listprescription).Select("compound_id <> '00000000-0000-0000-0000-000000000000' and item_id <> 0").CopyToDataTable();
+                Session[Helper.SessionCompDetailPres] = dtcompdetail;
+                gvw_compdetail.DataSource = dtcompdetail;
+                gvw_compdetail.DataBind();
+            }
+            else
+            {
+                Session[Helper.SessionCompDetailPres] = null;
+                gvw_compdetail.DataSource = null;
+                gvw_compdetail.DataBind();
+            }
+
+        }
+
+
+    }
+
+
+
+    protected void drugs_data_RowDataBound(Object sender, GridViewRowEventArgs e)
+    {
+        if (e.Row.RowType == DataControlRowType.DataRow)
+        {
+            HiddenField idItem = (HiddenField)e.Row.FindControl("item_id");
+           
+            DataTable dt = ((DataTable)Session[Helper.SessionDrugPres]).Select("item_id = " + idItem.Value).CopyToDataTable();
+
+            DataTable dtfreqtemp = (DataTable)Session[Helper.SessionFrequency];
+            DataTable dtroutetemp = (DataTable)Session[Helper.SessionRoute];
+            if (dtfreqtemp == null)
+            {
+                var frequencyData = clsOrderSet.getFrequency();
+                var Jsonfrequency = JsonConvert.DeserializeObject<ResultFrequency>(frequencyData.Result.ToString());
+                listfrequency = Jsonfrequency.list;
+                frequencydt = Helper.ToDataTable(listfrequency);
+                Session[Helper.SessionFrequency] = frequencydt;
+            }
+
+            if (dtroutetemp == null)
+            {
+                var administrationRouteData = clsOrderSet.getAdministrationRoute();
+                var JsonadministrationRoute = JsonConvert.DeserializeObject<ResultAdministrationRoute>(administrationRouteData.Result.ToString());
+                listadministrationRoute = JsonadministrationRoute.list;
+                routedt = Helper.ToDataTable(listadministrationRoute);
+                Session[Helper.SessionRoute] = routedt;
+            }
+            
+            DropDownList ddlfrequency_drugs = (DropDownList)e.Row.FindControl("frequency_code");
+            ddlfrequency_drugs.DataSource = (DataTable)Session[Helper.SessionFrequency];
+            ddlfrequency_drugs.DataTextField = "name";
+            ddlfrequency_drugs.DataValueField = "administrationFrequencyId";
+            ddlfrequency_drugs.DataBind();
+            ddlfrequency_drugs.SelectedValue = dt.Rows[0]["frequency_id"].ToString();
+            // ddlfrequency_drugs.ToolTip = dt.Rows[0]["frequency_code"].ToString();
+            ddlfrequency_drugs.Items.Insert(0, new ListItem("-", "0"));
+
+            DropDownList ddlroute_drugs = (DropDownList)e.Row.FindControl("administrationRouteCode");
+            ddlroute_drugs.DataSource = (DataTable)Session[Helper.SessionRoute];
+            ddlroute_drugs.DataTextField = "name";
+            ddlroute_drugs.DataValueField = "administration_route_id";
+            ddlroute_drugs.DataBind();
+            ddlroute_drugs.SelectedValue = dt.Rows[0]["administration_route_id"].ToString();
+            //ddlroute_drugs.ToolTip = dt.Rows[0]["AdministrationRouteCode"].ToString();
+            ddlroute_drugs.Items.Insert(0, new ListItem("-", "0"));
+        }
+    }
+
+    protected void comp_data_RowDataBound(Object sender, GridViewRowEventArgs e)
+    {
+        if (e.Row.RowType == DataControlRowType.DataRow)
+        {
+            HiddenField compound_id = (HiddenField)e.Row.FindControl("compound_comp_id");
+
+            DataTable dtfreqtemp = (DataTable)Session[Helper.SessionFrequency];
+            DataTable dtroutetemp = (DataTable)Session[Helper.SessionRoute];
+            if (dtfreqtemp == null)
+            {
+                var frequencyData = clsOrderSet.getFrequency();
+                var Jsonfrequency = JsonConvert.DeserializeObject<ResultFrequency>(frequencyData.Result.ToString());
+                listfrequency = Jsonfrequency.list;
+                frequencydt = Helper.ToDataTable(listfrequency);
+                Session[Helper.SessionFrequency] = frequencydt;
+            }
+
+            if (dtroutetemp == null)
+            {
+                var administrationRouteData = clsOrderSet.getAdministrationRoute();
+                var JsonadministrationRoute = JsonConvert.DeserializeObject<ResultAdministrationRoute>(administrationRouteData.Result.ToString());
+                listadministrationRoute = JsonadministrationRoute.list;
+                routedt = Helper.ToDataTable(listadministrationRoute);
+                Session[Helper.SessionRoute] = routedt;
+            }
+
+            DataTable dt = ((DataTable)Session[Helper.SessionCompPres]).Select("compound_id = '" + compound_id.Value + "'").CopyToDataTable();
+
+            DropDownList ddlfrequency_drugs = (DropDownList)e.Row.FindControl("frequency_comp_code");
+            ddlfrequency_drugs.DataSource = (DataTable)Session[Helper.SessionFrequency]; 
+            ddlfrequency_drugs.DataTextField = "name";
+            ddlfrequency_drugs.DataValueField = "administrationFrequencyId";
+            ddlfrequency_drugs.DataBind();
+            ddlfrequency_drugs.SelectedValue = dt.Rows[0]["frequency_id"].ToString();
+            // ddlfrequency_drugs.ToolTip = dt.Rows[0]["frequency_code"].ToString();
+            ddlfrequency_drugs.Items.Insert(0, new ListItem("-", "0"));
+
+            DropDownList ddlroute_drugs = (DropDownList)e.Row.FindControl("administrationRouteCode_comp");
+            ddlroute_drugs.DataSource = (DataTable)Session[Helper.SessionRoute];
+            ddlroute_drugs.DataTextField = "name";
+            ddlroute_drugs.DataValueField = "administration_route_id";
+            ddlroute_drugs.DataBind();
+            ddlroute_drugs.SelectedValue = dt.Rows[0]["administration_route_id"].ToString();
+            //ddlroute_drugs.ToolTip = dt.Rows[0]["AdministrationRouteCode"].ToString();
+            ddlroute_drugs.Items.Insert(0, new ListItem("-", "0"));
+        }
+    }
+
+    bool MyParentMethod(object sender)
+    {
+        //StdClinicControl.checkIfExist += new Form_CPOE_Control_Template_StdClinicLabPage.customHandler(MyParentMethod);
+        listchecked = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked];
+        if (listchecked != null)
+        {
+            labempty.Visible = false;
+            linklabbutton.Visible = false;
+            btnEditLab.Visible = true;
+            if (Helper.ToDataTable(listchecked).Select("isdelete = 0").Count() > 0)
+            {
+                DataTable dt = Helper.ToDataTable(listchecked).Select("isdelete = 0").CopyToDataTable();
+                Repeater1.DataSource = dt;
+                Repeater1.DataBind();
+            }
+            else
+            {
+                labempty.Visible = true;
+                linklabbutton.Visible = true;
+                btnEditLab.Visible = false;
+                Repeater1.DataSource = null;
+                Repeater1.DataBind();
+            }
+            
+        }
+
+        return true;
+
+    }
+
+    protected void btnSubmit_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            lblModalTitle.Text = "Laboratory";
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "myModal", "$('#myModal').modal();", true);
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+        //upModal.Update();
+        //GetMappingClinicLab(2, "cliniclab");
+
+    }
+
+    protected void formularium_onclik(object sender, EventArgs e)
+    {
+        DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+        if (chkformularium.Checked)
+        {
+            chkformularium.Checked = true;
+            if (hfPayerType.Value != "NORMAL")
+            {
+                gvw_data.DataSource = (dtItem.Select("Formularium = '" + hfPayerType.Value + "'").CopyToDataTable()).Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                gvw_data.DataBind();
+            }
+            else
+            {
+                gvw_data.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                gvw_data.DataBind();
+            }
+        }
+        else
+        {
+            gvw_data.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+            gvw_data.DataBind();
+        }
+        upError.Update();
+        txtSearchItem.Text = "";
+    }
+    protected void btnFind_click(object sender, EventArgs e)
+    {
+        try
+        {
+            upError.Update();
+            string a = txtSearchItem.Text;
+            gvw_data.DataSource = null;
+            if (a == "")
+            {
+                //listitem = (List<Item>)ViewState["item"];
+                DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+                if (chkformularium.Checked)
+                {
+                    chkformularium.Checked = true;
+                    if (hfPayerType.Value != "NORMAL")
+                    {
+                        gvw_data.DataSource = (dtItem.Select("Formularium = '" + hfPayerType.Value + "'").CopyToDataTable()).Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                        gvw_data.DataBind();
+                    }
+                    else
+                    {
+                        gvw_data.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                        gvw_data.DataBind();
+                    }
+                }
+                else
+                {
+                    gvw_data.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                    gvw_data.DataBind();
+                }
+            }
+            else
+            {
+                try
+                {
+                    DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+                    if (chkformularium.Checked)
+                    {
+                        chkformularium.Checked = true;
+                        if (hfPayerType.Value != "NORMAL")
+                        {
+                            gvw_data.DataSource = (dtItem.Select("Formularium = '" + hfPayerType.Value + "' and (salesItemName like '%" + a + "%' or activeIngredientsName like '%" + a + "%')").CopyToDataTable()).Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                            gvw_data.DataBind();
+                        }
+                        else
+                        {
+                            gvw_data.DataSource = dtItem.Select("salesItemName like '%" + a + "%' or activeIngredientsName like '%" + a + "%'").CopyToDataTable();
+                            gvw_data.DataBind();
+                        }
+                    }
+                    else
+                    {
+                        gvw_data.DataSource = dtItem.Select("salesItemName like '%" + a + "%' or activeIngredientsName like '%" + a + "%'").CopyToDataTable();
+                        gvw_data.DataBind();
+                    }
+                    //gvw_data.DataSource = dtItem.Select("salesItemName like '%" + a + "%' or activeIngredientsName like '%" + a + "%'").CopyToDataTable();
+                }
+                catch
+                {
+                    gvw_data.DataSource = null;
+                }
+                gvw_data.DataBind();
+            }
+            upError.Update();
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+
+
+    protected void btnFindCons_click(object sender, EventArgs e)
+    {
+        try
+        {
+            upConsItem.Update();
+            string keyword = txtSearchItemcons.Text;
+            if (keyword == "")
+            {
+                //listitem = (List<Item>)ViewState["item"];
+                DataTable dtItem = (DataTable)Session[Helper.SessionDrugsConsumables];
+                gvw_cons.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable(); ;
+                gvw_cons.DataBind();
+            }
+            else
+            {
+
+                try
+                {
+                    DataTable dtItem = (DataTable)Session[Helper.SessionDrugsConsumables];
+                    gvw_cons.DataSource = dtItem.Select("salesItemName like '%" + keyword + "%' or activeIngredientsName like '%" + keyword + "%'").CopyToDataTable();
+                }
+                catch
+                {
+                    gvw_cons.DataSource = null;
+                }
+                gvw_cons.DataBind();
+            }
+            upConsItem.Update();
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+    protected void btnFindcomp_click(object sender, EventArgs e)
+    {
+        try
+        {
+            string a = find_detail.Text;
+            if (a == "")
+            {
+                //listitem = (List<Item>)ViewState["item"];
+                DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+                gvw_item_detail.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable(); ;
+                gvw_item_detail.DataBind();
+            }
+            else
+            {
+
+                try
+                {
+                    DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+                    gvw_item_detail.DataSource = dtItem.Select("salesItemName like '%" + a + "%' or activeIngredientsName like '%" + a + "%'").CopyToDataTable();
+                }
+                catch
+                {
+                    gvw_item_detail.DataSource = null;
+                }
+                gvw_item_detail.DataBind();
+                //listitem = (List<Item>)ViewState["item"];
+                //gvw_item_detail.DataBind();
+            }
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+    public bool CheckQuantityPrescription(int type)
+    {
+        if (type == 1)
+        {
+            foreach (GridViewRow rows in gvw_drug.Rows)
+            {
+                TextBox quantity = (TextBox)rows.FindControl("quantity");
+                //string a = quantity.Text;
+                if (quantity.Text == "")
+                {
+                    return false;
+                }
+                else if (double.Parse(quantity.Text) < 0.000001)
+                {
+                    return false;
+                }
+            }
+        }
+        else if (type == 2)
+        {
+            foreach (GridViewRow rows in gvw_comp.Rows)
+            {
+                TextBox quantity = (TextBox)rows.FindControl("quantity_comp");
+                //string a = quantity.Text;
+                if (quantity.Text == "")
+                {
+                    return false;
+                }
+                else if (double.Parse(quantity.Text) < 0.000001)
+                {
+                    return false;
+                }
+            }
+        }
+        else if (type == 3)
+        {
+            foreach (GridViewRow rows in gvw_compdetail.Rows)
+            {
+                Label quantity = (Label)rows.FindControl("quantity_compdtlhdn");
+                //string a = quantity.Text;
+                if (quantity.Text == "")
+                {
+                    return false;
+                }
+                else if (double.Parse(quantity.Text) < 0.000001)
+                {
+                    return false;
+                }
+            }
+        }
+        else if (type == 4)
+        {
+            foreach (GridViewRow rows in gvw_consumables.Rows)
+            {
+                TextBox quantity = (TextBox)rows.FindControl("quantity_cons");
+                //string a = quantity.Text;
+                if (quantity.Text == "")
+                {
+                    return false;
+                }
+                else if (double.Parse(quantity.Text) < 0.000001)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    protected List<Prescription> GetRowList(int type)
+    {
+        List<Prescription> data = new List<Prescription>();
+        if (type == 1)//gvw_drugs
+        {
+            foreach (GridViewRow rows in gvw_drug.Rows)
+            {
+                HiddenField prescription_id = (HiddenField)rows.FindControl("prescription_id");
+                HiddenField prescription_no = (HiddenField)rows.FindControl("prescription_no");
+                HiddenField item_id = (HiddenField)rows.FindControl("item_id");
+                Label item_name = (Label)rows.FindControl("item_name");
+                //HiddenField orderSetDetailId = (HiddenField)rows.FindControl("id_order_drugs_detail");
+                TextBox quantity = (TextBox)rows.FindControl("quantity");
+                HiddenField uom_id = (HiddenField)rows.FindControl("uom_id");
+                Label uom_code = (Label)rows.FindControl("uom_code");
+                DropDownList frequency_code = (DropDownList)rows.FindControl("frequency_code");
+                TextBox dosage_id = (TextBox)rows.FindControl("dosage_id");
+                TextBox dose_text = (TextBox)rows.FindControl("dose_text");
+                TextBox remarks = (TextBox)rows.FindControl("remarks");
+                DropDownList administrationRouteCode = (DropDownList)rows.FindControl("administrationRouteCode");
+                TextBox iteration = (TextBox)rows.FindControl("iteration");
+                CheckBox is_routine = (CheckBox)rows.FindControl("is_routine");
+                HiddenField is_consumables = (HiddenField)rows.FindControl("is_consumables");
+                HiddenField compound_id = (HiddenField)rows.FindControl("compound_id");
+                HiddenField compound_name = (HiddenField)rows.FindControl("compound_name");
+                HiddenField origin_prescription_id = (HiddenField)rows.FindControl("origin_prescription_id");
+                HiddenField hope_arinvoice_id = (HiddenField)rows.FindControl("hope_arinvoice_id");
+                HiddenField is_delete = (HiddenField)rows.FindControl("is_delete");
+
+                Prescription row = new Prescription();
+
+                row.prescription_id = Guid.Parse(prescription_id.Value);
+                row.prescription_no = prescription_no.Value ;
+                row.item_id = Int64.Parse(item_id.Value);
+                row.item_name = item_name.Text;
+                if (quantity.Text == "")
+                {
+                    row.quantity = "0";
+                }
+                else
+                {
+                    //var decimaltemp = Decimal.Parse(quantity.Text);
+                    //row.quantity = Convert.ToInt64(decimaltemp);
+                    
+                    row.quantity = quantity.Text.ToString();
+                }
+                if (uom_code.Text.ToString() != "")
+                {
+                    row.uom_id = Int64.Parse(uom_id.Value.ToString());
+                    row.uom_code = uom_code.Text;
+                }
+                else if (uom_code.Text.ToString() == "")
+                {
+                    row.uom_id = 0;
+                    row.uom_code = "";
+                }
+                row.frequency_id = Int64.Parse(frequency_code.SelectedValue);
+                row.frequency_code = frequency_code.SelectedItem.Text;
+                if (dosage_id.Text.ToString() != "")
+                {
+                    row.dosage_id = dosage_id.Text.ToString();
+                }
+                else
+                    row.dosage_id = "0";
+
+
+                row.dose_text = dose_text.Text;
+                row.remarks = remarks.Text;
+                row.administration_route_id = Int64.Parse(administrationRouteCode.SelectedValue);
+                row.administration_route_code = administrationRouteCode.SelectedItem.Text;
+                if (iteration.Text == "")
+                {
+                    row.iteration = 0;
+                }
+                else
+                {
+                    row.iteration = int.Parse(iteration.Text);
+                }
+                if (is_routine.Checked)
+                {
+                    row.is_routine = 1;
+                }
+                else
+                {
+                    row.is_routine = 0;
+                }
+
+                row.is_consumables = int.Parse(is_consumables.Value);
+                row.compound_id = Guid.Parse(compound_id.Value.ToString());
+                row.compound_name = compound_name.Value;
+                row.origin_prescription_id = Guid.Parse(origin_prescription_id.Value);
+                row.hope_arinvoice_id = Int64.Parse(hope_arinvoice_id.Value);
+                row.is_delete = int.Parse(is_delete.Value);
+
+                data.Add(row);
+            }
+        }
+        else if (type == 2)//gvw_compound_header
+        {
+            foreach (GridViewRow rows in gvw_comp.Rows)
+            {
+                HiddenField prescription_id = (HiddenField)rows.FindControl("prescription_comp_id");
+                HiddenField prescription_no = (HiddenField)rows.FindControl("prescription_comp_no");
+                HiddenField item_id = (HiddenField)rows.FindControl("item_comp_id");
+                HiddenField item_name = (HiddenField)rows.FindControl("item_comp_name");
+                //HiddenField orderSetDetailId = (HiddenField)rows.FindControl("id_order_drugs_detail");
+                TextBox quantity = (TextBox)rows.FindControl("quantity_comp");
+                HiddenField uom_id = (HiddenField)rows.FindControl("uom_comp_id");
+                Label uom_code = (Label)rows.FindControl("uom_comp_code");
+                DropDownList frequency_code = (DropDownList)rows.FindControl("frequency_comp_code");
+                TextBox dosage_id = (TextBox)rows.FindControl("dosage_comp_id");
+                TextBox dose_text = (TextBox)rows.FindControl("dose_comp_text");
+                TextBox remarks = (TextBox)rows.FindControl("remarks_comp");
+                DropDownList administrationRouteCode = (DropDownList)rows.FindControl("administrationRouteCode_comp");
+                TextBox iteration = (TextBox)rows.FindControl("iteration_comp");
+                CheckBox is_routine = (CheckBox)rows.FindControl("is_routine_comp");
+                HiddenField is_consumables = (HiddenField)rows.FindControl("is_consumables_comp");
+                HiddenField compound_id = (HiddenField)rows.FindControl("compound_comp_id");
+                LinkButton compound_name = (LinkButton)rows.FindControl("compound_comp_name");
+                HiddenField origin_prescription_id = (HiddenField)rows.FindControl("origin_prescription_comp_id");
+                HiddenField hope_arinvoice_id = (HiddenField)rows.FindControl("hope_arinvoice_comp_id");
+                HiddenField is_delete = (HiddenField)rows.FindControl("is_delete_comp");
+
+                Prescription row = new Prescription();
+
+                row.prescription_id = Guid.Parse(prescription_id.Value);
+                row.prescription_no = prescription_no.Value;
+                row.item_id = Int64.Parse(item_id.Value);
+                row.item_name = item_name.Value;
+                if (quantity.Text == "")
+                {
+                    row.quantity = "0";
+                }
+                else
+                {
+                    //var decimaltemp = Decimal.Parse(quantity.Text);
+                    //row.quantity = Convert.ToInt64(decimaltemp);
+                    row.quantity = quantity.Text.ToString();
+                }
+                if (uom_code.Text.ToString() != "")
+                {
+                    row.uom_id = Int64.Parse(uom_id.Value.ToString());
+                    row.uom_code = uom_code.Text;
+                }
+                else if (uom_code.Text.ToString() == "")
+                {
+                    row.uom_id = 0;
+                    row.uom_code = "";
+                }
+                row.frequency_id = Int64.Parse(frequency_code.SelectedValue);
+                row.frequency_code = frequency_code.SelectedItem.Text;
+                if (dosage_id.Text.ToString() != "")
+                {
+                    row.dosage_id = dosage_id.Text.ToString();
+                }
+                else
+                    row.dosage_id = "0";
+                row.dose_text = dose_text.Text;
+                row.remarks = remarks.Text;
+                row.administration_route_id = Int64.Parse(administrationRouteCode.SelectedValue);
+                row.administration_route_code = administrationRouteCode.SelectedItem.Text;
+                if (iteration.Text == "")
+                {
+                    row.iteration = 0;
+                }
+                else
+                {
+                    row.iteration = int.Parse(iteration.Text);
+                }
+                if (is_routine.Checked)
+                {
+                    row.is_routine = 1;
+                }
+                else
+                {
+                    row.is_routine = 0;
+                }
+
+                row.is_consumables = int.Parse(is_consumables.Value);
+                row.compound_id = Guid.Parse(compound_id.Value.ToString());
+                row.compound_name = compound_name.Text;
+                row.origin_prescription_id = Guid.Parse(origin_prescription_id.Value);
+                row.hope_arinvoice_id = Int64.Parse(hope_arinvoice_id.Value);
+                row.is_delete = int.Parse(is_delete.Value);
+
+                data.Add(row);
+            }
+        }
+        else if (type == 3)//gvw_compound_detail
+        {
+            foreach (GridViewRow rows in gvw_compdetail.Rows)
+            {
+                HiddenField prescription_id = (HiddenField)rows.FindControl("prescription_compdtlhdn_id");
+                HiddenField prescription_no = (HiddenField)rows.FindControl("prescription_compdtlhdn_no");
+                HiddenField item_id = (HiddenField)rows.FindControl("item_compdtlhdn_id");
+                Label item_name = (Label)rows.FindControl("item_compdtlhdn_name");
+                //HiddenField orderSetDetailId = (HiddenField)rows.FindControl("id_order_drugs_detail");
+                Label quantity = (Label)rows.FindControl("quantity_compdtlhdn");
+                HiddenField uom_id = (HiddenField)rows.FindControl("uom_compdtlhdn_id");
+                Label uom_code = (Label)rows.FindControl("uom_compdtlhdn_code");
+                HiddenField frequency_id = (HiddenField)rows.FindControl("frequency_compdtlhdn_id");
+                Label frequency_code = (Label)rows.FindControl("frequency_compdtlhdn_code");
+                Label dosage_id = (Label)rows.FindControl("dosage_compdtlhdn_id");
+                Label dose_text = (Label)rows.FindControl("dose_compdtlhdn_text");
+                Label remarks = (Label)rows.FindControl("remarks_compdtlhdn");
+                HiddenField administrationRoute_id = (HiddenField)rows.FindControl("administrationRouteid_compdtlhdn");
+                Label administrationRouteCode = (Label)rows.FindControl("administrationRouteCode_compdtlhdn");
+                Label iteration = (Label)rows.FindControl("iteration_compdtlhdn");
+                CheckBox is_routine = (CheckBox)rows.FindControl("is_routine_compdtlhdn");
+                HiddenField is_consumables = (HiddenField)rows.FindControl("is_consumables_compdtlhdn");
+                HiddenField compound_id = (HiddenField)rows.FindControl("compound_compdtlhdn_id");
+                Label compound_name = (Label)rows.FindControl("compound_compdtlhdn_name");
+                HiddenField origin_prescription_id = (HiddenField)rows.FindControl("origin_prescription_compdtlhdn_id");
+                HiddenField hope_arinvoice_id = (HiddenField)rows.FindControl("hope_arinvoice_compdtlhdn_id");
+                HiddenField is_delete = (HiddenField)rows.FindControl("is_delete_compdtlhdn");
+
+                Prescription row = new Prescription();
+
+                row.prescription_id = Guid.Parse(prescription_id.Value);
+                row.prescription_no = prescription_no.Value;
+                row.item_id = Int64.Parse(item_id.Value);
+                row.item_name = item_name.Text;
+                if (quantity.Text == "")
+                {
+                    row.quantity = "0";
+                }
+                else
+                {
+                    //var decimaltemp = Decimal.Parse(quantity.Text);
+                    //row.quantity = Convert.ToInt64(decimaltemp);
+                    row.quantity = quantity.Text.ToString();
+                }
+                if (uom_code.Text.ToString() != "")
+                {
+                    row.uom_id = Int64.Parse(uom_id.Value.ToString());
+                    row.uom_code = uom_code.Text;
+                }
+                else if (uom_code.Text.ToString() == "")
+                {
+                    row.uom_id = 0;
+                    row.uom_code = "";
+                }
+                row.frequency_id = Int64.Parse(frequency_id.Value);
+                row.frequency_code = frequency_code.Text;
+                if (dosage_id.Text.ToString() != "")
+                {
+                    row.dosage_id = dosage_id.Text.ToString();
+                }
+                else
+                    row.dosage_id = "0";
+                row.dose_text = dose_text.Text;
+                row.remarks = remarks.Text;
+                row.administration_route_id = Int64.Parse(administrationRoute_id.Value);
+                row.administration_route_code = administrationRouteCode.Text;
+                if (iteration.Text == "")
+                {
+                    row.iteration = 0;
+                }
+                else
+                {
+                    row.iteration = int.Parse(iteration.Text);
+                }
+                if (is_routine.Checked)
+                {
+                    row.is_routine = 1;
+                }
+                else
+                {
+                    row.is_routine = 0;
+                }
+
+                row.is_consumables = int.Parse(is_consumables.Value);
+                row.compound_id = Guid.Parse(compound_id.Value.ToString());
+                row.compound_name = compound_name.Text;
+                row.origin_prescription_id = Guid.Parse(origin_prescription_id.Value);
+                row.hope_arinvoice_id = Int64.Parse(hope_arinvoice_id.Value);
+                row.is_delete = int.Parse(is_delete.Value);
+
+                data.Add(row);
+            }
+        }
+        else if (type==4)//modal_compound_detail
+        {
+            foreach (GridViewRow rows in gvw_comp_detail.Rows)
+            {
+                HiddenField prescription_id = (HiddenField)rows.FindControl("prescription_compdtl_id");
+                HiddenField prescription_no = (HiddenField)rows.FindControl("prescription_compdtl_no");
+                HiddenField item_id = (HiddenField)rows.FindControl("item_compdtl_id");
+                Label item_name = (Label)rows.FindControl("item_compdtl_name");
+                //HiddenField orderSetDetailId = (HiddenField)rows.FindControl("id_order_drugs_detail");
+                TextBox quantity = (TextBox)rows.FindControl("quantity_compdtl");
+                HiddenField uom_id = (HiddenField)rows.FindControl("uom_compdtl_id");
+                Label uom_code = (Label)rows.FindControl("uom_compdtl_code");
+                HiddenField frequency_id = (HiddenField)rows.FindControl("frequency_compdtl_id");
+                HiddenField frequency_code = (HiddenField)rows.FindControl("frequency_compdtl_code");
+                TextBox dosage_id = (TextBox)rows.FindControl("dosage_compdtl_id");
+                TextBox dose_text = (TextBox)rows.FindControl("dose_compdtl_text");
+                TextBox remarks = (TextBox)rows.FindControl("remarks_compdtl");
+                HiddenField administrationRoute_id = (HiddenField)rows.FindControl("administration_route_compdtl_id");
+                HiddenField administrationRouteCode = (HiddenField)rows.FindControl("administration_route_compdtl_code");
+                TextBox iteration = (TextBox)rows.FindControl("iteration_compdtl");
+                HiddenField is_routine = (HiddenField)rows.FindControl("is_routine_compdtl");
+                HiddenField is_consumables = (HiddenField)rows.FindControl("is_consumables_compdtl");
+                HiddenField compound_id = (HiddenField)rows.FindControl("compound_compdtl_id");
+                HiddenField compound_name = (HiddenField)rows.FindControl("compound_compdtl_name");
+                HiddenField origin_prescription_id = (HiddenField)rows.FindControl("origin_prescription_compdtl_id");
+                HiddenField hope_arinvoice_id = (HiddenField)rows.FindControl("hope_arinvoice_compdtl_id");
+                HiddenField is_delete = (HiddenField)rows.FindControl("is_delete_compdtl");
+
+                Prescription row = new Prescription();
+
+                row.prescription_id = Guid.Parse(prescription_id.Value);
+                row.prescription_no = prescription_no.Value;
+                row.item_id = Int64.Parse(item_id.Value);
+                row.item_name = item_name.Text;
+                if (quantity.Text == "")
+                {
+                    row.quantity = "0";
+                }
+                else
+                {
+                    //var decimaltemp = Decimal.Parse(quantity.Text);
+                    //row.quantity = Convert.ToInt64(decimaltemp);
+                    row.quantity = quantity.Text.ToString();
+                }
+                if (uom_code.Text.ToString() != "")
+                {
+                    row.uom_id = Int64.Parse(uom_id.Value.ToString());
+                    row.uom_code = uom_code.Text;
+                }
+                else if (uom_code.Text.ToString() == "")
+                {
+                    row.uom_id = 0;
+                    row.uom_code = "";
+                }
+                row.frequency_id = Int64.Parse(frequency_id.Value);
+                row.frequency_code = frequency_code.Value;
+                if (dosage_id.Text.ToString() != "")
+                {
+                    row.dosage_id = dosage_id.Text.ToString();
+                }
+                else
+                    row.dosage_id = "0";
+                row.dose_text = dose_text.Text;
+                row.remarks = remarks.Text;
+                row.administration_route_id = Int64.Parse(administrationRoute_id.Value);
+                row.administration_route_code = administrationRouteCode.Value;
+                if (iteration.Text == "")
+                {
+                    row.iteration = 0;
+                }
+                else
+                {
+                    row.iteration = int.Parse(iteration.Text);
+                }
+
+                row.is_routine = int.Parse(is_routine.Value);
+
+                row.is_consumables = int.Parse(is_consumables.Value);
+                row.compound_id = Guid.Parse(compound_id.Value.ToString());
+                row.compound_name = compound_name.Value;
+                row.origin_prescription_id = Guid.Parse(origin_prescription_id.Value);
+                row.hope_arinvoice_id = Int64.Parse(hope_arinvoice_id.Value);
+                row.is_delete = int.Parse(is_delete.Value);
+
+                data.Add(row);
+            }
+        }
+        else if (type == 5)//gvw_consumables
+        {
+            foreach (GridViewRow rows in gvw_consumables.Rows)
+            {
+                HiddenField prescription_id = (HiddenField)rows.FindControl("prescription_id_cons");
+                HiddenField prescription_no = (HiddenField)rows.FindControl("prescription_no_cons");
+                HiddenField item_id = (HiddenField)rows.FindControl("itemId_cons");
+                Label item_name = (Label)rows.FindControl("item_name_cons");
+                TextBox quantity = (TextBox)rows.FindControl("quantity_cons");
+                HiddenField uom_id = (HiddenField)rows.FindControl("uom_id_cons");
+                Label uom_code = (Label)rows.FindControl("uom_code_cons");
+                HiddenField frequency_code = (HiddenField)rows.FindControl("frequency_code_cons");
+                HiddenField frequency_id = (HiddenField)rows.FindControl("frequency_id_cons");
+                HiddenField dosage_id = (HiddenField)rows.FindControl("dosage_id_cons");
+                HiddenField dose_text = (HiddenField)rows.FindControl("dose_text_cons");
+                TextBox remarks = (TextBox)rows.FindControl("remarks_cons");
+                HiddenField administrationRouteId = (HiddenField)rows.FindControl("administrationRouteId_cons");
+                HiddenField administrationRouteCode = (HiddenField)rows.FindControl("administrationRouteCode_cons");
+                HiddenField iteration = (HiddenField)rows.FindControl("iteration_cons");
+                HiddenField is_routine = (HiddenField)rows.FindControl("is_routine_cons");
+                HiddenField is_consumables = (HiddenField)rows.FindControl("is_consumables_cons");
+                HiddenField compound_id = (HiddenField)rows.FindControl("compound_id_cons");
+                HiddenField compound_name = (HiddenField)rows.FindControl("compound_name_cons");
+                HiddenField origin_prescription_id = (HiddenField)rows.FindControl("origin_prescription_id_cons");
+                HiddenField hope_arinvoice_id = (HiddenField)rows.FindControl("hope_arinvoice_id_cons");
+                HiddenField is_delete = (HiddenField)rows.FindControl("is_delete_cons");
+
+                Prescription row = new Prescription();
+
+                row.prescription_id = Guid.Parse(prescription_id.Value);
+                row.prescription_no = prescription_no.Value;
+                row.item_id = Int64.Parse(item_id.Value);
+                row.item_name = item_name.Text;
+                if (quantity.Text == "")
+                {
+                    row.quantity = "0";
+                }
+                else
+                {
+                    //var decimaltemp = Decimal.Parse(quantity.Text);
+                    //row.quantity = Convert.ToInt64(decimaltemp);
+                    row.quantity = quantity.Text.ToString();
+                }
+                if (uom_code.Text.ToString() != "")
+                {
+                    row.uom_id = Int64.Parse(uom_id.Value.ToString());
+                    row.uom_code = uom_code.Text;
+                }
+                else if (uom_code.Text.ToString() == "")
+                {
+                    row.uom_id = 0;
+                    row.uom_code = "";
+                }
+                row.frequency_id = Int64.Parse(frequency_id.Value);
+                row.frequency_code = frequency_code.Value;
+                if (dosage_id.Value.ToString() != "")
+                {
+                    row.dosage_id = dosage_id.Value.ToString();
+                }
+                else
+                    row.dosage_id = "0";
+                row.dose_text = dose_text.Value;
+                row.remarks = remarks.Text;
+                row.administration_route_id = Int64.Parse(administrationRouteId.Value);
+                row.administration_route_code = administrationRouteCode.Value;
+                if (iteration.Value == "")
+                {
+                    row.iteration = 0;
+                }
+                else
+                {
+                    row.iteration = int.Parse(iteration.Value);
+                }
+                row.is_routine = int.Parse(is_routine.Value);
+                
+
+                row.is_consumables = int.Parse(is_consumables.Value);
+                row.compound_id = Guid.Parse(compound_id.Value.ToString());
+                row.compound_name = compound_name.Value;
+                row.origin_prescription_id = Guid.Parse(origin_prescription_id.Value);
+                row.hope_arinvoice_id = Int64.Parse(hope_arinvoice_id.Value);
+                row.is_delete = int.Parse(is_delete.Value);
+
+                data.Add(row);
+            }
+        }
+        return data;
+    }
+
+    protected void frequentdrugs_onclick(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            LinkButton salesItemName = (LinkButton)gvw_frequent_drugs.Rows[selRowIndex].FindControl("frequentdrugs_name");
+            HiddenField salesitemid = (HiddenField)gvw_frequent_drugs.Rows[selRowIndex].FindControl("hffrequentdrugs_id");
+            HiddenField hfUomId = (HiddenField)gvw_frequent_drugs.Rows[selRowIndex].FindControl("hfuom_id");
+            HiddenField hfUomCode = (HiddenField)gvw_frequent_drugs.Rows[selRowIndex].FindControl("hfuom_code");
+
+            List<Prescription> data = GetRowList(1);
+            Prescription temp = new Prescription();
+            temp.prescription_id = Guid.Empty;
+            temp.prescription_no = "";
+            temp.item_id = long.Parse(salesitemid.Value);
+            temp.item_name = salesItemName.Text;
+            temp.quantity = "0";
+            temp.uom_id = long.Parse(hfUomId.Value);
+            temp.uom_code = hfUomCode.Value;
+            temp.frequency_id = 0;
+            temp.frequency_code = "";
+            temp.dosage_id = "0";
+            temp.dose_text = "";
+            temp.administration_route_id = 0;
+            temp.administration_route_code = "";
+            temp.iteration = 0;
+            temp.remarks = "";
+            temp.is_routine = 0;
+            temp.is_consumables = 0;
+            temp.compound_id = Guid.Empty;
+            temp.compound_name = "";
+            temp.origin_prescription_id = Guid.Empty;
+            temp.hope_arinvoice_id = 0;
+            temp.is_delete = 0;
+
+            if (temp != null)
+            {
+                DataTable dttemp = Helper.ToDataTable(data);
+                if (dttemp.Select("item_name = '"+ temp.item_name + "'").Count() == 0)
+                {
+                    data.Add(temp);
+                    DataTable dta = Helper.ToDataTable(data);
+                    Session[Helper.SessionDrugPres] = dta;
+                    gvw_drug.DataSource = dta;
+                    gvw_drug.DataBind();
+                }
+                else
+                    ScriptManager.RegisterStartupScript(Page, Page.GetType(), "existing", "alert('Item Already Exist');", true);
+                //txtSearchItem.Text = "";
+            }
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+
+    }
+
+    protected void itemselectedCons_onclick(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            LinkButton salesItemName = (LinkButton)gvw_cons.Rows[selRowIndex].FindControl("salesItemName");
+            Label salesitemid = (Label)gvw_cons.Rows[selRowIndex].FindControl("salesitemid");
+            HiddenField hfUomId = (HiddenField)gvw_cons.Rows[selRowIndex].FindControl("hfUomId");
+            HiddenField hfUomCode = (HiddenField)gvw_cons.Rows[selRowIndex].FindControl("hfUomCode");
+
+            List<Prescription> data = GetRowList(5);
+            Prescription temp = new Prescription();
+            temp.prescription_id = Guid.Empty;
+            temp.prescription_no = "";
+            temp.item_id = long.Parse(salesitemid.Text);
+            temp.item_name = salesItemName.Text;
+            temp.quantity = "0";
+            temp.uom_id = long.Parse(hfUomId.Value);
+            temp.uom_code = hfUomCode.Value;
+            temp.frequency_id = 0;
+            temp.frequency_code = "";
+            temp.dosage_id = "0";
+            temp.dose_text = "";
+            temp.administration_route_id = 0;
+            temp.administration_route_code = "";
+            temp.iteration = 0;
+            temp.remarks = "";
+            temp.is_routine = 0;
+            temp.is_consumables = 1;
+            temp.compound_id = Guid.Empty;
+            temp.compound_name = "";
+            temp.origin_prescription_id = Guid.Empty;
+            temp.hope_arinvoice_id = 0;
+            temp.is_delete = 0;
+
+            if (temp != null)
+            {
+                DataTable dttemp = Helper.ToDataTable(data);
+                if (dttemp.Select("item_name = '" + temp.item_name + "'").Count() == 0)
+                {   
+                    data.Add(temp);
+                    DataTable dta = Helper.ToDataTable(data);
+                    Session[Helper.SessionConsumablesList] = dta;
+                    gvw_consumables.DataSource = dta;
+                    gvw_consumables.DataBind();
+                    txtSearchItemcons.Text = "";
+                }
+                else
+                    ScriptManager.RegisterStartupScript(Page, Page.GetType(), "existing", "alert('Item Already Exist');", true);
+
+            }
+            //txtItemAdd.Text = salesItemName.Text;
+            //txtItemId.Text = salesitemid.Text;
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+    protected void itemselected_onclick(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            LinkButton salesItemName = (LinkButton)gvw_data.Rows[selRowIndex].FindControl("salesItemName");
+            Label salesitemid = (Label)gvw_data.Rows[selRowIndex].FindControl("salesitemid");
+            HiddenField hfUomId = (HiddenField)gvw_data.Rows[selRowIndex].FindControl("hfUomId");
+            HiddenField hfUomCode = (HiddenField)gvw_data.Rows[selRowIndex].FindControl("hfUomCode");
+
+            List<Prescription> data = GetRowList(1);
+            Prescription temp = new Prescription();
+            temp.prescription_id = Guid.Empty;
+            temp.prescription_no = "";
+            temp.item_id = long.Parse(salesitemid.Text);
+            temp.item_name = salesItemName.Text;
+            temp.quantity = "0";
+            temp.uom_id = long.Parse(hfUomId.Value);
+            temp.uom_code = hfUomCode.Value;
+            temp.frequency_id = 0;
+            temp.frequency_code = "";
+            temp.dosage_id = "0";
+            temp.dose_text = "";
+            temp.administration_route_id = 0;
+            temp.administration_route_code = "";
+            temp.iteration = 0;
+            temp.remarks = "";
+            temp.is_routine = 0;
+            temp.is_consumables = 0;
+            temp.compound_id = Guid.Empty;
+            temp.compound_name = "";
+            temp.origin_prescription_id = Guid.Empty;
+            temp.hope_arinvoice_id = 0;
+            temp.is_delete = 0;
+
+            if (temp != null)
+            {
+                DataTable dttemp = Helper.ToDataTable(data);
+                if (dttemp.Select("item_name = '" + temp.item_name + "'").Count() == 0)
+                {
+                    data.Add(temp);
+                    DataTable dta = Helper.ToDataTable(data);
+                    Session[Helper.SessionDrugPres] = dta;
+                    gvw_drug.DataSource = dta;
+                    gvw_drug.DataBind();
+                    txtSearchItem.Text = "";
+                }
+                else
+                    ScriptManager.RegisterStartupScript(Page, Page.GetType(), "existing", "alert('Item Already Exist');", true);
+
+            }
+            //txtItemAdd.Text = salesItemName.Text;
+            //txtItemId.Text = salesitemid.Text;
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+
+
+    }
+
+
+    protected void itemselecteddetail_onclick(object sender, EventArgs e)
+    {
+        try
+        { 
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            LinkButton salesItemName = (LinkButton)gvw_item_detail.Rows[selRowIndex].FindControl("salesItemName_detail");
+            Label salesitemid = (Label)gvw_item_detail.Rows[selRowIndex].FindControl("salesitemid_detail");
+            HiddenField hfUomId = (HiddenField)gvw_item_detail.Rows[selRowIndex].FindControl("hfUomId_detail");
+            HiddenField hfUomCode = (HiddenField)gvw_item_detail.Rows[selRowIndex].FindControl("hfUomCode_detail");
+
+            List<Prescription> data = GetRowList(4);
+        
+            Prescription temp = new Prescription();
+            temp.prescription_id = Guid.Empty;
+            temp.prescription_no = "";
+            temp.item_id = long.Parse(salesitemid.Text);
+            temp.item_name = salesItemName.Text;
+            temp.quantity = "0";
+            temp.uom_id = long.Parse(hfUomId.Value);
+            temp.uom_code = hfUomCode.Value;
+            temp.frequency_id = 0;
+            temp.frequency_code = "";
+            temp.dosage_id = "0";
+            temp.dose_text = "";
+            temp.administration_route_id = 0;
+            temp.administration_route_code = "";
+            temp.iteration = 0;
+            temp.remarks = "";
+            temp.is_routine = 0;
+            temp.is_consumables = 0;
+            temp.compound_id = Guid.Empty;
+            temp.compound_name = data[0].compound_name;
+            temp.origin_prescription_id = Guid.Empty;
+            temp.hope_arinvoice_id = 0;
+            temp.is_delete = 0;
+
+            if (temp != null)
+            {
+                DataTable dttemp = Helper.ToDataTable(data);
+                if (dttemp.Select("item_name = '" + temp.item_name + "'").Count() == 0)
+                {
+                    data.Add(temp);
+                    DataTable dta = Helper.ToDataTable(data);
+                    Session[Helper.SessionCompPresHdn] = dta;
+                    gvw_comp_detail.DataSource = dta;
+                    gvw_comp_detail.DataBind();
+                    find_detail.Text = "";
+                }
+                else
+                    ScriptManager.RegisterStartupScript(Page, Page.GetType(), "existing", "alert('Item Already Exist');", true);
+            }
+            //txtItemAdd.Text = salesItemName.Text;
+            //txtItemId.Text = salesitemid.Text;
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+
+    protected void CompDetail_onClick(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            LinkButton compound_comp_name = (LinkButton)gvw_comp.Rows[selRowIndex].FindControl("compound_comp_name");
+            DataTable dtcompdetail = (DataTable)Session[Helper.SessionCompDetailPres];
+
+            Repeater3.DataSource = null;
+            Repeater3.DataBind();
+            itemex.Visible = false;
+
+            DataTable dtItem = (DataTable)Session[Helper.SessionItemDrugPres];
+            gvw_item_detail.DataSource = dtItem.Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+            gvw_item_detail.DataBind();
+            Session[Helper.SessionCompHeaderHdn] = null;
+            Session[Helper.SessionCompPresHdn] = dtcompdetail.Select("compound_name = '" + compound_comp_name.Text + "' and item_id not in ('0')").CopyToDataTable();
+            gvw_comp_detail.DataSource = dtcompdetail.Select("compound_name = '" + compound_comp_name.Text + "' and item_id not in ('0')").CopyToDataTable();
+            gvw_comp_detail.DataBind();
+
+            //DataTable dtdrugsdetail = ViewState["item"] as DataTable;
+            //gvw_item_detail.DataSource = dtdrugsdetail;
+            //gvw_item_detail.DataBind();
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalcompdetail", "$('#modalcompdetail').modal({backdrop: 'static', keyboard: false});", true);
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+
+    }
+
+    protected void btnSaveCompDetail_onClick(object sender, EventArgs e)
+    {
+        try
+        {
+
+            List<Prescription> data = GetRowList(4);
+            if (data.Count() >= 2)
+            {
+                string compname = data[0].compound_name;
+                if (Session[Helper.SessionCompHeaderHdn] != null)
+                {
+                    DataTable dtheadercomp = (DataTable)Session[Helper.SessionCompHeaderHdn];
+                    Session[Helper.SessionCompHeaderHdn] = null;
+                    if (Session[Helper.SessionCompPres] != null)
+                    {
+                        DataTable dtheader = (DataTable)Session[Helper.SessionCompPres];
+                        dtheader.Merge(dtheadercomp);
+                        Session[Helper.SessionCompPres] = dtheader;
+                        gvw_comp.DataSource = dtheader;
+                        gvw_comp.DataBind();
+                    }
+                    else
+                    {
+                        Session[Helper.SessionCompPres] = dtheadercomp;
+                        gvw_comp.DataSource = dtheadercomp;
+                        gvw_comp.DataBind();
+                    }
+
+                }
+                if (Session[Helper.SessionCompDetailPres] != null)
+                {
+                    DataTable dtdetail = (DataTable)Session[Helper.SessionCompDetailPres];
+                    if (dtdetail.Select("compound_name not in ('" + compname + "')").Count() > 0)
+                    {
+                        DataTable dttempdetail = dtdetail.Select("compound_name not in ('" + compname + "')").CopyToDataTable();
+                        //for (int i = dtdetail.Rows.Count - 1; i >= 0; i--)
+                        //{
+                        //    DataRow dr = dtdetail.Rows[i];
+                        //    if (dr["compound_name"].ToString() == compname)
+                        //    {
+                        //        dr.Delete();
+                        //        dr.AcceptChanges();
+                        //    }
+                        //}
+
+                        //DataTable dttempdetail = Helper.ToDataTable(data);
+                        dttempdetail.Merge(Helper.ToDataTable(data));
+                        gvw_compdetail.DataSource = dttempdetail;
+                        gvw_compdetail.DataBind();
+                        Session[Helper.SessionCompDetailPres] = dttempdetail;
+                        //dta.Merge(Helper.ToDataTable(dataheader));
+                    }
+                    else
+                    {
+                        Session[Helper.SessionCompDetailPres] = Helper.ToDataTable(data);
+                        gvw_compdetail.DataSource = Helper.ToDataTable(data);
+                        gvw_compdetail.DataBind();
+                    }
+                    //Session["compdetail"] = dtdetail;
+
+                }
+                else
+                {
+                    Session[Helper.SessionCompDetailPres] = Session[Helper.SessionCompPresHdn];
+                    gvw_compdetail.DataSource = Session[Helper.SessionCompPresHdn];
+                    gvw_compdetail.DataBind();
+                }
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalcompdetail", "$('#modalcompdetail').modal('hide');", true);
+            }
+            else
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Compound should contains minimum 2 items');", true);
+            }
+        }
+        catch(Exception ex)
+        {
+            string a = ex.Message;
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+    protected void btnDeleteCons_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            List<Prescription> datadetail = GetRowList(5);
+            DataTable dt = Helper.ToDataTable(datadetail);
+            //DataTable dt = Session["presdrug"] as DataTable;
+            dt.Rows[selRowIndex].SetField("is_delete", 1);
+            //dt.Rows[selRowIndex].Delete();
+            if (dt.Select("is_delete = 0").Count() > 0)
+            {
+                Session[Helper.SessionConsumablesList] = dt.Select("is_delete = 0").CopyToDataTable();
+                gvw_consumables.DataSource = dt.Select("is_delete = 0").CopyToDataTable();
+                gvw_consumables.DataBind();
+            }
+            else
+            {
+                Session[Helper.SessionConsumablesList] = null;
+                gvw_consumables.DataSource = null;
+                gvw_consumables.DataBind();
+            }
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+    protected void btnDelete_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            List<Prescription> datadetail = GetRowList(1);
+            DataTable dt = Helper.ToDataTable(datadetail);
+            //DataTable dt = Session["presdrug"] as DataTable;
+            dt.Rows[selRowIndex].SetField("is_delete", 1);
+            //dt.Rows[selRowIndex].Delete();
+            if (dt.Select("is_delete = 0").Count() > 0)
+            {
+                Session[Helper.SessionDrugPres] = dt.Select("is_delete = 0").CopyToDataTable();
+                gvw_drug.DataSource = dt.Select("is_delete = 0").CopyToDataTable();
+                gvw_drug.DataBind();
+            }
+            else
+            {
+                Session[Helper.SessionDrugPres] = null;
+                gvw_drug.DataSource = null;
+                gvw_drug.DataBind();
+            }
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+    protected void btnDeleteComp_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            HiddenField presid = (HiddenField)gvw_comp_detail.Rows[selRowIndex].FindControl("prescription_compdtl_id");
+            List<Prescription> datadetail = GetRowList(4);
+            DataTable dt = Helper.ToDataTable(datadetail);
+            if (dt.Select("is_delete = 0").Count() > 2)
+            {
+                if (Guid.Parse(presid.Value) == Guid.Empty)
+                {
+                    dt.Rows[selRowIndex].Delete();
+                }
+                else
+                {
+                    dt.Rows[selRowIndex].SetField("is_delete", 1);
+                }
+                //dt.Rows[selRowIndex].Delete();
+
+                Session[Helper.SessionCompPresHdn] = dt.Select("is_delete = 0").CopyToDataTable();
+                gvw_comp_detail.DataSource = dt.Select("is_delete = 0").CopyToDataTable();
+                gvw_comp_detail.DataBind();
+            }
+            else
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Compound should contains minimum 2 items');", true);
+            }
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+    protected void btnDeleteheadercomp_Click(object sender, EventArgs e)
+    {
+        int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+        HiddenField presid = (HiddenField)gvw_comp.Rows[selRowIndex].FindControl("prescription_comp_id");
+        LinkButton compname = (LinkButton)gvw_comp.Rows[selRowIndex].FindControl("compound_comp_name");
+        List<Prescription> dataheader = GetRowList(2);
+        List<Prescription> datadetail = GetRowList(3);
+        DataTable dtheader = Helper.ToDataTable(dataheader);
+        DataTable dtdetail = Helper.ToDataTable(datadetail);
+        if (dtheader.Select("compound_name not in('" + compname.Text + "')").Count() > 0)
+        {
+            DataTable dt = dtheader.Select("compound_name not in('" + compname.Text + "')").CopyToDataTable();
+            Session[Helper.SessionCompPres] = dt;
+            gvw_comp.DataSource = dt;
+            gvw_comp.DataBind();
+
+            DataTable dtdetailcomp = dtdetail.Select("compound_name not in('" + compname.Text + "')").CopyToDataTable();
+            Session[Helper.SessionCompDetailPres] = dtdetailcomp;
+            gvw_compdetail.DataSource = dtdetailcomp;
+            gvw_compdetail.DataBind();
+        }
+        else
+        {
+            Session[Helper.SessionCompPres] = null;
+            gvw_comp.DataSource = null;
+            gvw_comp.DataBind();
+
+            Session[Helper.SessionCompDetailPres] = null;
+            gvw_compdetail.DataSource = null;
+            gvw_compdetail.DataBind();
+        }
+
+
+
+    }
+    protected void checkkey(object sender, EventArgs e)
+    {
+        ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalexdrugs", "alert('Order Set Compound already in use');", true);
+    }
+
+    protected void btnLabSet_onClick(object sender, EventArgs e)
+    {
+        int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+        LinkButton setname = (LinkButton)gvw_labset.Rows[selRowIndex].FindControl("setname_lab");
+        var getlabset = clsOrderSet.getOrdersetLab(setname.Text, Helper.organizationId, Helper.doctorid);
+        var getJsonlabset = JsonConvert.DeserializeObject<ResultCpoeTrans>(getlabset.Result.ToString());
+
+        List<CpoeTrans> listexcludetrans = new List<CpoeTrans>();
+        List<CpoeTrans> listnotexist = new List<CpoeTrans>();
+        //List<CpoeTrans> listtempcpoetrans = new List<CpoeTrans>();
+        List<CpoeTrans> listtempcpoetrans;
+        if (Session[Helper.SessionLabPathologyChecked] == null)
+        {
+            listtempcpoetrans = new List<CpoeTrans>();
+        }
+        else
+        {
+            listtempcpoetrans = new List<CpoeTrans>();
+            listtempcpoetrans = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked];
+        }
+        
+        if (listtempcpoetrans != null)
+        {
+            foreach (CpoeTrans x in getJsonlabset.list)
+            {
+                if (listtempcpoetrans.Any(y => y.name == x.name))
+                {
+                    listexcludetrans.Add(x);
+                }
+                else if (listtempcpoetrans.Any(y => x.ischeck == 0))
+                {
+                    listnotexist.Add(x);
+                }
+                else
+                    listtempcpoetrans.Add(x);
+            }
+        }
+        else
+        {
+            foreach (CpoeTrans x in getJsonlabset.list)
+            {
+                listtempcpoetrans.Add(x);
+            }
+        }
+
+        Session[Helper.SessionLabPathologyChecked] = listtempcpoetrans;
+
+        listchecked = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked];
+        if (listchecked != null)
+        {
+            labempty.Visible = false;
+            linklabbutton.Visible = false;
+            btnEditLab.Visible = true;
+            if (Helper.ToDataTable(listchecked).Select("isdelete = 0 and ischeck <> 0").Count() > 0)
+            {
+                DataTable dt = Helper.ToDataTable(listchecked).Select("isdelete = 0 and ischeck <> 0").CopyToDataTable();
+                Repeater1.DataSource = dt;
+                Repeater1.DataBind();
+            }
+            else
+            {
+                labempty.Visible = true;
+                linklabbutton.Visible = true;
+                btnEditLab.Visible = false;
+                Repeater1.DataSource = null;
+                Repeater1.DataBind();
+            }
+            List<CpoeMapping> tempMap = new List<CpoeMapping>();
+            tempMap = (List<CpoeMapping>)Session[Helper.Sessionmaplab];
+            //StdClinicControl.GetMappingClinicLab(tempMap);
+            //StdMicroLabControl.GetMappingMicroLab(tempMap);
+            //StdCitoControl.GetMappingCitoLab(tempMap);
+            
+        }
+
+        if (listexcludetrans.Count() > 0 || listnotexist.Count() > 0)
+        {
+            if (listexcludetrans.Count() > 0)
+            {
+                DataTable dtexclude = Helper.ToDataTable(listexcludetrans);
+                rptExist.DataSource = dtexclude;
+                rptExist.DataBind();
+                lblExist.Visible = true;
+            }
+            else
+            {
+                rptExist.DataSource = null;
+                rptExist.DataBind();
+                lblExist.Visible = false;
+            }
+            if (listnotexist.Count() > 0)
+            {
+                DataTable dtnotexist = Helper.ToDataTable(listnotexist);
+                rptNotExist.DataSource = dtnotexist;
+                rptNotExist.DataBind();
+                lblNotExist.Visible = true;
+            }
+            else
+            {
+                rptNotExist.DataSource = null;
+                rptNotExist.DataBind();
+                lblNotExist.Visible = false;
+            }
+            //ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalexdrugs", "$('#modallab').modal();", true);
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modallab", "$('#modallab').modal();", true);
+
+        }
+    }
+
+
+    protected void orderset_onclick(object sender, EventArgs e)
+    {
+        try
+        {
+            string separator = "-(R)";
+
+            //List<PrescriptionDrug> listprescriptiondrugtemp, listprescriptioncomptemp,listdrugex = new List<PrescriptionDrug>();
+            List<Prescription> listprescriptiondrugtemp, listprescriptioncomptemp, listdrugex = new List<Prescription>();
+            int selRowIndex = ((GridViewRow)(((LinkButton)sender).Parent.Parent)).RowIndex;
+            LinkButton setname = (LinkButton)gvw_orderset.Rows[selRowIndex].FindControl("setname");
+            if (setname.Text.Contains("-(R)"))
+            {
+                string[] tempordersetname = setname.Text.Split(new string[] { separator }, StringSplitOptions.None);
+                string ordersetname = tempordersetname[0];
+                if (Session[Helper.SessionCompPres] != null)
+                {
+                    if (((DataTable)Session[Helper.SessionCompPres]).Select("compound_name = '" + ordersetname + "'").Count() > 0)
+                    {
+                        ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalexdrugs", "alert('Order Set Compound already in use');", true);
+                    }
+                    else
+                    {
+
+                        var getItemdetailComp = clsPrescription.GetCompDetailPrescription(ordersetname, 2);
+                        var getJsonItemdetailComp = JsonConvert.DeserializeObject<ResultPrescription>(getItemdetailComp.Result.ToString());
+                        listprescriptioncomptemp = getJsonItemdetailComp.list;
+
+                        foreach (var templist in listprescriptioncomptemp)
+                        {
+                            string[] tempqty = templist.quantity.ToString().Split('.');
+                            int a = tempqty.Count();
+                            if (tempqty.Count() > 1)
+                            {
+                                if (tempqty[1].Length == 3)
+                                {
+                                    if (tempqty[1] == "000")
+                                    {
+                                        templist.quantity = decimal.Parse(tempqty[0]).ToString();
+                                    }
+                                    else if (tempqty[1].Substring(tempqty[1].Length - 2) == "00")
+                                    {
+                                        templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 1);
+                                    }
+                                    else if (tempqty[1].Substring(tempqty[1].Length - 1) == "0")
+                                    {
+                                        templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 2);
+                                    }
+                                }
+
+                                string[] tempdose = templist.dosage_id.ToString().Split('.');
+
+                                if (tempdose[1].Length == 3)
+                                {
+                                    if (tempdose[1] == "000")
+                                    {
+                                        templist.dosage_id = decimal.Parse(tempdose[0]).ToString();
+                                    }
+                                    else if (tempdose[1].Substring(tempdose[1].Length - 2) == "00")
+                                    {
+                                        templist.dosage_id = tempdose[0] + "." + tempdose[1].Substring(0, 1);
+                                    }
+                                    else if (tempdose[1].Substring(tempdose[1].Length - 1) == "0")
+                                    {
+                                        templist.dosage_id = tempdose[0] + "." + tempdose[1].Substring(0, 2);
+                                    }
+                                }
+                            }
+                        }
+                        DataTable prescriptioncompdt = Helper.ToDataTable(listprescriptioncomptemp);
+
+                        if (prescriptioncompdt.Select("organization_id = 0").Count() == 0)
+                        {
+                            DataTable dta = prescriptioncompdt.Select("item_id = 0").CopyToDataTable();
+                            DataTable dtcompdetailhdn = prescriptioncompdt.Select("item_id <> 0").CopyToDataTable();
+                            List<Prescription> dataheader = GetRowList(2);
+                            List<Prescription> datadetail = GetRowList(3);
+
+                            dta.Merge(Helper.ToDataTable(dataheader));
+                            dtcompdetailhdn.Merge(Helper.ToDataTable(datadetail));
+
+                            Session[Helper.SessionCompPres] = dta;
+                            gvw_comp.DataSource = dta;
+                            gvw_comp.DataBind();
+
+                            Session[Helper.SessionCompDetailPres] = dtcompdetailhdn;
+                            gvw_compdetail.DataSource = dtcompdetailhdn;
+                            gvw_compdetail.DataBind();
+                        }
+                        else
+                        {
+                            Repeater3.DataSource = null;
+                            Repeater3.DataBind();
+                            itemex.Visible = false;
+
+                            DataTable dta = prescriptioncompdt.Select("item_id = 0").CopyToDataTable();
+                            DataTable dtcompdetailhdn = prescriptioncompdt.Select("item_id <> 0 and organization_id <> 0").CopyToDataTable();
+                            DataTable dtexdrugs = prescriptioncompdt.Select("item_id <> 0 and organization_id = 0").CopyToDataTable();
+                            Session[Helper.SessionCompHeaderHdn] = dta;
+                            Session[Helper.SessionCompPresHdn] = dtcompdetailhdn;
+                            //DataTable dtcompdetailhdn = Helper.ToDataTable(datadetail);
+                            if (prescriptioncompdt.Select("item_id <> 0 and organization_id = 0").Count() > 0)
+                            {
+                                Repeater3.DataSource = dtexdrugs;
+                                Repeater3.DataBind();
+                                itemex.Visible = true;
+                            }
+
+                            gvw_comp_detail.DataSource = dtcompdetailhdn;
+                            gvw_comp_detail.DataBind();
+
+                            //DataTable dtItem = (DataTable)Session["item"];
+                            gvw_item_detail.DataSource = (DataTable)Session[Helper.SessionItemDrugPres];
+                            gvw_item_detail.DataBind();
+
+                            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalcompdetail", "$('#modalcompdetail').modal({backdrop: 'static', keyboard: false});", true);
+                        }
+
+                    }
+                }
+                else
+                {
+                    var getItemdetailComp = clsPrescription.GetCompDetailPrescription(ordersetname, 2);
+                    var getJsonItemdetailComp = JsonConvert.DeserializeObject<ResultPrescription>(getItemdetailComp.Result.ToString());
+                    listprescriptioncomptemp = getJsonItemdetailComp.list;
+
+                    foreach (var templist in listprescriptioncomptemp)
+                    {
+                        string[] tempqty = templist.quantity.ToString().Split('.');
+                        int a = tempqty.Count();
+                        if (tempqty.Count() > 1)
+                        {
+                            if (tempqty[1].Length == 3)
+                            {
+                                if (tempqty[1] == "000")
+                                {
+                                    templist.quantity = decimal.Parse(tempqty[0]).ToString();
+                                }
+                                else if (tempqty[1].Substring(tempqty[1].Length - 2) == "00")
+                                {
+                                    templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 1);
+                                }
+                                else if (tempqty[1].Substring(tempqty[1].Length - 1) == "0")
+                                {
+                                    templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 2);
+                                }
+                            }
+
+                            string[] tempdose = templist.dosage_id.ToString().Split('.');
+
+                            if (tempdose[1].Length == 3)
+                            {
+                                if (tempdose[1] == "000")
+                                {
+                                    templist.dosage_id = decimal.Parse(tempdose[0]).ToString();
+                                }
+                                else if (tempdose[1].Substring(tempdose[1].Length - 2) == "00")
+                                {
+                                    templist.dosage_id = tempdose[0] + "." + tempdose[1].Substring(0, 1);
+                                }
+                                else if (tempdose[1].Substring(tempdose[1].Length - 1) == "0")
+                                {
+                                    templist.dosage_id = tempdose[0] + "." + tempdose[1].Substring(0, 2);
+                                }
+                            }
+                        }
+                    }
+
+                    DataTable prescriptioncompdt = Helper.ToDataTable(listprescriptioncomptemp);
+
+                    if (prescriptioncompdt.Select("organization_id = 0").Count() == 0)
+                    {
+                        DataTable dta = prescriptioncompdt.Select("item_id = 0").CopyToDataTable();
+                        DataTable dtcompdetailhdn = prescriptioncompdt.Select("item_id <> 0").CopyToDataTable();
+                        List<Prescription> dataheader = GetRowList(2);
+                        List<Prescription> datadetail = GetRowList(3);
+
+                        dta.Merge(Helper.ToDataTable(dataheader));
+                        dtcompdetailhdn.Merge(Helper.ToDataTable(datadetail));
+
+                        Session[Helper.SessionCompPres] = dta;
+                        gvw_comp.DataSource = dta;
+                        gvw_comp.DataBind();
+
+                        Session[Helper.SessionCompDetailPres] = dtcompdetailhdn;
+                        gvw_compdetail.DataSource = dtcompdetailhdn;
+                        gvw_compdetail.DataBind();
+                    }
+                    else
+                    {
+                        Repeater3.DataSource = null;
+                        Repeater3.DataBind();
+                        itemex.Visible = false;
+
+                        DataTable dta = prescriptioncompdt.Select("item_id = 0").CopyToDataTable();
+                        DataTable dtcompdetailhdn = prescriptioncompdt.Select("item_id <> 0 and organization_id <> 0").CopyToDataTable();
+                        DataTable dtexdrugs = prescriptioncompdt.Select("item_id <> 0 and organization_id = 0").CopyToDataTable();
+                        Session[Helper.SessionCompHeaderHdn] = dta;
+                        Session[Helper.SessionCompPresHdn] = dtcompdetailhdn;
+                        //DataTable dtcompdetailhdn = Helper.ToDataTable(datadetail);
+                        if (prescriptioncompdt.Select("item_id <> 0 and organization_id = 0").Count() > 0)
+                        {
+                            Repeater3.DataSource = dtexdrugs;
+                            Repeater3.DataBind();
+                            itemex.Visible = true;
+                        }
+
+                        gvw_comp_detail.DataSource = dtcompdetailhdn;
+                        gvw_comp_detail.DataBind();
+
+                        //DataTable dtItem = (DataTable)Session["item"];
+                        gvw_item_detail.DataSource = ((DataTable)Session[Helper.SessionItemDrugPres]).Rows.Cast<System.Data.DataRow>().Take(100).CopyToDataTable();
+                        gvw_item_detail.DataBind();
+
+                        ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalcompdetail", "$('#modalcompdetail').modal({backdrop: 'static', keyboard: false});", true);
+                    }
+                }
+            }
+            else
+            {
+                var getItemdetailDrug = clsPrescription.GetDrugDetailPrescription(setname.Text, Helper.organizationId, Helper.doctorid);
+                var getJsonItemdetailDrug = JsonConvert.DeserializeObject<ResultPrescription>(getItemdetailDrug.Result.ToString());
+                listprescriptiondrugtemp = getJsonItemdetailDrug.list;
+                List<Prescription> data = GetRowList(1);
+                foreach (var x in listprescriptiondrugtemp)
+                {
+                    if (x.organization_id != 0)
+                    {
+                        if (x != null)
+                        {
+                            DataTable dttemp = Helper.ToDataTable(data);
+                            if (dttemp.Select("item_name = '" + x.item_name + "'").Count() == 0)
+                            {
+                                data.Add(x);
+                                DataTable dta = Helper.ToDataTable(data);
+                                Session[Helper.SessionDrugPres] = dta;
+                                gvw_drug.DataSource = dta;
+                                gvw_drug.DataBind();
+                                txtSearchItem.Text = "";
+                            }
+                            else
+                                listdrugex.Add(x);
+
+                        }
+                    }
+                    else
+                        listdrugex.Add(x);
+                }
+
+                DataTable dtDrugex = Helper.ToDataTable(listdrugex);
+
+                if (dtDrugex.Rows.Count != 0)
+                {
+                    ScriptManager.RegisterStartupScript(Page, Page.GetType(), "modalexdrugs", "$('#modalexdrugs').modal();", true);
+                    //UpdatePanel1.Update();
+                    Repeater2.DataSource = dtDrugex;
+                    Repeater2.DataBind();
+                }
+            }
+        }
+        catch
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
+        }
+    }
+
+    public SOAP GetPlanningValues(SOAP SOA)
+    {
+        foreach (var planning in SOA.planning)
+        {
+            if (planning.soap_mapping_id == Guid.Parse("337a371f-baf5-424a-bdc5-c320c277cac6"))
+            {
+                planning.remarks = txtPlanning.Text;
+            }
+            if (planning.soap_mapping_id == Guid.Parse("0c822444-a7ee-4904-a223-2869e8424579"))
+            {
+                planning.remarks = txtplanningother.Text;
+            }
+            if (planning.soap_mapping_id == Guid.Parse("2df0294d-f94e-4ba4-8ba1-f017bfb55d92"))
+            {
+                planning.remarks = txtPresNotes.Text;
+            }
+        }
+        if (Session[Helper.SessionLabPathologyChecked] == null)
+        {
+            SOA.cpoe_trans.Clear();
+        }
+        else
+        SOA.cpoe_trans = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked];
+
+        SOA.cpoe_notes = StdClinicControl.getvaluesnotes(SOA.cpoe_notes);
+        SOA.cpoe_notes = StdMicroLabControl.getvaluesnotes(SOA.cpoe_notes);
+        SOA.cpoe_notes = StdCitoControl.getvaluesnotes(SOA.cpoe_notes);
+
+        List<Prescription> datadrugs = GetRowList(1);
+        List<Prescription> datacompheader = GetRowList(2);
+        List<Prescription> datacompdetail = GetRowList(3);
+        List<Prescription> dataconsumables = GetRowList(5);
+
+        datadrugs.AddRange(datacompheader);
+        datadrugs.AddRange(datacompdetail);
+        datadrugs.AddRange(dataconsumables);
+
+        SOA.prescription = datadrugs;
+        
+        return SOA;
+    }
+
+
+}

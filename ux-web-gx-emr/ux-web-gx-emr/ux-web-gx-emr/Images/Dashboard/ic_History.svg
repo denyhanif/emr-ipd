@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#13a7b9}
+        </style>
+    </defs>
+    <g id="ic_History" transform="translate(-871 -66)">
+        <path id="Rectangle_8499" d="M0 0h32v32H0z" class="cls-1" data-name="Rectangle 8499" transform="translate(871 66)"/>
+        <g id="Rounded" transform="translate(871.372 70.998)">
+            <g id="Group_8894" data-name="Group 8894">
+                <path id="Path_34612" d="M15.958 3A11.114 11.114 0 0 0 4.535 14.1H2.327a.611.611 0 0 0-.427 1.052l3.442 3.454a.611.611 0 0 0 .876 0l3.442-3.454a.617.617 0 0 0-.449-1.052H7a8.633 8.633 0 0 1 8.759-8.635 8.744 8.744 0 0 1 8.512 8.512 8.64 8.64 0 0 1-8.635 8.759 8.506 8.506 0 0 1-5.28-1.826 1.227 1.227 0 0 0-1.628.1 1.233 1.233 0 0 0 .1 1.838 10.927 10.927 0 0 0 6.809 2.356 11.114 11.114 0 0 0 11.1-11.423A11.233 11.233 0 0 0 15.958 3z" class="cls-2" data-name="Path 34612" transform="translate(-1.708 -2.997)"/>
+                <path id="Path_34613" d="M12.925 8a.932.932 0 0 0-.925.925v4.54a1.248 1.248 0 0 0 .6 1.061l3.849 2.282a.927.927 0 1 0 .95-1.591l-3.549-2.11V8.913A.929.929 0 0 0 12.925 8z" class="cls-2" data-name="Path 34613" transform="translate(.696 -1.828)"/>
+            </g>
+        </g>
+    </g>
+</svg>

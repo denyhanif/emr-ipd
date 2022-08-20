@@ -1,0 +1,1154 @@
+﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="PlanningPage.ascx.cs" Inherits="Form_SOAP_Control_Template_PlanningPage" %>
+<%@ Register Src="~/Form/CPOE/Control_Template/StdClinicLabPage.ascx" TagName="StdClinicControl" TagPrefix="uc1" %>
+<%@ Register Src="~/Form/CPOE/Control_Template/StdMicroLab.ascx" TagName="StdMicroLabControl" TagPrefix="uc2" %>
+<%@ Register Src="~/Form/CPOE/Control_Template/StdCitoLab.ascx" TagName="StdCitoControl" TagPrefix="uc3" %>
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="cc1" %>
+
+<script type="text/javascript">
+
+
+    function OnClick() {
+        if (testpopup.style.display == "none") {
+            testpopup.style.display = "";
+            $("[id$='txtSearchItem']").focus();
+        }
+        else
+            testpopup.style.display = "none";
+    }
+
+    function OnClickcons() {
+        if (popupcons.style.display == "none") {
+            popupcons.style.display = "";
+            $("[id$='txtSearchItemcons']").focus();
+        }
+        else
+            popupcons.style.display = "none";
+    }
+
+    function OnClick2() {
+        if (testpopup2.style.display == "none") {
+            testpopup2.style.display = "";
+            $("[id$='find_detail']").focus();
+        }
+        else
+            testpopup2.style.display = "none";
+    }
+
+    function showConsumables() {
+        var dvPassport = document.getElementById("dvConsumables");
+        dvPassport.style.display = "";
+        return false;
+    }
+
+    function HideConsumables() {
+        var dvPassport = document.getElementById("dvConsumables");
+        dvPassport.style.display = "none";
+        var dvPassport2 = document.getElementById("dvConsumablesShow");
+        dvPassport2.style.display = "";
+        
+        return false;
+    }
+
+    function CheckNumeric() {
+        return event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode == 46;
+    }
+    function myFunction() {
+        testpopup.style.display = "none";
+        return false;
+    }
+
+    function txtOnKeyPress() {
+        var c = event.keyCode;
+        if (c == 13) {
+            return true;
+        }
+    }
+
+    function txtOnKeyPressFalse() {
+        var c = event.keyCode;
+        if (c == 13) {
+            return false;
+        }
+    }
+
+    function validateFloatKeyPress(el) {
+        var v = parseFloat(el.value);
+        var strv = el.value.split('.');
+        var strval = strv[1];
+        // alert(strval.length);
+        if (strval.length == 3) {
+            if (strval == "000") {
+                el.value = strv[0];
+            }
+            else
+                el.value = (isNaN(v)) ? '' : v.toFixed(3);
+        }
+        else if (strval.length == 2) {
+            if (strval == "00") {
+                el.value = strv[0];
+            }
+            else
+                el.value = (isNaN(v)) ? '' : v.toFixed(2);
+        }
+        else if (strval.length == 1) {
+            if (strval == "0") {
+                el.value = strv[0];
+            }
+            else
+                el.value = (isNaN(v)) ? '' : v.toFixed(2);
+        }
+        else
+            el.value = (isNaN(v)) ? '' : v.toFixed(2);
+        //el.value = (isNaN(v)) ? '' : v.toFixed(2);
+    }
+</script>
+
+<style>
+    .box {
+        border-radius: 2px;
+        background-color: #ffffff;
+        border: solid 1px #cdced9;
+        height: 23px;
+    }
+
+    .hiddencol {
+        display: none;
+    }
+    .mycheckbox input[type="checkbox"] 
+{ 
+    margin-right: 2px; 
+}
+</style>
+<asp:HiddenField ID="hfPayerType" runat="server" />
+<%--<asp:TextBox runat="server" ID="hfPayerType"></asp:TextBox>--%>
+<%-- ==================================================== PLANNING & PROCEDURE ============================================================ --%>
+<div class="col-lg-12" style="padding-left: 0px; margin: 0px">
+
+    <div style="height: 150px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+        <div>
+            <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Planning & Procedure</label>
+        </div>
+
+        <div class="modal-body">
+            <asp:TextBox runat="server" Style="outline-color: transparent; max-width: 100%; width: 100%; resize: none" placeholder="Type here..." BorderColor="transparent" ID="txtPlanning" TextMode="MultiLine" Rows="4" />
+        </div>
+    </div>
+</div>
+<%-- ==================================================== END PLANNING & PROCEDURE ============================================================ --%>
+
+<%-- ==================================================== LAB & RAD ============================================================ --%>
+<asp:UpdatePanel runat="server">
+    <ContentTemplate>
+        <div class="col-lg-12 mx-auto" style="margin: 0px; padding: 0px">
+            <div class="col-lg-4" style="padding-left: 0px">
+                <div style="min-height: 260px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                    <div class="row form-control" style="border-top-left-radius: 7px; border-top-right-radius: 7px; margin-left: 0%">
+                        <div class="col-sm-10" style="padding-left: 2px; padding-top: 5px">
+                            <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px;">Laboratory</label>
+                        </div>
+                        <asp:Button runat="server" ID="btnEditLab" Visible="false" BorderStyle="None" Style="background-color: white; color: #9d1fc3; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 12px; padding-top: 5px" Text="Edit" OnClick="btnSubmit_Click"></asp:Button>
+                    </div>
+
+
+                    <div class="modal-body" style="overflow-y: auto; max-height: 220px; min-height: 220px; padding-left: 0px;">
+                        <div>
+                            <asp:Label runat="server" ID="labempty" Style="z-index: 0; position: absolute; top: 35%; left: 20%;"><span>
+                                <img src="<%= Page.ResolveClientUrl("~/Images/P/ic_LabEmpty.png") %>" /></span><span style="font-size: 12px; font-weight: bold; color: #bdbfd8">No Lab Added</span><asp:LinkButton runat="server" Style="font-size: 12px; font-weight: bold; color: #9d1fc3" Text="Add Lab Here" ID="linklabbutton" OnClick="btnSubmit_Click"></asp:LinkButton></asp:Label>
+                            <%--<asp:Image ImageUrl="~/Images/P/ic_LabEmpty.png" runat="server" Style="z-index:0;position:absolute;top:40%;left:40%"/>--%>
+                            <ul>
+                                <asp:Repeater runat="server" ID="Repeater1">
+                                    <ItemTemplate>
+                                        <li>
+                                            <asp:Label ID="NameLabel" runat="server" Text='<%#Eval("name") %>' Font-Size="12px" Font-Names="Helvetica, Arial, sans-serif" Enabled="false" />
+                                        </li>
+
+                                    </ItemTemplate>
+                                </asp:Repeater>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="col-lg-4" style="padding-left: 0px">
+                <div style="height: 260px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                    <div>
+                        <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Radiology</label>
+                    </div>
+
+                    <div class="modal-body" style="overflow-y: auto; max-height: 220px; min-height: 220px; padding-left: 0px;">
+                        <asp:Label runat="server" ID="Label3" Style="z-index: 0; position: absolute; top: 35%; left: 20%;"><span>
+                            <img src="<%= Page.ResolveClientUrl("~/Images/P/ic_RadEmpty.png") %>" /></span><span style="font-size: 12px; font-weight: bold; color: #bdbfd8">No Radiology Added</span><asp:LinkButton runat="server" Style="font-size: 12px; font-weight: bold; color: #9d1fc3" Text="Add Radiology Here" ID="LinkButton1" OnClick="btnSubmit_Click"></asp:LinkButton></asp:Label>
+                        <%--<asp:TextBox BorderColor="red" style="outline-color:red" runat="server"></asp:TextBox>--%>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-4" style="padding-left: 0px">
+                <div style="height: 260px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                    <div>
+                        <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Diagnostic</label>
+                    </div>
+
+                    <div class="modal-body" style="overflow-y: auto; max-height: 220px; min-height: 220px; padding-left: 0px;">
+                        <asp:Label runat="server" ID="Label4" Style="z-index: 0; position: absolute; top: 35%; left: 20%;"><span>
+                            <img src="<%= Page.ResolveClientUrl("~/Images/P/ic_DiagnosticEmpty.png") %>" /></span><span style="font-size: 12px; font-weight: bold; color: #bdbfd8">No Diagnostic Added</span><asp:LinkButton runat="server" Style="font-size: 12px; font-weight: bold; color: #9d1fc3" Text="Add Diagnostic Here" ID="LinkButton2" OnClick="btnSubmit_Click"></asp:LinkButton></asp:Label>
+                        <%--<asp:TextBox BorderColor="red" style="outline-color:red" runat="server"></asp:TextBox>--%>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </ContentTemplate>
+</asp:UpdatePanel>
+<%-- ==================================================== END LAB & RAD ============================================================ --%>
+
+<%-- ==================================================== Others ============================================================ --%>
+<div class="col-lg-12" style="padding-left: 0px; margin: 0px">
+
+    <div style="height: 123px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+        <div>
+            <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Others</label>
+        </div>
+
+        <div class="modal-body">
+            <asp:TextBox runat="server" Style="outline-color: transparent; max-width: 100%; width: 100%; resize: none" placeholder="Type here..." BorderColor="transparent" ID="txtplanningother" TextMode="MultiLine" Rows="3" />
+        </div>
+    </div>
+</div>
+<%-- ==================================================== END Others ============================================================ --%>
+
+
+<div class="col-sm-9">
+    <%-- ==================================================== DRUGS PRESCRIPTION ============================================================ --%>
+    <div class="row">
+        <div class="col-sm-12 mx-auto" style="padding: 0px; margin: 0px">
+            <div style="min-height: 500px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                <div class="row form-control" style="border-top-left-radius: 7px; border-top-right-radius: 7px; margin-left: 0%">
+                    <div class="col-sm-9" style="padding-left: 2px; padding-top: 5px">
+                        <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;">Drugs Prescription</label>
+                    </div>
+
+                    <asp:UpdateProgress ID="UpdateProgress2" runat="server" AssociatedUpdatePanelID="upFormularium">
+                        <ProgressTemplate>
+                            <div class="modal-backdrop" style="background-color: transparent; vertical-align: central; text-align: center">
+                                <div class="login-logo">
+                                    <img src="" style="visibility: collapse" width="30%" />
+                                    <br />
+                                </div>
+                                <div class="login-box">
+                                    <div>
+                                        <img alt="" height="200px" width="200px" style="background-color: transparent; vertical-align: middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                                    </div>
+                                </div>
+                            </div>
+                        </ProgressTemplate>
+                    </asp:UpdateProgress>
+
+                    <asp:UpdatePanel runat="server" ID="upFormularium">
+                        <ContentTemplate>
+                            <asp:CheckBox runat="server" Style="padding-right:5px;margin:0px" GroupName="formularium" id="chkformularium" AutoPostBack="true" OnCheckedChanged="formularium_onclik" /><label style="font-size: 11px;vertical-align: text-top;">Drugs Outside Formularium</label>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                    
+                    
+                </div>
+
+                <div class="modal-body" style="padding-top: 5px">
+                    <asp:UpdateProgress ID="uProgLogin" runat="server" AssociatedUpdatePanelID="upError">
+                        <ProgressTemplate>
+                            <div class="modal-backdrop" style="background-color: transparent; vertical-align: central; text-align: center">
+                                <div class="login-logo">
+                                    <img src="" style="visibility: collapse" width="30%" />
+                                    <br />
+                                </div>
+                                <div class="login-box">
+                                    <div>
+                                        <img alt="" height="200px" width="200px" style="background-color: transparent; vertical-align: middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                                    </div>
+                                </div>
+                            </div>
+                        </ProgressTemplate>
+                    </asp:UpdateProgress>
+                    <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="upError2">
+                        <ProgressTemplate>
+                            <div class="modal-backdrop" style="background-color: transparent; vertical-align: central; text-align: center">
+                                <div class="login-logo">
+                                    <img src="" style="visibility: collapse" width="30%" />
+                                    <br />
+                                </div>
+                                <div class="login-box">
+                                    <div>
+                                        <img alt="" height="200px" width="200px" style="background-color: transparent; vertical-align: middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                                    </div>
+                                </div>
+                            </div>
+                        </ProgressTemplate>
+                    </asp:UpdateProgress>
+                    <asp:UpdatePanel ID="upError2" runat="server">
+                        <ContentTemplate>
+                            <asp:GridView ID="gvw_drug" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed"
+                                OnRowDataBound="drugs_data_RowDataBound" DataKeyNames="prescription_id" EmptyDataText="No Data">
+                                <PagerStyle CssClass="pagination-ys" />
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Item" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="prescription_id" runat="server" Value='<%# Bind("prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="prescription_no" runat="server" Value='<%# Bind("prescription_no") %>'></asp:HiddenField>
+                                            <%--<asp:Label id="prescription_id" runat="server" Text='<%# Bind("prescription_id") %>' Visible="false"><%# Eval("prescription_id").ToString() %></asp:Label>--%>
+                                            <%--<asp:Label id="item_id" runat="server" Text='<%# Bind("item_id") %>' Visible="false"><%# Eval("item_id").ToString() %></asp:Label>--%>
+                                            <asp:HiddenField ID="item_id" runat="server" Value='<%# Bind("item_id") %>'></asp:HiddenField>
+                                            <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="item_name" runat="server" Text='<%# Bind("item_name") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Qty" ItemStyle-Width="4%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" onkeypress="return CheckNumeric();" onchange="validateFloatKeyPress(this);" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="quantity" runat="server" Text='<%# Bind("quantity") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="UoM" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="uom_id" runat="server" Value='<%# Bind("uom_id") %>'></asp:HiddenField>
+                                            <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="uom_code" runat="server" Text='<%# Bind("uom_code") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Frequency" ItemStyle-Width="8%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <%--<asp:TextBox Width="100%" CssClass="box"  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="frequency_code" runat="server"  Text='<%# Bind("frequency_code") %>'></asp:TextBox>--%>
+                                            <asp:DropDownList ID="frequency_code" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:DropDownList>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px" Visible="false">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" onkeypress="return CheckNumeric();" onchange="validateFloatKeyPress(this);" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dosage_id" runat="server" Text='<%# Bind("dosage_id") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose Text" ItemStyle-Width="6%" HeaderStyle-Font-Size="11px" Visible="false">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dose_text" runat="server" Text='<%# Bind("dose_text") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose & Instruction" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="remarks" runat="server" Text='<%# Bind("remarks") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Route" ItemStyle-Width="7%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:DropDownList ID="administrationRouteCode" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:DropDownList>
+                                            <%--<asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="administrationRouteCode" runat="server"  Text='<%# Bind("administrationRouteCode") %>'></asp:TextBox>--%>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Iter" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" onkeypress="return CheckNumeric();" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="iteration" runat="server" Text='<%# Bind("iteration") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Routine" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px" ItemStyle-HorizontalAlign="Center">
+                                        <ItemTemplate>
+                                            <asp:CheckBox Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="is_routine" runat="server" Checked='<%# Eval("is_routine").ToString() != "0" %>'></asp:CheckBox>
+                                            <asp:HiddenField ID="is_consumables" runat="server" Value='<%# Bind("is_consumables") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="compound_id" runat="server" Value='<%# Bind("compound_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="compound_name" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="origin_prescription_id" runat="server" Value='<%# Bind("origin_prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="hope_arinvoice_id" runat="server" Value='<%# Bind("hope_arinvoice_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="is_delete" runat="server" Value='<%# Bind("is_delete") %>'></asp:HiddenField>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField ItemStyle-Width="1%" HeaderStyle-Font-Size="11px" ItemStyle-HorizontalAlign="Center" ItemStyle-VerticalAlign="Middle">
+                                        <ItemTemplate>
+                                            <asp:LinkButton ID="btndelete" runat="server" OnClick="btnDelete_Click"><span aria-hidden="true" class="glyphicon glyphicon-remove-sign"></span></asp:LinkButton>
+                                            <%--<asp:Button  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="btndelete" runat="server" Text="X" OnClick="btnDelete_Click"></asp:Button>--%>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+
+                                </Columns>
+                            </asp:GridView>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                    <div>
+                        <asp:UpdatePanel runat="server">
+                            <ContentTemplate>
+                                <div>
+                                    <asp:TextBox runat="server" ID="txtItemId" Visible="false" ReadOnly="true" />
+                                    <asp:TextBox runat="server" ID="txtItemAdd" Placeholder="Item Name" ReadOnly="true" onclick="OnClick()" />
+                                </div>
+                            </ContentTemplate>
+                        </asp:UpdatePanel>
+
+                        <div id="testpopup" style="display: none; position: absolute; z-index: 1; border: 1px groove; min-width: 600px; min-height: 200px; background-color: white; max-height: 250px; max-width: 800px">
+                            <asp:UpdatePanel runat="server" ID="upError" UpdateMode="Conditional">
+                                <ContentTemplate>
+                                    <div>
+                                        <asp:TextBox runat="server" ID="txtSearchItem" onkeydown="return txtOnKeyPress();" AutoPostBack="true" OnTextChanged="btnFind_click"></asp:TextBox>
+                                        <asp:Button runat="server" ID="btnfind" OnClick="btnFind_click" Text="Find" />
+                                    </div>
+                                    <div style="overflow-y: scroll; max-height: 200px; max-width: 800px; min-width: 600px; min-height: 200px;">
+                                        <asp:GridView ID="gvw_data" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed" BorderColor="Black"
+                                            HeaderStyle-CssClass="text-center" HeaderStyle-HorizontalAlign="Center"
+                                            ShowHeaderWhenEmpty="True" DataKeyNames="SalesItemId" EmptyDataText="No Data"
+                                            AllowSorting="True">
+                                            <PagerStyle CssClass="pagination-ys" />
+                                            <Columns>
+                                                <asp:TemplateField HeaderText="Item" ItemStyle-Width="15%" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                                    <ItemTemplate>
+                                                        <asp:Label ID="salesitemid" runat="server" Text='<%# Bind("SalesItemId") %>' Visible="false"><%# Eval("SalesItemId").ToString() %></asp:Label>
+                                                        <asp:LinkButton Font-Underline="true" Font-Size="12px" ID="salesItemName" runat="server" Text='<%# Bind("SalesItemName") %>' OnClick="itemselected_onclick" OnClientClick="OnClick()"></asp:LinkButton>
+                                                        <asp:HiddenField ID="hfUomId" Value='<%# Bind("SalesUomId") %>' runat="server" />
+                                                        <asp:HiddenField ID="hfUomCode" Value='<%# Bind("SalesUomCode") %>' runat="server" />
+                                                    </ItemTemplate>
+                                                </asp:TemplateField>
+                                                <asp:BoundField HeaderText="Active Ingredients" ItemStyle-Width="15%" ItemStyle-HorizontalAlign="Left" DataField="ActiveIngredientsName" SortExpression="ActiveIngredientsName"></asp:BoundField>
+                                                <asp:BoundField HeaderText="Quantity" ItemStyle-Width="5%" ItemStyle-HorizontalAlign="Left" DataField="TotalQuantity" SortExpression="TotalQuantity"></asp:BoundField>
+                                            </Columns>
+                                        </asp:GridView>
+                                    </div>
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%-- ==================================================== END DRUGS PRESCRIPTION ======================================================== --%>
+
+
+    <%-- ==================================================== Prescription Notes ============================================================ --%>
+    <div class="row">
+        <div class="col-lg-12 mx-auto" style="padding: 0px; margin: 0px">
+
+            <div style="height: 123px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                <div>
+                    <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Prescription Notes</label>
+                </div>
+
+                <div class="modal-body">
+                    <asp:TextBox runat="server" Style="outline-color: transparent; max-width: 100%; width: 100%; resize: none" placeholder="Type here..." BorderColor="transparent" ID="txtPresNotes" TextMode="MultiLine" Rows="3" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <%-- ==================================================== END Prescription Notes ============================================================ --%>
+
+        <%-- ==================================================== Pharmacist Notes ============================================================ --%>
+    <div class="row">
+        <div class="col-lg-12 mx-auto" style="padding: 0px; margin: 0px">
+
+            <div style="height: 123px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                <div>
+                    <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Pharmacist Notes</label>
+                </div>
+
+                <div class="modal-body">
+                    <asp:TextBox runat="server" Style="outline-color: transparent; max-width: 100%; width: 100%; resize: none" BorderColor="transparent" ID="txtPharmacistNotes" TextMode="MultiLine" Rows="3" ReadOnly="true" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <%-- ==================================================== END Pharmacist Notes ============================================================ --%>
+
+    <%-- ==================================================== COMPOUND PRESCRIPTION =================================================== --%>
+    <div class="row">
+        <div class="col-sm-12 mx-auto" style="padding: 0px; margin: 0px">
+            <div style="min-height: 300px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                <div>
+                    <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Compound Prescription</label>
+                </div>
+
+                <div class="modal-body" style="padding-top: 5px">
+                    <asp:UpdatePanel runat="server">
+                        <ContentTemplate>
+                            <asp:GridView ID="gvw_comp" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed"
+                                OnRowDataBound="comp_data_RowDataBound" DataKeyNames="prescription_id" EmptyDataText="No Data">
+                                <PagerStyle CssClass="pagination-ys" />
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Item" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="prescription_comp_id" runat="server" Value='<%# Bind("prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="prescription_comp_no" runat="server" Value='<%# Bind("prescription_no") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="item_comp_id" runat="server" Value='<%# Bind("item_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="item_comp_name" runat="server" Value='<%# Bind("item_name") %>'></asp:HiddenField>
+                                            <%--<asp:HiddenField ID="compound_comp_name" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>--%>
+                                            <asp:LinkButton Font-Size="12px" Font-Underline="true" Font-Names="Helvetica, Arial, sans-serif" ID="compound_comp_name" runat="server" Text='<%# Bind("compound_name") %>' OnClick="CompDetail_onClick"></asp:LinkButton>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Qty" ItemStyle-Width="3%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" Font-Size="11px" onkeypress="return CheckNumeric();" Font-Names="Helvetica, Arial, sans-serif" ID="quantity_comp" runat="server" Text='<%# Bind("quantity") %>' onkeydown="return txtOnKeyPressFalse();" onchange="validateFloatKeyPress(this);"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="UoM" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="uom_comp_id" runat="server" Value='<%# Bind("uom_id") %>'></asp:HiddenField>
+                                            <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="uom_comp_code" runat="server" Text='<%# Bind("uom_code") %>' onkeydown="return txtOnKeyPressFalse();"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Frequency" ItemStyle-Width="8%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <%--<asp:TextBox Width="100%" CssClass="box"  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="frequency_code" runat="server"  Text='<%# Bind("frequency_code") %>'></asp:TextBox>--%>
+                                            <asp:DropDownList ID="frequency_comp_code" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:DropDownList>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px" Visible="false">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" Font-Size="11px" onkeypress="return CheckNumeric();" Font-Names="Helvetica, Arial, sans-serif" ID="dosage_comp_id" runat="server" Text='<%# Bind("dosage_id") %>' onkeydown="return txtOnKeyPressFalse();" onchange="validateFloatKeyPress(this);"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose Text" ItemStyle-Width="6%" HeaderStyle-Font-Size="11px" Visible="false">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dose_comp_text" runat="server" Text='<%# Bind("dose_text") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose & Instruction" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="remarks_comp" runat="server" Text='<%# Bind("remarks") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Route" ItemStyle-Width="7%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:DropDownList ID="administrationRouteCode_comp" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:DropDownList>
+                                            <%--<asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="administrationRouteCode" runat="server"  Text='<%# Bind("administrationRouteCode") %>'></asp:TextBox>--%>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Iter" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="iteration_comp" runat="server" Text='<%# Bind("iteration") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Routine" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:CheckBox Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="is_routine_comp" runat="server" Checked='<%# Eval("is_routine").ToString() != "0" %>' onkeydown="return txtOnKeyPressFalse();"></asp:CheckBox>
+                                            <asp:HiddenField ID="is_consumables_comp" runat="server" Value='<%# Bind("is_consumables") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="compound_comp_id" runat="server" Value='<%# Bind("compound_id") %>'></asp:HiddenField>
+                                            <%--<asp:HiddenField ID="compound_comp_name" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>--%>
+                                            <asp:HiddenField ID="origin_prescription_comp_id" runat="server" Value='<%# Bind("origin_prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="hope_arinvoice_comp_id" runat="server" Value='<%# Bind("hope_arinvoice_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="is_delete_comp" runat="server" Value='<%# Bind("is_delete") %>'></asp:HiddenField>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField ItemStyle-Width="1%" HeaderStyle-Font-Size="11px" ItemStyle-HorizontalAlign="Center" ItemStyle-VerticalAlign="Middle">
+                                        <ItemTemplate>
+                                            <asp:LinkButton ID="btndelete" runat="server" OnClick="btnDeleteheadercomp_Click"><span aria-hidden="true" class="glyphicon glyphicon-remove-sign"></span></asp:LinkButton>
+                                            <%--<asp:Button  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="btndelete" runat="server"  CssClass="btn btn-danger" Text="X" OnClick="btnDeleteheadercomp_Click"></asp:Button>--%>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                </Columns>
+                            </asp:GridView>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+
+                    <asp:UpdatePanel runat="server">
+                        <ContentTemplate>
+                            <asp:GridView ID="gvw_compdetail" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed hiddencol"
+                                DataKeyNames="prescription_id" EmptyDataText="No Data">
+                                <PagerStyle CssClass="pagination-ys" />
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Item" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:Label ID="compound_compdtlhdn_name" runat="server" Text='<%# Bind("compound_name") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Item" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="prescription_compdtlhdn_id" runat="server" Value='<%# Bind("prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="prescription_compdtlhdn_no" runat="server" Value='<%# Bind("prescription_no") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="item_compdtlhdn_id" runat="server" Value='<%# Bind("item_id") %>'></asp:HiddenField>
+
+                                            <%--<asp:HiddenField ID="compound_comp_name" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>--%>
+                                            <asp:Label Font-Size="12px" Font-Underline="true" Font-Names="Helvetica, Arial, sans-serif" ID="item_compdtlhdn_name" runat="server" Text='<%# Bind("item_name") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Qty" ItemStyle-Width="3%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:Label Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="quantity_compdtlhdn" runat="server" Text='<%# Bind("quantity") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="UoM" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="uom_compdtlhdn_id" runat="server" Value='<%# Bind("uom_id") %>'></asp:HiddenField>
+                                            <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="uom_compdtlhdn_code" runat="server" Text='<%# Bind("uom_code") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Frequency" ItemStyle-Width="8%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <%--<asp:TextBox Width="100%" CssClass="box"  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="frequency_code" runat="server"  Text='<%# Bind("frequency_code") %>'></asp:TextBox>--%>
+                                            <asp:HiddenField ID="frequency_compdtlhdn_id" Value='<%# Bind("frequency_id") %>' runat="server"></asp:HiddenField>
+                                            <asp:Label ID="frequency_compdtlhdn_code" Text='<%# Bind("frequency_code") %>' CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:Label Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dosage_compdtlhdn_id" runat="server" Text='<%# Bind("dosage_id") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Dose Text" ItemStyle-Width="6%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:Label Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dose_compdtlhdn_text" runat="server" Text='<%# Bind("dose_text") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Instruction" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:Label Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="remarks_compdtlhdn" runat="server" Text='<%# Bind("remarks") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Route" ItemStyle-Width="7%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="administrationRouteid_compdtlhdn" Value='<%# Bind("administration_route_id") %>' runat="server"></asp:HiddenField>
+                                            <asp:Label ID="administrationRouteCode_compdtlhdn" Text='<%# Bind("administration_route_code") %>' CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:Label>
+                                            <%--<asp:DropDownList ID="administrationRouteCode_compdtl" CssClass="box"  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" runat="server"></asp:DropDownList>--%>
+                                            <%--<asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="administrationRouteCode" runat="server"  Text='<%# Bind("administrationRouteCode") %>'></asp:TextBox>--%>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Iter" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:Label Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="iteration_compdtlhdn" runat="server" Text='<%# Bind("iteration") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Routine" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:CheckBox Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="is_routine_compdtlhdn" runat="server" Checked='<%# Eval("is_routine").ToString() != "0" %>'></asp:CheckBox>
+                                            <asp:HiddenField ID="is_consumables_compdtlhdn" runat="server" Value='<%# Bind("is_consumables") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="compound_compdtlhdn_id" runat="server" Value='<%# Bind("compound_id") %>'></asp:HiddenField>
+                                            <%--<asp:HiddenField ID="compound_comp_name" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>--%>
+                                            <asp:HiddenField ID="origin_prescription_compdtlhdn_id" runat="server" Value='<%# Bind("origin_prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="hope_arinvoice_compdtlhdn_id" runat="server" Value='<%# Bind("hope_arinvoice_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="is_delete_compdtlhdn" runat="server" Value='<%# Bind("is_delete") %>'></asp:HiddenField>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                </Columns>
+                            </asp:GridView>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+            `
+        </div>
+    </div>
+    <%-- ====================================================END COMPOUND PRESCRIPTION =================================================== --%>
+    <%-- ==================================================== CONSUMABLES PRESCRIPTION =================================================== --%>
+
+    <div class="row" style="padding-bottom:50px;">
+<%--        <div class="col-lg-12 mx-auto" style="padding: 0px; margin: 0px" id="dvConsumables">
+            <div style="background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                <div class="row form-control" style="border-top-left-radius: 7px; border-top-right-radius: 7px; margin-left: 0%">
+                    <div class="col-sm-10" style="padding-left: 2px; padding-top: 5px">
+                        <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px;">Consumables</label>
+                    </div>
+                    <asp:Button runat="server" ID="Button1" BorderStyle="None" Style="background-color: white; color: #4d9b35; font-family: Helvetica, Arial, sans-serif; font-size: 12px;text-decoration:underline; padding-top: 5px" Text="Add Consumables" onclick="btnConsumables_onClick" ></asp:Button>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+            </div>
+        </div>--%>
+
+        <div class="col-lg-12 mx-auto" style="padding: 0px; margin: 0px;display:normal" id="dvConsumablesShow">
+            <div style="min-height: 123px;background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+                <div class="row form-control" style="border-top-left-radius: 7px; border-top-right-radius: 7px; margin-left: 0%">
+                        <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px;">Consumables</label>
+                </div>
+                <div class="modal-body">
+                    <asp:UpdatePanel ID="UpdatePanel4" runat="server">
+                        <ContentTemplate>
+                            <asp:GridView ID="gvw_consumables" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed"
+                                 DataKeyNames="prescription_id" EmptyDataText="No Data">
+                                <PagerStyle CssClass="pagination-ys" />
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Item" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="prescription_id_cons" runat="server" Value='<%# Bind("prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="prescription_no_cons" runat="server" Value='<%# Bind("prescription_no") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="frequency_code_cons" runat="server" Value='<%# Bind("frequency_code") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="frequency_id_cons" runat="server" Value='<%# Bind("frequency_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="dosage_id_cons" runat="server" Value='<%# Bind("dosage_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="dose_text_cons" runat="server" Value='<%# Bind("dose_text") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="administrationRouteCode_cons" runat="server" Value='<%# Bind("administration_route_code") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="administrationRouteId_cons" runat="server" Value='<%# Bind("administration_route_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="HiddenField1" runat="server" Value='<%# Bind("administration_route_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="is_routine_cons" runat="server" Value='<%# Bind("is_routine") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="is_consumables_cons" runat="server" Value='<%# Bind("is_consumables") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="compound_id_cons" runat="server" Value='<%# Bind("compound_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="compound_name_cons" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="origin_prescription_id_cons" runat="server" Value='<%# Bind("origin_prescription_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="hope_arinvoice_id_cons" runat="server" Value='<%# Bind("hope_arinvoice_id") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="is_delete_cons" runat="server" Value='<%# Bind("is_delete") %>'></asp:HiddenField>
+                                            <%--<asp:Label id="prescription_id" runat="server" Text='<%# Bind("prescription_id") %>' Visible="false"><%# Eval("prescription_id").ToString() %></asp:Label>--%>
+                                            <%--<asp:Label id="item_id" runat="server" Text='<%# Bind("item_id") %>' Visible="false"><%# Eval("item_id").ToString() %></asp:Label>--%>
+                                            <asp:HiddenField ID="iteration_cons" runat="server" Value='<%# Bind("iteration") %>'></asp:HiddenField>
+                                            <asp:HiddenField ID="itemId_cons" runat="server" Value='<%# Bind("item_id") %>'></asp:HiddenField>
+                                            <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="item_name_cons" runat="server" Text='<%# Bind("item_name") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Qty" ItemStyle-Width="4%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" onkeypress="return CheckNumeric();" onchange="validateFloatKeyPress(this);" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="quantity_cons" runat="server" Text='<%# Bind("quantity") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="UoM" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:HiddenField ID="uom_id_cons" runat="server" Value='<%# Bind("uom_id") %>'></asp:HiddenField>
+                                            <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="uom_code_cons" runat="server" Text='<%# Bind("uom_code") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Instruction" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                        <ItemTemplate>
+                                            <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="remarks_cons" runat="server" Text='<%# Bind("remarks") %>' onkeydown="return txtOnKeyPressFalse();"></asp:TextBox>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField ItemStyle-Width="1%" HeaderStyle-Font-Size="11px" ItemStyle-HorizontalAlign="Center" ItemStyle-VerticalAlign="Middle">
+                                        <ItemTemplate>
+                                            <asp:LinkButton ID="btndelete" runat="server" OnClick="btnDeleteCons_Click"><span aria-hidden="true" class="glyphicon glyphicon-remove-sign"></span></asp:LinkButton>
+                                            <%--<asp:Button  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="btndelete" runat="server" Text="X" OnClick="btnDelete_Click"></asp:Button>--%>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+
+                                </Columns>
+                            </asp:GridView>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+
+                    <div>
+                        <asp:UpdatePanel runat="server">
+                            <ContentTemplate>
+                                <div>
+                                    <asp:TextBox runat="server" ID="TextBox1" Visible="false" ReadOnly="true" />
+                                    <asp:TextBox runat="server" ID="TextBox3" Placeholder="Item Name" ReadOnly="true" onclick="OnClickcons()" />
+                                </div>
+                            </ContentTemplate>
+                        </asp:UpdatePanel>
+
+                        <div id="popupcons" style="display: none; position: absolute; z-index: 1; border: 1px groove; min-width: 600px; min-height: 200px; background-color: white; max-height: 250px; max-width: 800px">
+                            <asp:UpdatePanel runat="server" ID="upConsItem" UpdateMode="Conditional">
+                                <ContentTemplate>
+                                    <div>
+                                        <asp:TextBox runat="server" ID="txtSearchItemcons" onkeydown="return txtOnKeyPress();" AutoPostBack="true" OnTextChanged="btnFindCons_click"></asp:TextBox>
+                                        <asp:Button runat="server" ID="Button1" OnClick="btnFindCons_click" Text="Find" />
+                                    </div>
+                                    <div style="overflow-y: scroll; max-height: 200px; max-width: 800px; min-width: 600px; min-height: 200px;">
+                                        <asp:GridView ID="gvw_cons" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed" BorderColor="Black"
+                                            HeaderStyle-CssClass="text-center" HeaderStyle-HorizontalAlign="Center"
+                                            ShowHeaderWhenEmpty="True" DataKeyNames="SalesItemId" EmptyDataText="No Data"
+                                            AllowSorting="True">
+                                            <PagerStyle CssClass="pagination-ys" />
+                                            <Columns>
+                                                <asp:TemplateField HeaderText="Item" ItemStyle-Width="15%" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                                    <ItemTemplate>
+                                                        <asp:Label ID="salesitemid" runat="server" Text='<%# Bind("SalesItemId") %>' Visible="false"><%# Eval("SalesItemId").ToString() %></asp:Label>
+                                                        <asp:LinkButton Font-Underline="true" Font-Size="12px" ID="salesItemName" runat="server" Text='<%# Bind("SalesItemName") %>' OnClick="itemselectedCons_onclick" OnClientClick="OnClickcons()"></asp:LinkButton>
+                                                        <asp:HiddenField ID="hfUomId" Value='<%# Bind("SalesUomId") %>' runat="server" />
+                                                        <asp:HiddenField ID="hfUomCode" Value='<%# Bind("SalesUomCode") %>' runat="server" />
+                                                    </ItemTemplate>
+                                                </asp:TemplateField>
+                                                <%--<asp:BoundField HeaderText="Active Ingredients" ItemStyle-Width="15%" ItemStyle-HorizontalAlign="Left" DataField="ActiveIngredientsName" SortExpression="ActiveIngredientsName"></asp:BoundField>--%>
+                                                <asp:BoundField HeaderText="Quantity" ItemStyle-Width="5%" ItemStyle-HorizontalAlign="Left" DataField="TotalQuantity" SortExpression="TotalQuantity"></asp:BoundField>
+                                            </Columns>
+                                        </asp:GridView>
+                                    </div>
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <%-- ==================================================== END CONSUMABLES PRESCRIPTION =================================================== --%>
+</div>
+
+
+<%-- ============================================= FREQUENTLY USED DRUNGS & ORDER SET HEADER ============================================== --%>
+<asp:UpdateProgress ID="UpdateProgress3" runat="server" AssociatedUpdatePanelID="upError3">
+    <ProgressTemplate>
+        <div class="modal-backdrop" style="background-color: transparent; vertical-align: central; text-align: center">
+            <div class="login-logo">
+                <img src="" style="visibility: collapse" width="30%" />
+                <br />
+            </div>
+            <div class="login-box">
+                <div>
+                    <img alt="" height="200px" width="200px" style="background-color: transparent; vertical-align: middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                </div>
+            </div>
+        </div>
+    </ProgressTemplate>
+</asp:UpdateProgress>
+
+<asp:UpdateProgress ID="UpdateProgress4" runat="server" AssociatedUpdatePanelID="upError4">
+    <ProgressTemplate>
+        <div class="modal-backdrop" style="background-color: transparent; vertical-align: central; text-align: center">
+            <div class="login-logo">
+                <img src="" style="visibility: collapse" width="30%" />
+                <br />
+            </div>
+            <div class="login-box">
+                <div>
+                    <img alt="" height="200px" width="200px" style="background-color: transparent; vertical-align: middle" class="login-box-body" src="<%= Page.ResolveClientUrl("~/Images/Background/loading.gif") %>" />
+                </div>
+            </div>
+        </div>
+    </ProgressTemplate>
+</asp:UpdateProgress>
+
+<div class="col-sm-3">
+    <div style="min-height: 260px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+        <div>
+            <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 12px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Frequently Used Drugs</label>
+        </div>
+
+        <div class="modal-body" style="padding: 2px; max-height: 300px; overflow-y: auto;">
+            <asp:UpdatePanel ID="upError3" runat="server">
+                <ContentTemplate>
+                    <asp:GridView ID="gvw_frequent_drugs" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed" BorderColor="Black"
+                        HeaderStyle-CssClass="text-center" HeaderStyle-HorizontalAlign="Center"
+                        ShowHeaderWhenEmpty="True" DataKeyNames="salesItemId" EmptyDataText="No Data" ShowHeader="false"
+                        AllowSorting="True">
+                        <PagerStyle CssClass="pagination-ys" />
+                        <Columns>
+                            <asp:TemplateField HeaderText="" ItemStyle-Width="15%" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                <ItemTemplate>
+                                    <asp:LinkButton Font-Underline="true" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ForeColor="Black" Font-Bold="true" ID="frequentdrugs_name" runat="server" Text='<%# Bind("salesItemName") %>' OnClick="frequentdrugs_onclick"></asp:LinkButton>
+                                    <br />
+                                    <asp:HiddenField ID="hffrequentdrugs_id" Value='<%# Bind("salesItemId") %>' runat="server" />
+                                    <asp:HiddenField ID="hfuom_id" Value='<%# Bind("uom_id") %>' runat="server" />
+                                    <asp:HiddenField ID="hfuom_code" Value='<%# Bind("uom_code") %>' runat="server" />
+                                    <%--<asp:Label id="itemlist" runat="server" Text='<%# Bind("item_list") %>' Font-Size="9px" Font-Names="Helvetica, Arial, sans-serif"></asp:Label>--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <%--<asp:BoundField HeaderText="activeIngredientsName" ItemStyle-Width="15%" ItemStyle-HorizontalAlign="Left" DataField="activeIngredientsName"  SortExpression="activeIngredientsName"></asp:BoundField>
+                                            <asp:BoundField HeaderText="totalQuantity" ItemStyle-Width="5%" ItemStyle-HorizontalAlign="Left" DataField="totalQuantity"  SortExpression="totalQuantity"></asp:BoundField>--%>
+                        </Columns>
+                    </asp:GridView>
+                </ContentTemplate>
+            </asp:UpdatePanel>
+        </div>
+    </div>
+    <div style="min-height: 260px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+        <div>
+            <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Order Set</label>
+        </div>
+        <div class="modal-body" style="padding: 2px; max-height: 350px; overflow-y: auto;">
+            <asp:UpdatePanel ID="upError4" runat="server">
+                <ContentTemplate>
+                    <asp:GridView ID="gvw_orderset" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed" BorderColor="Black"
+                        HeaderStyle-CssClass="text-center" HeaderStyle-HorizontalAlign="Center"
+                        ShowHeaderWhenEmpty="True" DataKeyNames="id" EmptyDataText="No Data" ShowHeader="false"
+                        AllowSorting="True">
+                        <PagerStyle CssClass="pagination-ys" />
+                        <Columns>
+                            <asp:BoundField DataField="set_name" HeaderText="set_name" Visible="false" />
+                            <asp:TemplateField HeaderText="" ItemStyle-Width="15%" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                <ItemTemplate>
+                                    <asp:LinkButton Font-Underline="true" Font-Size="12px" Font-Names="Helvetica, Arial, sans-serif" ForeColor="Black" Font-Bold="true" ID="setname" runat="server" Text='<%# Bind("set_name") %>' OnClick="orderset_onclick"></asp:LinkButton>
+                                    <br />
+                                    <asp:Label ID="itemlist" runat="server" Text='<%# Bind("item_list") %>' Font-Size="9px" Font-Names="Helvetica, Arial, sans-serif"></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <%--<asp:BoundField HeaderText="activeIngredientsName" ItemStyle-Width="15%" ItemStyle-HorizontalAlign="Left" DataField="activeIngredientsName"  SortExpression="activeIngredientsName"></asp:BoundField>
+                                            <asp:BoundField HeaderText="totalQuantity" ItemStyle-Width="5%" ItemStyle-HorizontalAlign="Left" DataField="totalQuantity"  SortExpression="totalQuantity"></asp:BoundField>--%>
+                        </Columns>
+                    </asp:GridView>
+                </ContentTemplate>
+            </asp:UpdatePanel>
+        </div>
+    </div>
+
+
+    <div style="min-height: 260px; background-color: white; width: 100%; border: 1px; border-radius: 7px; box-shadow: 0px 2px 5px #9293A0; margin-top: 0px" class="modal-dialog center-block">
+        <div>
+            <label style="background-color: white; color: #000000; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 14px; border-top-left-radius: 7px; border-top-right-radius: 7px;" class="form-control">Lab Set</label>
+        </div>
+        <div class="modal-body" style="padding: 2px; max-height: 350px; overflow-y: auto;">
+            <asp:UpdatePanel ID="UpdatePanel2" runat="server">
+                <ContentTemplate>
+                    <asp:GridView ID="gvw_labset" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed" BorderColor="Black"
+                        HeaderStyle-CssClass="text-center" HeaderStyle-HorizontalAlign="Center"
+                        ShowHeaderWhenEmpty="True" DataKeyNames="id" EmptyDataText="No Data" ShowHeader="false"
+                        AllowSorting="True">
+                        <PagerStyle CssClass="pagination-ys" />
+                        <Columns>
+                            <asp:BoundField DataField="set_name" HeaderText="set_name" Visible="false" />
+                            <asp:TemplateField HeaderText="" ItemStyle-Width="15%" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                <ItemTemplate>
+                                    <asp:LinkButton Font-Underline="true" Font-Size="12px" Font-Names="Helvetica, Arial, sans-serif" ForeColor="Black" Font-Bold="true" ID="setname_lab" runat="server" Text='<%# Bind("set_name") %>' OnClick="btnLabSet_onClick"></asp:LinkButton>
+                                    <br />
+                                    <asp:Label ID="itemlist_lab" runat="server" Text='<%# Bind("item_list") %>' Font-Size="9px" Font-Names="Helvetica, Arial, sans-serif"></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <%--<asp:BoundField HeaderText="activeIngredientsName" ItemStyle-Width="15%" ItemStyle-HorizontalAlign="Left" DataField="activeIngredientsName"  SortExpression="activeIngredientsName"></asp:BoundField>
+                                            <asp:BoundField HeaderText="totalQuantity" ItemStyle-Width="5%" ItemStyle-HorizontalAlign="Left" DataField="totalQuantity"  SortExpression="totalQuantity"></asp:BoundField>--%>
+                        </Columns>
+                    </asp:GridView>
+                </ContentTemplate>
+            </asp:UpdatePanel>
+        </div>
+    </div>
+</div>
+<%-- =============================================END FREQUENTLY USED DRUNGS & ORDER SET HEADER ============================================== --%>
+
+
+
+<%-- ============================================= MODAL EXCLUDED DRUGS ============================================== --%>
+<div class="modal fade" id="modalexdrugs" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+        <ContentTemplate>
+            <div class="modal-dialog" style="position: fixed; top: 25%; left: 35%; width: 30%;">
+                <div class="modal-content" style="border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.24);">
+                    <div class="modal-header" style="height: 40px; padding-top: 10px; padding-bottom: 5px">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h5 class="modal-title">
+                            <asp:Label ID="Label1" Style="font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 12px;" runat="server" Text="Drugs not Available"></asp:Label></h5>
+                    </div>
+                    <div class="modal-body">
+                        <ul>
+                            <asp:Repeater runat="server" ID="Repeater2">
+                                <ItemTemplate>
+                                    <li>
+                                        <asp:Label ID="NameLabel" runat="server" Text='<%#Eval("item_name") %>' Font-Size="10px" Font-Names="Helvetica" Style="max-width: 100%" />
+                                        <br />
+                                    </li>
+                                </ItemTemplate>
+                            </asp:Repeater>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+</div>
+<%-- ============================================= END MODAL EXCLUDED DRUGS ============================================== --%>
+
+<%-- ============================================= MODAL COMPOUND DETAIL ============================================== --%>
+<div class="modal fade" id="modalcompdetail" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="height: 40px; padding-top: 10px; padding-bottom: 5px">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5 class="modal-title">
+                    <asp:Label ID="Label2" Style="font-family: Helvetica, Arial, sans-serif; font-weight: bold" runat="server" Text="Compound Detail"></asp:Label></h5>
+            </div>
+            <div class="modal-body">
+                <asp:UpdatePanel runat="server">
+                    <ContentTemplate>
+                        <div>
+                            <asp:Label runat="server" ID="itemex" Font-Names="Helvetica, Arial, sans-serif" Text="Item Excluded"></asp:Label>
+                            <ul>
+                                <asp:Repeater runat="server" ID="Repeater3">
+                                    <ItemTemplate>
+                                        <li>
+                                            <asp:Label ID="NameLabel" runat="server" Font-Names="Helvetica, Arial, sans-serif" Text='<%#Eval("item_name") %>' Font-Size="12px" Style="max-width: 100%" />
+                                            <br />
+                                        </li>
+                                    </ItemTemplate>
+                                </asp:Repeater>
+                            </ul>
+                        </div>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+                <asp:UpdatePanel runat="server">
+                    <ContentTemplate>
+                        <asp:GridView ID="gvw_comp_detail" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed"
+                            DataKeyNames="prescription_id" EmptyDataText="No Data">
+                            <PagerStyle CssClass="pagination-ys" />
+                            <Columns>
+                                <asp:TemplateField HeaderText="Item" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                    <ItemTemplate>
+                                        <asp:HiddenField ID="prescription_compdtl_id" runat="server" Value='<%# Bind("prescription_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="prescription_compdtl_no" runat="server" Value='<%# Bind("prescription_no") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="item_compdtl_id" runat="server" Value='<%# Bind("item_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="frequency_compdtl_id" runat="server" Value='<%# Bind("frequency_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="frequency_compdtl_code" runat="server" Value='<%# Bind("frequency_code") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="administration_route_compdtl_id" runat="server" Value='<%# Bind("administration_route_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="administration_route_compdtl_code" runat="server" Value='<%# Bind("administration_route_code") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="is_routine_compdtl" runat="server" Value='<%# Bind("is_routine") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="is_consumables_compdtl" runat="server" Value='<%# Bind("is_consumables") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="compound_compdtl_id" runat="server" Value='<%# Bind("compound_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="compound_compdtl_name" runat="server" Value='<%# Bind("compound_name") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="origin_prescription_compdtl_id" runat="server" Value='<%# Bind("origin_prescription_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="hope_arinvoice_compdtl_id" runat="server" Value='<%# Bind("hope_arinvoice_id") %>'></asp:HiddenField>
+                                        <asp:HiddenField ID="is_delete_compdtl" runat="server" Value='<%# Bind("is_delete") %>'></asp:HiddenField>
+                                        <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="item_compdtl_name" runat="server" Text='<%# Bind("item_name") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Qty" ItemStyle-Width="3%" HeaderStyle-Font-Size="11px">
+                                    <ItemTemplate>
+                                        <asp:TextBox Width="100%" Style="text-align: right" onkeypress="return CheckNumeric();" onchange="validateFloatKeyPress(this);" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="quantity_compdtl" runat="server" Text='<%# Bind("quantity") %>'></asp:TextBox>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="UoM" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px">
+                                    <ItemTemplate>
+                                        <asp:HiddenField ID="uom_compdtl_id" runat="server" Value='<%# Bind("uom_id") %>'></asp:HiddenField>
+                                        <asp:Label Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="uom_compdtl_code" runat="server" Text='<%# Bind("uom_code") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Dose" ItemStyle-Width="2%" HeaderStyle-Font-Size="11px" Visible="false">
+                                    <ItemTemplate>
+                                        <asp:TextBox Width="100%" Style="text-align: right" onkeypress="return CheckNumeric();" onchange="validateFloatKeyPress(this);" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dosage_compdtl_id" runat="server" Text='<%# Bind("dosage_id") %>'></asp:TextBox>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Dose Text" ItemStyle-Width="6%" HeaderStyle-Font-Size="11px" Visible="false">
+                                    <ItemTemplate>
+                                        <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="dose_compdtl_text" runat="server" Text='<%# Bind("dose_text") %>'></asp:TextBox>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Dose & Instruction" ItemStyle-Width="10%" HeaderStyle-Font-Size="11px">
+                                    <ItemTemplate>
+                                        <asp:TextBox Width="100%" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="remarks_compdtl" runat="server" Text='<%# Bind("remarks") %>'></asp:TextBox>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="Iter" ItemStyle-Width="1%" HeaderStyle-Font-Size="11px">
+                                    <ItemTemplate>
+                                        <asp:TextBox Width="100%" Style="text-align: right" CssClass="box" Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" ID="iteration_compdtl" runat="server" Text='<%# Bind("iteration") %>'></asp:TextBox>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField ItemStyle-Width="1%" HeaderStyle-Font-Size="11px" ItemStyle-HorizontalAlign="Center" ItemStyle-VerticalAlign="Middle">
+                                    <ItemTemplate>
+                                        <asp:LinkButton ID="btndelete" runat="server" OnClick="btnDeleteComp_Click"><span aria-hidden="true" class="glyphicon glyphicon-remove-sign"></span></asp:LinkButton>
+                                        <%--<asp:Button  Font-Size="11px" Font-Names="Helvetica, Arial, sans-serif" CssClass="btn btn-danger" ID="btndelete" runat="server" Text="X" OnClick="btnDeleteComp_Click"></asp:Button>--%>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                            </Columns>
+                        </asp:GridView>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+                <asp:UpdatePanel runat="server">
+                    <ContentTemplate>
+                        <asp:TextBox runat="server" ID="item_id_detail" Visible="false" ReadOnly="true" />
+                        <asp:TextBox runat="server" ID="item_search_detail" Placeholder="Item Name" ReadOnly="true" onclick="OnClick2()" />
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+                <div id="testpopup2" style="display: none; position: absolute; z-index: 1; border: 1px groove; min-width: 600px; min-height: 200px; background-color: white; max-height: 250px; max-width: 800px">
+                    <asp:UpdatePanel runat="server" ID="Updatepanel3">
+                        <ContentTemplate>
+                            <div>
+                                <asp:TextBox runat="server" ID="find_detail" onkeydown="return txtOnKeyPress();" AutoPostBack="true" OnTextChanged="btnFindcomp_click"></asp:TextBox>
+                                <asp:Button runat="server" OnClick="btnFindcomp_click" Text="Find" />
+                            </div>
+                            <div style="overflow-y: scroll; max-height: 200px; max-width: 800px; min-width: 600px; min-height: 200px;">
+                                <asp:GridView ID="gvw_item_detail" runat="server" AutoGenerateColumns="False" CssClass="table table-striped table-bordered table-condensed" BorderColor="Black"
+                                    HeaderStyle-CssClass="text-center" HeaderStyle-HorizontalAlign="Center"
+                                    ShowHeaderWhenEmpty="True" DataKeyNames="salesItemId" EmptyDataText="No Data"
+                                    AllowSorting="True">
+                                    <PagerStyle CssClass="pagination-ys" />
+                                    <Columns>
+                                        <asp:TemplateField HeaderText="salesItemName" ItemStyle-Width="15%" HeaderStyle-ForeColor="#3C8DBC" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left">
+                                            <ItemTemplate>
+                                                <asp:Label ID="salesitemid_detail" runat="server" Text='<%# Bind("salesItemId") %>' Visible="false"><%# Eval("salesItemId").ToString() %></asp:Label>
+                                                <asp:LinkButton Font-Underline="true" Font-Size="12px" ID="salesItemName_detail" runat="server" Text='<%# Bind("salesItemName") %>' OnClientClick="OnClick2()" OnClick="itemselecteddetail_onclick"></asp:LinkButton>
+                                                <asp:HiddenField ID="hfUomId_detail" Value='<%# Bind("salesUomId") %>' runat="server" />
+                                                <asp:HiddenField ID="hfUomCode_detail" Value='<%# Bind("salesUomCode") %>' runat="server" />
+                                            </ItemTemplate>
+                                        </asp:TemplateField>
+                                        <asp:BoundField HeaderText="activeIngredientsName" ItemStyle-Width="15%" ItemStyle-HorizontalAlign="Left" DataField="activeIngredientsName" SortExpression="activeIngredientsName"></asp:BoundField>
+                                        <asp:BoundField HeaderText="totalQuantity" ItemStyle-Width="5%" ItemStyle-HorizontalAlign="Left" DataField="totalQuantity" SortExpression="totalQuantity"></asp:BoundField>
+                                    </Columns>
+                                </asp:GridView>
+                            </div>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>
+                <asp:UpdatePanel runat="server">
+                    <ContentTemplate>
+                        <asp:Button runat="server" Text="Save" class="box" OnClick="btnSaveCompDetail_onClick" />
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+    </div>
+</div>
+<%-- ============================================= END  MODAL COMPOUND DETAIL ============================================== --%>
+
+
+<%-- ============================================= MODAL ALERT LAB ============================================== --%>
+
+<div class="modal fade" id="modallab" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="position: fixed; top: 25%; left: 35%; width: 30%;">
+        <div class="modal-content" style="border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.24);">
+            <div class="modal-header" style="height: 30px; padding-top: 5px; padding-bottom: 5px">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5 class="modal-title">
+                    <asp:Label ID="Label5" Style="font-family: Helvetica; font-weight: bold; font-size: 14px" runat="server" Text="Service Lab Warning"></asp:Label></h5>
+            </div>
+            <div class="modal-body">
+            <asp:UpdatePanel runat="server">
+                <ContentTemplate>
+                <asp:Label Style="font-family: Helvetica; font-size: 12px; font-weight: bold;" runat="server" ID="lblExist" Text="Service Already Exist"></asp:Label>
+                <ul>
+                    <asp:Repeater runat="server" ID="rptExist">
+                        <ItemTemplate>
+                            <li>
+                                <asp:Label ID="NameLabel" runat="server" Text='<%#Eval("name") %>' Font-Size="11px" Font-Names="Helvetica" Style="max-width: 100%" />
+                                <br />
+                            </li>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </ul>
+
+                <asp:Label runat="server" Style="font-family: Helvetica; font-size: 12px; font-weight: bold;" ID="lblNotExist" Text="Service Not Available"></asp:Label>
+                <ul>
+                    <asp:Repeater runat="server" ID="rptNotExist">
+                        <ItemTemplate>
+                            <li>
+                                <asp:Label ID="NameLabel" runat="server" Text='<%#Eval("name") %>' Font-Size="11px" Font-Names="Helvetica" Style="max-width: 100%" />
+                                <br />
+                            </li>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </ul>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+    </div>
+</div>
+<%-- ============================================= END MODAL SUBMIT AND SIGN ============================================== --%>
+
+
+<%-- ============================================= MODAL LABORATORY ============================================== --%>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" onabort="modal_onclose">
+    <div class="modal-dialog" style="width: 80%;">
+        <asp:UpdatePanel ID="upModal" runat="server" UpdateMode="Always">
+            <ContentTemplate>
+                <div class="modal-content" style="border-radius: 7px">
+                    <div class="modal-header" style="height: 40px; padding-top: 10px; padding-bottom: 5px">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h5 class="modal-title">
+                            <asp:Label ID="lblModalTitle" Style="font-family: Helvetica, Arial, sans-serif; font-weight: bold" runat="server" Text="Laboratory"></asp:Label></h5>
+                    </div>
+
+                    <div class="modal-body" style="background-color: #e7e8ef; margin: 0px; padding-top: 10px; padding-bottom: 0px">
+
+                        <cc1:TabContainer ID="TabContainer1" runat="server">
+                            <cc1:TabPanel ID="ClinicalLab" Visible="true" HeaderText="Clinical Pathology" Font-Size="14px" Style="background-color: #e7e8ef;" runat="server">
+                                <HeaderTemplate>Clinical Pathology</HeaderTemplate>
+                                <ContentTemplate>
+                                    <uc1:StdClinicControl runat="server" ID="StdClinicControl" />
+                                </ContentTemplate>
+                            </cc1:TabPanel>
+                            <cc1:TabPanel ID="Microbiology" Visible="true" HeaderText="Microbiology " runat="server">
+                                <HeaderTemplate>Microbiology</HeaderTemplate>
+                                <ContentTemplate>
+                                    <uc2:StdMicroLabControl runat="server" ID="StdMicroLabControl" />
+                                </ContentTemplate>
+                            </cc1:TabPanel>
+                            <cc1:TabPanel ID="CITO" Visible="true" HeaderText="Clinical Pathology (CITO) " runat="server">
+                                <HeaderTemplate><span style="color: red">Clinical Pathology (CITO)</span></HeaderTemplate>
+                                <ContentTemplate>
+                                    <uc3:StdCitoControl runat="server" ID="StdCitoControl" />
+                                </ContentTemplate>
+                            </cc1:TabPanel>
+                        </cc1:TabContainer>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">Close</button>
+                    </div>
+                </div>
+            </ContentTemplate>
+        </asp:UpdatePanel>
+    </div>
+</div>
+<%-- ============================================= END MODAL LABORATORY ============================================== --%>
+
+

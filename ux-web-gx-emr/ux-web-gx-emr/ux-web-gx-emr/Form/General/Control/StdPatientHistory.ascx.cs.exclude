@@ -1,0 +1,1493 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using log4net;
+using Microsoft.Ajax.Utilities;
+using Newtonsoft.Json;
+using static PatientHistory;
+
+public partial class Form_General_Control_StdPatientHistory : System.Web.UI.UserControl
+{
+    protected static readonly ILog log = LogManager.GetLogger(typeof(Form_General_Control_StdPatientHistory));
+    //public List<Dose> listdoseUom = new List<Dose>();
+    public List<physicalExm> eye = new List<physicalExm>();
+    public List<physicalExm> move = new List<physicalExm>();
+    public List<physicalExm> verbal = new List<physicalExm>();
+
+    public string setENG = "none";
+    public string setIND = "none";
+    public string isBahasa = "";
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (Session[Helper.SessionLanguage] == null)
+            Session[Helper.SessionLanguage] = 1;
+
+        if (Session[Helper.SessionLanguage].ToString() == "1")
+        {
+            setENG = "";
+            setIND = "none";
+            isBahasa = "ENG";
+            HFisBahasa.Value = "ENG";
+        }
+        else if (Session[Helper.SessionLanguage].ToString() == "2")
+        {
+            setENG = "none";
+            setIND = "";
+            isBahasa = "IND";
+            HFisBahasa.Value = "IND";
+        }
+        else
+        {
+            setENG = "";
+            setIND = "none";
+            isBahasa = "ENG";
+            HFisBahasa.Value = "ENG";
+        }
+
+        if (!IsPostBack)
+        {
+            // ------------------------------------------------------------ Electronic MR --------------------------------------------------------------
+            eye = new List<physicalExm>();
+            Session.Remove(Helper.ViewStatePatientHistoryEye);
+            eye.Add(new physicalExm { idph = 1, name = "None" });
+            eye.Add(new physicalExm { idph = 2, name = "To Pressure" });
+            eye.Add(new physicalExm { idph = 3, name = "To Sound" });
+            eye.Add(new physicalExm { idph = 4, name = "Spontaneus" });
+            Session[Helper.ViewStatePatientHistoryEye] = eye;
+
+            move = new List<physicalExm>();
+            Session.Remove(Helper.ViewStatePatientHistoryMove);
+            move.Add(new physicalExm { idph = 1, name = "None" });
+            move.Add(new physicalExm { idph = 2, name = "Extension" });
+            move.Add(new physicalExm { idph = 3, name = "Flexion to pain stumulus" });
+            move.Add(new physicalExm { idph = 4, name = "Withdrawns from pain" });
+            move.Add(new physicalExm { idph = 5, name = "Localizes to pain stimulus" });
+            move.Add(new physicalExm { idph = 6, name = "Obey Commands" });
+            move.Add(new physicalExm { idph = 1, name = "None" });
+            Session[Helper.ViewStatePatientHistoryMove] = move;
+
+            verbal = new List<physicalExm>();
+            Session.Remove(Helper.ViewStatePatientHistoryVerbal);
+            verbal.Add(new physicalExm { idph = 1, name = "None" });
+            verbal.Add(new physicalExm { idph = 2, name = "Incomprehensible sounds" });
+            verbal.Add(new physicalExm { idph = 3, name = "Inappropriate words" });
+            verbal.Add(new physicalExm { idph = 4, name = "Confused" });
+            verbal.Add(new physicalExm { idph = 5, name = "Orientated" });
+            Session[Helper.ViewStatePatientHistoryVerbal] = verbal;
+            // ------------------------------------------------------------ Electronic MR --------------------------------------------------------------
+        }
+    }
+
+    public void setPatientHistory(string userId, ResultPatientHistoryEncounterData JsongetPatientHistoryData)
+    {
+        try
+        {
+            log.Info(LogLibrary.Logging("S", "loadDataPatientHistory ", userId, ""));
+            GridView gvw_test = new GridView();
+            
+            StringBuilder patientHistory = new StringBuilder();
+            eye = (List<physicalExm>)Session[Helper.ViewStatePatientHistoryEye];
+            move = (List<physicalExm>)Session[Helper.ViewStatePatientHistoryMove];
+            verbal = (List<physicalExm>)Session[Helper.ViewStatePatientHistoryVerbal];
+
+            ResultPatientHistoryEncounterData patientHistoryData = JsongetPatientHistoryData;
+
+            /*public PatientHistoryHeader historyheader { get; set; }
+            public PatientHistoryAnamnesis historyanamnesis { get; set; }
+            public List<PatientHistoryIllness> historyillness { get; set; }
+            public List<PatientHistoryPhysicalExam> historyphysicalexam { get; set; }
+            public List<PatientHistoryDiagnosis> historydiagnosis { get; set; }
+            public List<PatientHistoryPlanning> historyplanning { get; set; }
+            public List<PatientHistoryClinicalFinding> historyclinical { get; set; }
+            public List<PatientHistoryPrescription> historyprescription { get; set; }*/
+
+            # region Data Patien History
+            if (patientHistoryData.list.historyheader != null || patientHistoryData.list.historyanamnesis != null || patientHistoryData.list.historyillness != null || 
+                patientHistoryData.list.historyphysicalexam != null || patientHistoryData.list.historydiagnosis != null || patientHistoryData.list.historyplanning != null ||
+                patientHistoryData.list.historyclinical != null || patientHistoryData.list.historyprescription != null || patientHistoryData.list.compound_header != null)
+            { 
+
+                // ------------------------------------ Illness History ---------------------------------
+                PatientHistoryHeader headerPatient = patientHistoryData.list.historyheader;
+                // ------------------------------------ Illness History ---------------------------------
+                List<PatientHistoryIllness> illnessHistory = patientHistoryData.list.historyillness;
+                illnessHistory.OrderBy(x => x.type);
+                List<String> illCategory = illnessHistory.DistinctBy(x => x.type).Select(x => x.type).ToList();
+
+                // ------------------------------------ history physical exam ---------------------------------
+                List<PatientHistoryPhysicalExam> physicalExams = patientHistoryData.list.historyphysicalexam;
+
+                // ------------------------------------ history diagnosis ---------------------------------
+                List<PatientHistoryDiagnosis> historyDiagnoses = patientHistoryData.list.historydiagnosis;
+
+                // ------------------------------------ history planning ---------------------------------
+                List<PatientHistoryPlanning> historyPlanning = patientHistoryData.list.historyplanning;
+
+                // ------------------------------------ history prescription ---------------------------------
+                List<PatientHistoryPrescription> historyPrescriptions = patientHistoryData.list.historyprescription;
+                List<PatientHistoryPrescription> tmpDrugs = (from a in historyPrescriptions
+                                                             where a.compoundName == "" &&
+                                                             a.isConsumables == false &&
+                                                             a.IsDoctor == 1 &&
+                                                             a.IsAdditional == 0
+                                                             orderby a.salesItemName
+                                                             select a).ToList();
+
+                List<PatientHistoryPrescription> tmpConsumableDoctor = (from a in historyPrescriptions
+                                                                        where a.compoundName == "" &&
+                                                                        a.isConsumables == true &&
+                                                                        a.IsDoctor == 1 &&
+                                                                        a.IsAdditional == 0
+                                                                        orderby a.salesItemName
+                                                                        select a).ToList();
+
+                List<PatientHistoryPrescription> tmpCompound = historyPrescriptions.FindAll(x => x.compoundName != "").OrderBy(x => x.salesItemName).ToList();
+                List<String> compoundName = tmpCompound.DistinctBy(x => x.compoundName).Select(x => x.compoundName).ToList();
+                List<PatientHistoryPrescription> tmpAdditionalDoctor = (from a in historyPrescriptions
+                                                                        where a.compoundName == "" &&
+                                                                        a.isConsumables == false &&
+                                                                        a.IsDoctor == 1 &&
+                                                                        a.IsAdditional == 1
+                                                                        orderby a.salesItemName
+                                                                        select a).ToList();
+
+                List<PatientHistoryPrescription> tmpPrescriptionPharmacist = (from a in historyPrescriptions
+                                                                              where a.compoundName == "" &&
+                                                                              a.isConsumables == false &&
+                                                                              a.IsDoctor == 0 &&
+                                                                              a.IsAdditional == 0
+                                                                              orderby a.salesItemName
+                                                                              select a).ToList();
+
+                List<PatientHistoryPrescription> tmpConsumablePharmacist = (from a in historyPrescriptions
+                                                                            where a.compoundName == "" &&
+                                                                            a.isConsumables == true &&
+                                                                            a.IsDoctor == 0 &&
+                                                                            a.IsAdditional == 0
+                                                                            orderby a.salesItemName
+                                                                            select a).ToList();
+
+                List<PatientHistoryPrescription> tmpAdditionalPharmacist = (from a in historyPrescriptions
+                                                                            where a.compoundName == "" &&
+                                                                            a.isConsumables == false &&
+                                                                            a.IsDoctor == 0 &&
+                                                                            a.IsAdditional == 1
+                                                                            orderby a.salesItemName
+                                                                            select a).ToList();
+
+                List<CompoundHeaderSoap> historyRacikanHeader = patientHistoryData.list.compound_header;
+                
+                List<CompoundHeaderSoap> tmpRacikanHeader = (from a in historyRacikanHeader
+                                                             where a.is_additional == false
+                                                             //orderby a.compound_name
+                                                             select a).ToList();
+
+                List<CompoundHeaderSoap> tmpRacikanHeaderAdd = (from a in historyRacikanHeader
+                                                             where a.is_additional == true
+                                                             //orderby a.compound_name
+                                                             select a).ToList();
+
+                List<CompoundDetailSoap> historyRacikanDetail = patientHistoryData.list.compound_detail;
+
+                List<CompoundDetailSoap> tmpRacikanDetail = (from a in historyRacikanDetail
+                                                             where a.is_additional == false
+                                                             //orderby a.item_name
+                                                             select a).ToList();
+
+                List<CompoundDetailSoap> tmpRacikanDetailAdd = (from a in historyRacikanDetail
+                                                                where a.is_additional == true
+                                                                //orderby a.item_name
+                                                                select a).ToList();
+
+                foreach (var templist in tmpRacikanHeader)
+                {
+                    string a = templist.quantity.ToString().Substring(0, 3);
+                    string[] tempqty = templist.quantity.ToString().Split('.');
+                    if (tempqty[1].Length == 3)
+                    {
+                        if (tempqty[1] == "000")
+                        {
+                            templist.quantity = decimal.Parse(tempqty[0]).ToString();
+                        }
+                        else if (tempqty[1].Substring(tempqty[1].Length - 2) == "00")
+                        {
+                            templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 1);
+                        }
+                        else if (tempqty[1].Substring(tempqty[1].Length - 1) == "0")
+                        {
+                            templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 2);
+                        }
+                    }
+
+                    string[] tempdose = templist.dose.ToString().Split('.');
+
+                    if (tempdose[1].Length == 3)
+                    {
+                        if (tempdose[1] == "000")
+                        {
+                            templist.dose = decimal.Parse(tempdose[0]).ToString();
+                        }
+                        else if (tempdose[1].Substring(tempdose[1].Length - 2) == "00")
+                        {
+                            templist.dose = tempdose[0] + "." + tempdose[1].Substring(0, 1);
+                        }
+                        else if (tempdose[1].Substring(tempdose[1].Length - 1) == "0")
+                        {
+                            templist.dose = tempdose[0] + "." + tempdose[1].Substring(0, 2);
+                        }
+                    }
+                }
+
+                foreach (var templist in tmpRacikanHeaderAdd)
+                {
+                    string a = templist.quantity.ToString().Substring(0, 3);
+                    string[] tempqty = templist.quantity.ToString().Split('.');
+                    if (tempqty[1].Length == 3)
+                    {
+                        if (tempqty[1] == "000")
+                        {
+                            templist.quantity = decimal.Parse(tempqty[0]).ToString();
+                        }
+                        else if (tempqty[1].Substring(tempqty[1].Length - 2) == "00")
+                        {
+                            templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 1);
+                        }
+                        else if (tempqty[1].Substring(tempqty[1].Length - 1) == "0")
+                        {
+                            templist.quantity = tempqty[0] + "." + tempqty[1].Substring(0, 2);
+                        }
+                    }
+
+                    string[] tempdose = templist.dose.ToString().Split('.');
+
+                    if (tempdose[1].Length == 3)
+                    {
+                        if (tempdose[1] == "000")
+                        {
+                            templist.dose = decimal.Parse(tempdose[0]).ToString();
+                        }
+                        else if (tempdose[1].Substring(tempdose[1].Length - 2) == "00")
+                        {
+                            templist.dose = tempdose[0] + "." + tempdose[1].Substring(0, 1);
+                        }
+                        else if (tempdose[1].Substring(tempdose[1].Length - 1) == "0")
+                        {
+                            templist.dose = tempdose[0] + "." + tempdose[1].Substring(0, 2);
+                        }
+                    }
+                }
+
+                foreach (var templist in tmpRacikanDetail)
+                {
+                    templist.dose = Helper.formatDecimal(templist.dose);
+                }
+
+                foreach (var templist in tmpRacikanDetailAdd)
+                {
+                    templist.dose = Helper.formatDecimal(templist.dose);
+                }
+
+                //-------------------------------- history clinical --------------------------------------------
+                //string linkLaboratory = "javascript:modalLaboratory('" + AdmissionId + "')";
+                //string linkRadiology = "javascript:modalRadiology('" + AdmissionId + "')";
+
+                //List<PatientHistoryClinicalFinding> patientHistoryClinicals = patientHistoryData.list.historyclinical;
+                //var laboratoryData = "";
+                //if (patientHistoryClinicals[0].countData != 0)
+                //{
+                //    laboratoryData = "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top\"><a href=\"" + linkLaboratory + "\"><img src=\"../../Images/Result/ic_Lab.png\" />  <label style=\"color: blue; text-decoration:underline; \"><b>Laboratory Result</b></label></a></div>";
+                //}
+                //else
+                //{
+                //    laboratoryData = "";
+                //}
+
+                //var radiologyData = "";
+                //if (patientHistoryClinicals[1].countData != 0)
+                //{
+                //    radiologyData = "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top\"><a href=\"" + linkRadiology + "\"><img src=\"../../Images/Result/ic_Rad.png\" />  <label  style=\"color: orange; text-decoration:underline; \"><b>Radiology Result</b></label></a></div>";
+                //}
+                //else
+                //{
+                //    radiologyData = "";
+                //}
+
+                var statusPregnancy = "";
+                if (historyDiagnoses.Find(x => x.mappingName.Equals("PREGNANCY")).value == "True")
+                {
+                    if (isBahasa == "ENG")
+                    {
+                        statusPregnancy = "Yes";
+                    }
+                    else if (isBahasa == "IND")
+                    {
+                        statusPregnancy = "Ya";
+                    }
+                }
+                else
+                {
+                    if (isBahasa == "ENG")
+                    {
+                        statusPregnancy = "-";
+                    }
+                    else if (isBahasa == "IND")
+                    {
+                        statusPregnancy = "-";
+                    }
+                }
+
+                var statusBreastFeeding = "";
+                if (historyDiagnoses.Find(x => x.mappingName.Equals("BREASTFEEDING")).value == "True")
+                {
+                    if (isBahasa == "ENG")
+                    {
+                        statusBreastFeeding = "Yes";
+                    }
+                    else if (isBahasa == "IND")
+                    {
+                        statusBreastFeeding = "Ya";
+                    }
+                }
+                else
+                {
+                    if (isBahasa == "ENG")
+                    {
+                        statusBreastFeeding = "-";
+                    }
+                    else if (isBahasa == "IND")
+                    {
+                        statusBreastFeeding = "-";
+                    }
+                }
+
+                patientHistory.Append("<div style=\"background-color:white; margin:20px; border-radius:7px; border: solid 2px lightgrey; \">" +
+                                    "<table class=\"table table-divider\" style=\"margin-bottom: 0px;\">");
+                patientHistory.Append("<tr>" +
+                                        "<td colspan=\"2\" style=\"border-top:0px;\">" +
+                                        "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                                            "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; font-size:15px;\">" +
+                                                "<b>" + patientHistoryData.list.historyheader.admissionDate.ToString("dddd, dd MMMM yyyy") + " - " +
+                                                patientHistoryData.list.historyheader.organizationCode + " - " + patientHistoryData.list.historyheader.admissionTypeName + " - " +
+                                                patientHistoryData.list.historyheader.doctorName + "</b" +
+                                            "</div>" +
+                                        "</div>" +
+                                        "</td>" +
+                                      "</tr>");
+
+                var tempChiefComplaint = historyDiagnoses.Find(x => x.mappingName == "PATIENT COMPLAINT").remarks.Split('\n').ToList();
+                var notesChiefComplaint = "";
+                if (tempChiefComplaint.Count != 0)
+                {
+                    for (int i = 0; i < tempChiefComplaint.Count; i++)
+                    {
+                        notesChiefComplaint = notesChiefComplaint + "<div>" + tempChiefComplaint[i] + "</div>";
+                    }
+                }
+                else
+                {
+                    notesChiefComplaint = historyDiagnoses.Find(x => x.mappingName == "PATIENT COMPLAINT").remarks;
+                }
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\"> <b> <label style=\"display:" + setENG + "\"> Chief Complaint </label> <label style=\"display:" + setIND + "\"> Keluhan Utama </label> </b></td><td>" + notesChiefComplaint + "</td></tr>");
+
+                var tempAnemsis = patientHistoryData.list.historyanamnesis.remarks.Split('\n').ToList();
+                var notesAnemsis = "";
+                if (tempAnemsis.Count != 0)
+                {
+                    for (int i = 0; i < tempAnemsis.Count; i++)
+                    {
+                        notesAnemsis = notesAnemsis + "<div>" + tempAnemsis[i] + "</div>";
+                    }
+                }
+                else
+                {
+                    notesAnemsis = patientHistoryData.list.historyanamnesis.remarks;
+                }
+
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\"> <b>Anamnesis</b></td>" +
+                                        "<td style=\"padding-top:0px; padding-bottom:0px;\">" +
+                                        "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                                            "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px 8px 8px 0px;\">" +
+                                                "<div>" + notesAnemsis + "</div>" +
+                                            "</div>" +
+                                            "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                "<div><b> <label style=\"display:" + setENG + "\"> Pregnant </label> <label style=\"display:" + setIND + "\"> Hamil </label> </b></div><div>" + statusPregnancy + "</div>" +
+                                            "</div>" +
+                                            "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                "<div><b> <label style=\"display:" + setENG + "\"> Breast Feeding </label> <label style=\"display:" + setIND + "\"> Menyusui </label></b></div><div>" + statusBreastFeeding + "</div>" +
+                                            "</div>" +
+                                        "</div>" +
+                                        "</td></tr>");
+
+                /*-------------------------------- Routine Medication --------------------------------*/
+                var routineMedication = illnessHistory.FindAll(x => x.type.Equals("RoutineMedication"));
+                var routineMedicationInner = "";
+                routineMedicationInner = "<b> <label style=\"display:" + setENG + "\"> Routine Medication </label> <label style=\"display:" + setIND + "\"> Pengobatan Rutin </label></b><br/>";
+                if (routineMedication.Count > 1)
+                {
+                    routineMedicationInner = routineMedicationInner + "<ul style =\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in routineMedication)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            routineMedicationInner = routineMedicationInner + "<li>" + data.remarks + "</li>";
+                        else
+                            routineMedicationInner = routineMedicationInner + "<li>" + data.value + "</li>";
+                    }
+                    routineMedicationInner = routineMedicationInner + "</ul>";
+                }
+                else
+                {
+                    if (routineMedication.Count == 0)
+                        routineMedicationInner = routineMedicationInner + "-";
+                    else
+                    {
+                        if (routineMedication[0].value == "" || routineMedication[0].remarks == "")
+                        {
+                            if (routineMedication[0].value.ToUpper() == "LAIN-LAIN")
+                                routineMedicationInner = routineMedicationInner + "" + routineMedication[0].remarks + "";
+                            else
+                                routineMedicationInner = routineMedicationInner + "" + routineMedication[0].value + "";
+                        }
+                    }
+                }                
+
+                /*-------------------------------- Drug Allergy --------------------------------*/
+                var drugAlergy = illnessHistory.FindAll(x => x.type.Equals("DrugAllergy"));
+                var drugAlergyInner = "";
+                drugAlergyInner = "<b><label style=\"display:" + setENG + "\"> Drug Allergy  </label> <label style=\"display:" + setIND + "\"> Alergi Obat </label> </b> <br />";
+                if (drugAlergy.Count > 1)
+                {
+                    drugAlergyInner = drugAlergyInner + "<ul style=\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in drugAlergy)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            drugAlergyInner = drugAlergyInner + "<li>" + data.remarks + "</li>";
+                        else
+                            drugAlergyInner = drugAlergyInner + "<li>" + data.value + "</li>";
+                    }
+                    drugAlergyInner = drugAlergyInner + "</ul>";
+                }
+                else
+                {
+                    if (drugAlergy.Count == 0)
+                        drugAlergyInner = drugAlergyInner + "-";
+                    else
+                    {
+                        if (drugAlergy[0].value != "" || drugAlergy[0].remarks != "")
+                        {
+                            if (drugAlergy[0].value.ToUpper() == "LAIN-LAIN")
+                                drugAlergyInner = drugAlergyInner + "" + drugAlergy[0].remarks + "";
+                            else
+                                drugAlergyInner = drugAlergyInner + "" + drugAlergy[0].value + "";
+                        }
+                    }
+                }
+
+                /*-------------------------------- Food Allergy --------------------------------*/
+                var foodAlergy = illnessHistory.FindAll(x => x.type.Equals("FoodAllergy"));
+                var foodAlergyInner = "";
+                foodAlergyInner = "<b> <label style=\"display:" + setENG + "\"> Food Allergy </label> <label style=\"display:" + setIND + "\"> Alergi Makanan </label></b> <br />";
+                if (foodAlergy.Count > 1)
+                {
+                    foodAlergyInner = foodAlergyInner + "<ul style=\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in foodAlergy)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            foodAlergyInner = foodAlergyInner + "<li>" + data.remarks + "</li>";
+                        else
+                            foodAlergyInner = foodAlergyInner + "<li>" + data.value + "</li>";
+                    }
+                    foodAlergyInner = foodAlergyInner + "</ul>";
+                }
+                else
+                {
+                    if (foodAlergy.Count == 0)
+                        foodAlergyInner = foodAlergyInner + "-";
+                    else
+                    {
+                        if (foodAlergy[0].value != "" || foodAlergy[0].remarks != "")
+                        {
+                            if (foodAlergy[0].value.ToUpper() == "LAIN-LAIN")
+                                foodAlergyInner = foodAlergyInner + "" + foodAlergy[0].remarks + "";
+                            else
+                                foodAlergyInner = foodAlergyInner + "" + foodAlergy[0].value + "";
+                        }
+                    }
+                }
+
+                /*-------------------------------- Other Allergy --------------------------------*/
+                var otherAlergy = illnessHistory.FindAll(x => x.type.Equals("OtherAllergy"));
+                var otherAlergyInner = "";
+                otherAlergyInner = "<b> <label style=\"display:" + setENG + "\"> Other Allergy </label> <label style=\"display:" + setIND + "\"> Alergi Lainnya </label></b> <br />";
+                if (otherAlergy.Count > 1)
+                {
+                    otherAlergyInner = otherAlergyInner + "<ul style=\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in otherAlergy)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            otherAlergyInner = otherAlergyInner + "<li>" + data.remarks + "</li>";
+                        else
+                            otherAlergyInner = otherAlergyInner + "<li>" + data.value + "</li>";
+                    }
+                    otherAlergyInner = otherAlergyInner + "</ul>";
+                }
+                else
+                {
+                    if (otherAlergy.Count == 0)
+                        otherAlergyInner = otherAlergyInner + "-";
+                    else
+                    {
+                        if (otherAlergy[0].value != "" || otherAlergy[0].remarks != "")
+                        {
+                            if (otherAlergy[0].value.ToUpper() == "LAIN-LAIN")
+                                otherAlergyInner = otherAlergyInner + "" + otherAlergy[0].remarks + "";
+                            else
+                                otherAlergyInner = otherAlergyInner + "" + otherAlergy[0].value + "";
+                        }
+                    }
+                }
+
+
+                /*-------------------------------- Surgery --------------------------------*/
+                var sugeryHistory = illnessHistory.FindAll(x => x.type.Equals("Surgery"));
+                var sugeryHistoryInner = "";
+                sugeryHistoryInner = "<b> <label style=\"display:" + setENG + "\"> Surgery History </label> <label style=\"display:" + setIND + "\"> Riwayat Operasi </label></b><br />";
+                if (sugeryHistory.Count > 1)
+                {
+                    sugeryHistoryInner = sugeryHistoryInner + "<ul style=\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in sugeryHistory)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            sugeryHistoryInner = sugeryHistoryInner + "<li>" + data.remarks + "</li>";
+                        else
+                            sugeryHistoryInner = sugeryHistoryInner + "<li>" + data.value + "</li>";
+                    }
+                    sugeryHistoryInner = sugeryHistoryInner + "</ul>";
+                }
+                else
+                {
+                    if (sugeryHistory.Count == 0)
+                        sugeryHistoryInner = sugeryHistoryInner + "-";
+                    else
+                    {
+                        if (sugeryHistory[0].value != "" || sugeryHistory[0].remarks != "")
+                        {
+                            if (sugeryHistory[0].value.ToUpper() == "LAIN-LAIN")
+                                sugeryHistoryInner = sugeryHistoryInner + "" + sugeryHistory[0].remarks + "";
+                            else
+                                sugeryHistoryInner = sugeryHistoryInner + "" + sugeryHistory[0].value + "";
+                        }
+                    }
+                }
+
+
+                /*-------------------------------- Diseas History ( Personal Disease ) --------------------------------*/
+                var diseasHistory = illnessHistory.FindAll(x => x.type.Equals("PersonalDisease") && x.value != "HAD" && x.value != "PRT" && x.value != "RHN" && x.value != "MRS" && x.value != "COVID");
+                var diseasHistoryInner = "";
+                diseasHistoryInner = "<b> <label style=\"display:" + setENG + "\"> Disease History </label> <label style=\"display:" + setIND + "\"> Riwayat Penyakit </label></b> <br />";
+                if (diseasHistory.Count > 1)
+                {
+                    diseasHistoryInner = diseasHistoryInner + "<ul style=\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in diseasHistory)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            diseasHistoryInner = diseasHistoryInner + "<li>" + data.remarks + "</li>";
+                        else
+                            diseasHistoryInner = diseasHistoryInner + "<li>" + data.value + "</li>";
+                    }
+                    diseasHistoryInner = diseasHistoryInner + "</ul>";
+                }
+                else
+                {
+                    if (diseasHistory.Count == 0)
+                        diseasHistoryInner = diseasHistoryInner + "-";
+                    else
+                    {
+                        if (diseasHistory[0].value != "" || diseasHistory[0].remarks != "")
+                        {
+                            if (diseasHistory[0].value.ToUpper() == "LAIN-LAIN")
+                                diseasHistoryInner = diseasHistoryInner + "" + diseasHistory[0].remarks + "";
+                            else
+                                diseasHistoryInner = diseasHistoryInner + "" + diseasHistory[0].value + "";
+                        }
+                    }
+                }
+
+
+                /*-------------------------------- Family Disease --------------------------------*/
+                var familyDiseasHistory = illnessHistory.FindAll(x => x.type.Equals("FamilyDisease"));
+                var familyDiseasHistoryInner = "";
+                familyDiseasHistoryInner = "<b> <label style=\"display:" + setENG + "\"> Family Disease History </label> <label style=\"display:" + setIND + "\"> Riwayat Penyakit Keluarga </label> </b> <br />";
+                if (familyDiseasHistory.Count > 1)
+                {
+                    familyDiseasHistoryInner = familyDiseasHistoryInner + "<ul style=\"padding-left:15px;\">";
+                    foreach (PatientHistoryIllness data in familyDiseasHistory)
+                    {
+                        if (data.value.ToUpper() == "LAIN-LAIN")
+                            familyDiseasHistoryInner = familyDiseasHistoryInner + "<li>" + data.remarks + "</li>";
+                        else
+                            familyDiseasHistoryInner = familyDiseasHistoryInner + "<li>" + data.value + "</li>";
+                    }
+                    familyDiseasHistoryInner = familyDiseasHistoryInner + "</ul>";
+                }
+                else
+                {
+                    if (familyDiseasHistory.Count == 0)
+                        familyDiseasHistoryInner = familyDiseasHistoryInner + "-";
+                    else
+                    {
+                        if (familyDiseasHistory[0].value == "" || familyDiseasHistory[0].remarks == "")
+                        {
+                            if (familyDiseasHistory[0].value.ToUpper() == "LAIN-LAIN")
+                                familyDiseasHistoryInner = familyDiseasHistoryInner + "" + familyDiseasHistory[0].remarks + "";
+                            else
+                                familyDiseasHistoryInner = familyDiseasHistoryInner + "" + familyDiseasHistory[0].value + "";
+                        }
+                    }
+                }
+                
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\">" +
+                                            "<div><b> <label style=\"display:" + setENG + "\"> Medication & Allergies </label> <label style=\"display:" + setIND + "\"> Pengobatan & Alergi </label></b></div>" +
+                                        //"<div style=\"color: blue; text-decoration:underline; \"><span>Revision</span></div>" +
+                                        "</td>" +
+                                        "<td style=\"padding-top:0px; padding-bottom:0px;\">" +
+                                            "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px 8px 8px 0px;\">" +
+                                                    "<div>" + routineMedicationInner + "</div>" +
+                                                "</div>" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                    "<div>" + drugAlergyInner + "</div>" +
+                                                "</div>" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                    "<div>" + foodAlergyInner + "</div>" +
+                                                "</div>" +
+                                                 "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                    "<div>" + otherAlergyInner + "</div>" +
+                                                "</div>" +
+                                            "</div>" +
+                                        "</td>" +
+                                        "</tr>");
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\">" +
+                                            "<div><b> <label style=\"display:" + setENG + "\"> Illness History </label> <label style=\"display:" + setIND + "\"> Riwayat Penyakit </label></b></div>" +
+                                        //"<div style=\"color: blue; text-decoration:underline; \"><span>Revision</span></div>" +
+                                        "</td>" +
+                                        "<td style=\"padding-top:0px; padding-bottom:0px;\">" +
+                                            "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px 8px 8px 0px;\">" +
+                                                    "<div>" + sugeryHistoryInner + "</div>" +
+                                                "</div>" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                    "<div>" + diseasHistoryInner + "</div>" +
+                                                "</div>" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\">" +
+                                                    "<div>" + familyDiseasHistoryInner + "</div>" +
+                                                "</div>" +
+                                            "</div>" +
+                                        "</td></tr>");
+
+                List<PatientHistoryDiagnosis> endemicArea = historyDiagnoses.FindAll(x => x.mappingId.Equals(Guid.Parse("6A10C1FA-7C43-4E7C-A855-EAEA815BCADE")));
+                var contentEndemicArea = "";
+
+                if (endemicArea.Count > 1)
+                {
+                    foreach (PatientHistoryDiagnosis data in endemicArea)
+                    {
+                        if (data.value.ToUpper() != "LAIN-LAIN")
+                            contentEndemicArea = contentEndemicArea + "<li>" + data.remarks + "</li>";
+                        else
+                            contentEndemicArea = contentEndemicArea + "<li>" + data.value + "</li>";
+                    }
+                }
+                else
+                {
+                    contentEndemicArea = "-";
+                    if (endemicArea[0].value != "" || endemicArea[0].remarks != "")
+                    {
+                        if (endemicArea[0].value.ToUpper() != "LAIN-LAIN")
+                            contentEndemicArea = endemicArea[0].remarks + "";
+                        else
+                            contentEndemicArea = endemicArea[0].value + "";
+                    }
+                }
+
+
+                List<PatientHistoryDiagnosis> screeningEndemic = historyDiagnoses.FindAll(x => x.mappingId.Equals(Guid.Parse("1979ddcb-33bc-4187-be92-04fbdb0a50d6")));
+                var contentScreeningEndemic = "";
+
+                if (screeningEndemic.Count > 1)
+                {
+                    foreach (PatientHistoryDiagnosis data in screeningEndemic)
+                    {
+                        if (data.value.ToUpper() != "LAIN-LAIN")
+                            contentScreeningEndemic = contentScreeningEndemic + "<li>" + data.remarks + "</li>";
+                        else
+                            contentScreeningEndemic = contentScreeningEndemic + "<li>" + data.value + "</li>";
+                    }
+                }
+                else
+                {
+                    contentScreeningEndemic = "-";
+
+                    if (screeningEndemic[0].value != "" || screeningEndemic[0].remarks != "")
+                    {
+                        if (screeningEndemic[0].value.ToUpper() != "LAIN-LAIN")
+                            contentScreeningEndemic = screeningEndemic[0].remarks;
+                        else
+                            contentScreeningEndemic = screeningEndemic[0].value;
+                    }
+                }
+
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\">" +
+                                            "<div><b> <label style=\"display:" + setENG + "\"> Endemic Area Visitation </label> <label style=\"display:" + setIND + "\"> Kunjungan ke Daerah Endemis </label></b></div>" +
+                                        "</td>" +
+                                        "<td style=\"padding-top:0px; padding-bottom:0px;\">" +
+                                            "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px 8px 8px 0px; width:40%;\">" +
+                                                    "<div><b> <label style=\"display:" + setENG + "\"> Have Been to Endemic Area </label> <label style=\"display:" + setIND + "\"> Kunjungan ke Daerah Endemis </label> </b></div>" +
+                                                    "<div>" + contentEndemicArea + "</div>" +
+                                                "</div>" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey; width:55%;\">" +
+                                                    "<div><b> <label style=\"display:" + setENG + "\"> Screening Infectious Disease </label> <label style=\"display:" + setIND + "\"> Pemindaian Penyakit Menular </label></b></div>" +
+                                                    "<div>" + contentScreeningEndemic + "</div>" +
+                                                "</div>" +
+                                            "</div>" +
+                                        "</td></tr>");
+
+                var nutrition = historyDiagnoses.Find(x => x.mappingId.Equals(Guid.Parse("82B114B2-303C-43EC-963B-851B19A11EEA")));
+                var contentNutrition = "-";
+                if (nutrition.value != "" || nutrition.remarks != "")
+                    contentNutrition = nutrition.value + " " + nutrition.remarks;
+
+                var fasting = historyDiagnoses.Find(x => x.mappingId.Equals(Guid.Parse("BB077100-EAAE-41E4-91DB-B2B10154EE48")));
+                var contentFasting = "-";
+                if (fasting.value != "" || fasting.remarks != "")
+                    contentFasting = fasting.value + " " + fasting.remarks;
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\">" +
+                                            "<div><b> <label style=\"display:" + setENG + "\"> Nutrition & Fasting </label> <label style=\"display:" + setIND + "\"> Nutrisi & Puasa </label></b></div>" +
+                                        //"<div style=\"color: blue; text-decoration:underline; \"><span>Revision</span></div>" +
+                                        "</td>" +
+                                        "<td style=\"padding-top:0px; padding-bottom:0px;\">" +
+                                            "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px 8px 8px 0px; width:40%;\">" +
+                                                    "<div><b> <label style=\"display:" + setENG + "\"> Nutrition Problem </label> <label style=\"display:" + setIND + "\"> Masalah Nutrisi </label></b></div>" +
+                                                    "<div>" + contentNutrition + "</div>" +
+                                                "</div>" +
+                                                "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey; width:55%;\">" +
+                                                    "<div><b> <label style=\"display:" + setENG + "\"> Fasting </label> <label style=\"display:" + setIND + "\"> Puasa </label></b></div>" +
+                                                    "<div>" + contentFasting + "</div>" +
+                                                "</div>" +
+                                            "</div>" +
+                                        "</td></tr>");
+
+                var tempChest = physicalExams.Find(x => x.mappingId == Guid.Parse("7218971c-e89f-4172-ae3c-b7fb855c1d6d")).remarks.Split('\n').ToList();
+                var notesChest = "";
+                if (tempChest.Count != 0)
+                {
+                    for (int i = 0; i < tempChest.Count; i++)
+                    {
+                        notesChest = notesChest + "<div>" + tempChest[i] + "</div>";
+                    }
+                }
+                else
+                {
+                    notesChest = physicalExams.Find(x => x.mappingId == Guid.Parse("7218971c-e89f-4172-ae3c-b7fb855c1d6d")).remarks;
+                }
+
+                var tempChestString = "";
+                if (notesChest != "")
+                {
+                    tempChestString = "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey;\"> <div>" + notesChest + "</div></div>" +
+                    "</div>";
+                }
+                else
+                {
+                    tempChestString = "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey;\"> <div> - </div></div>" +
+                    "</div>";
+                }
+
+                var total = 0;
+                var eyeData = physicalExams.Find(a => a.mappingName == "GCS EYE").value;
+                var moveData = physicalExams.Find(a => a.mappingName == "GCS MOVE").value;
+                var verbalData = physicalExams.Find(a => a.mappingName == "GCS VERBAL").value;
+
+                string eyeName = "-";
+                if (eyeData != "")
+                {
+                    eyeName = ". " + eye.Find(x => x.idph.ToString() == physicalExams.Find(a => a.mappingName == "GCS EYE").value).name;
+                    total = total + int.Parse(eyeData);
+                }
+
+                string moveName = "-";
+                if (moveData != "")
+                {
+                    moveName = ". " + move.Find(x => x.idph.ToString() == physicalExams.Find(a => a.mappingName == "GCS MOVE").value).name;
+                    total = total + int.Parse(moveData);
+                }
+
+                string verbalName = "-";
+                if (verbalData != "")
+                {
+                    if (verbalData == "T")
+                    {
+                        verbalName = ". " + "Tracheostomy";
+                        total = 0;
+                    }
+                    else if (verbalData == "A")
+                    {
+                        verbalName = ". " + "Aphasia";
+                        total = 0;
+                    }
+                    else
+                    {
+                        verbalName = ". " + verbal.Find(x => x.idph.ToString() == physicalExams.Find(a => a.mappingName == "GCS VERBAL").value).name;
+                        total = total + int.Parse(verbalData);
+                    }
+                }
+                var painScale = physicalExams.Find(x => x.mappingId.Equals(Guid.Parse("3aae8dc2-484f-4f3c-a01b-1b0c3f107176")));
+                var painScaleString = "0";
+                if (painScale != null && painScale.value != "")
+                {
+                    painScaleString = painScale.value;
+                }
+
+                string bloodremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "BLOOD PRESSURE HIGH").value != "" || physicalExams.Find(x => x.mappingName == "BLOOD PRESSURE LOW").value != "")
+                {
+                    bloodremark = physicalExams.Find(x => x.mappingName == "BLOOD PRESSURE HIGH").value + "/" + physicalExams.Find(x => x.mappingName == "BLOOD PRESSURE LOW").value + " mmHg";
+                }
+
+                string pulserateremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "PULSE RATE").value != "")
+                {
+                    pulserateremark = physicalExams.Find(x => x.mappingName == "PULSE RATE").value + " x/mnt";
+                }
+
+                string respiratoryremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "RESPIRATORY RATE").value != "")
+                {
+                    respiratoryremark = physicalExams.Find(x => x.mappingName == "RESPIRATORY RATE").value + " x/mnt";
+                }
+
+                string spo2remark = "-";
+                if (physicalExams.Find(x => x.mappingName == "SPO2").value != "")
+                {
+                    spo2remark = physicalExams.Find(x => x.mappingName == "SPO2").value + " %";
+                }
+
+                string temperatureremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "TEMPERATURE").value != "")
+                {
+                    temperatureremark = physicalExams.Find(x => x.mappingName == "TEMPERATURE").value + " °C";
+                }
+
+                string weightremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "WEIGHT").value != "")
+                {
+                    weightremark = physicalExams.Find(x => x.mappingName == "WEIGHT").value + " kg";
+                }
+
+                string heightremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "HEIGHT").value != "")
+                {
+                    heightremark = physicalExams.Find(x => x.mappingName == "HEIGHT").value + " cm";
+                }
+
+                string headremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "LINGKAR KEPALA").value != "")
+                {
+                    headremark = physicalExams.Find(x => x.mappingName == "LINGKAR KEPALA").value + " cm";
+                }
+
+                string mentalstatusremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "MENTAL STATUS").value != "")
+                {
+                    mentalstatusremark = physicalExams.Find(x => x.mappingName == "MENTAL STATUS").value;
+                }
+
+                string conciousremark = "-";
+                if (physicalExams.Find(x => x.mappingName == "CONSCIOUSNESS LEVEL").value != "")
+                {
+                    conciousremark = physicalExams.Find(x => x.mappingName == "CONSCIOUSNESS LEVEL").value;
+                }
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\"><b> <label style=\"display:" + setENG + "\"> Physical Examination </label> <label style=\"display:" + setIND + "\"> Pemeriksaan Fisik </label></b></td>");
+                patientHistory.Append("<td style=\"padding:0px;\">" +
+                    "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px;\"><b>Eye(Mata): </b><asp:Label runat =\"server\" Text=\"\" Font-Bold =\"true\"/> <br />" + physicalExams.Find(x => x.mappingName == "GCS EYE").value + eyeName + "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\"><b>Move(Motorik) : </b><asp:Label runat=\"server\" Font-Bold=\"true\" Text=\"\" /> <br />" + physicalExams.Find(x => x.mappingName == "GCS MOVE").value + moveName + "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\"><b>Verbal(Verbal) : </b><asp:Label runat =\"server\" Font-Bold=\"true\" Text=\"\" /> <br />" + physicalExams.Find(x => x.mappingName == "GCS VERBAL").value  + verbalName + "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-left:1px solid lightgrey;\"><b> <label style=\"display:" + setENG + "\"> Score: </label> <label style=\"display:" + setIND + "\"> Skor: </label>  </b><asp:Label runat =\"server\" Font-Bold=\"true\" Text=\"\" />" + total + "</div>" +
+                    "</div>" +
+                    "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey;\"><b> <label style=\"display:" + setENG + "\"> Pain Scale: </label> <label style=\"display:" + setIND + "\"> Skala Nyeri: </label> </b><asp:Label runat =\"server\" Text=\"\" Font-Bold =\"true\"/>" + painScaleString + "</div>" +
+                    "</div>" +
+                    "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Blood pressure </label> <label style=\"display:" + setIND + "\"> Tekanan Darah </label></b></div><div>" + bloodremark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Pulse Rate </label> <label style=\"display:" + setIND + "\"> Nadi </label></b></div><div>" + pulserateremark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Respiratory Rate </label> <label style=\"display:" + setIND + "\"> Pernapasan </label></b></div><div>" + respiratoryremark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b>SpO2</b></div><div>" + spo2remark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Temperature </label> <label style=\"display:" + setIND + "\"> Suhu </label></b></div><div>" + temperatureremark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Weight </label> <label style=\"display:" + setIND + "\"> Berat </label></b></div><div>" + weightremark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Height </label> <label style=\"display:" + setIND + "\"> Tinggi </label></b></div><div>" + heightremark + "</div>" +
+                        "</div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">" +
+                            "<div><b> <label style=\"display:" + setENG + "\"> Head Circumference </label> <label style=\"display:" + setIND + "\"> Lingkar Kepala </label></b></div><div>" + headremark + "</div>" +
+                        "</div>" +
+                    "</div>" +
+                    "<div class=\"btn-group btn-group-justified\" role=\"group\" aria-label=\"...\">" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey;\">  <div><b> <label style=\"display:" + setENG + "\"> Mental Status </label> <label style=\"display:" + setIND + "\"> Status Mental </label></b></div>  <div class=\"btn-group\" role=\"group\" style=\"vertical-align:top\"> " + mentalstatusremark + "</div>  </div>" +
+                        "<div class=\"btn-group\" role=\"group\" style=\"vertical-align:top; padding:8px; border-top:1px solid lightgrey; border-left:1px solid lightgrey;\">  <div><b> <label style=\"display:" + setENG + "\"> Consciousness Level </label> <label style=\"display:" + setIND + "\"> Kesadaran </label></b></div>  <div class=\"btn-group\" role=\"group\" style=\"vertical-align:top\"> " + conciousremark + "</div>  </div>" +
+                    "</div>" + tempChestString +
+                    "</td></tr>");
+                var diagnosis = historyDiagnoses.Find(x => x.mappingId.Equals(Guid.Parse("d24d0881-7c06-4563-bf75-3a20b843dc47")));
+                var tempDiagnosis = diagnosis.remarks.Split('\n').ToList();
+                var notesDiagnosis = "";
+                if (tempDiagnosis.Count != 0)
+                {
+                    for (int i = 0; i < tempDiagnosis.Count; i++)
+                    {
+                        notesDiagnosis = notesDiagnosis + "<div>" + tempDiagnosis[i] + "</div>";
+                    }
+                }
+                else
+                {
+                    notesDiagnosis = diagnosis.remarks;
+                }
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\"><b> <label style=\"display:" + setENG + "\"> Diagnosis </label> <label style=\"display:" + setIND + "\"> Diagnosa </label></b></td>" +
+                                    "<td>" + notesDiagnosis + "</td></tr>");
+
+                var tempPlanProcedure = historyPlanning.Find(x => x.mappingId.Equals(Guid.Parse("337a371f-baf5-424a-bdc5-c320c277cac6"))).remarks.Split('\n').ToList();
+                var notesPlanProcedure = "";
+                if (tempPlanProcedure.Count != 0)
+                {
+                    for (int i = 0; i < tempPlanProcedure.Count; i++)
+                    {
+                        notesPlanProcedure = notesPlanProcedure + "<div>" + tempPlanProcedure[i] + "</div>";
+                    }
+                }
+                else
+                {
+                    notesPlanProcedure = historyPlanning.Find(x => x.mappingId.Equals(Guid.Parse("337a371f-baf5-424a-bdc5-c320c277cac6"))).remarks;
+                }
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\"><b> <label style=\"display:" + setENG + "\"> Planning & Procedure </label> <label style=\"display:" + setIND + "\"> Perencanaan & Tindakan </label></b></td><td>" + notesPlanProcedure + "</td></tr>");
+
+                var tempProcedure = headerPatient.procedureNotes.Split('\n').ToList();
+                var notesProcedure = "";
+                if (tempProcedure.Count != 0)
+                {
+                    for (int i = 0; i < tempProcedure.Count; i++)
+                    {
+                        notesProcedure = notesProcedure + "<div>" + tempProcedure[i] + "</div>";
+                    }
+                }
+                else
+                {
+                    notesProcedure = headerPatient.procedureNotes;
+                }
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%;\"><b> <label style=\"display:" + setENG + "\"> Procedure Notes </label> <label style=\"display:" + setIND + "\"> Catatan Tindakan </label></b></td><td>" + notesProcedure + "</td></tr>");
+
+                patientHistory.Append("<tr><td style=\"background-color:whitesmoke; width:20%; border-radius:0px 0px 0px 7px;\"><b> <label style=\"display:" + setENG + "\"> Prescription </label> <label style=\"display:" + setIND + "\"> Resep </label></b></td><td style=\"padding:0px;\">");
+
+                //if (tmpDrugs.Count != 0)
+                //{
+                    var tempDoctorDrugs = tmpDrugs.FindAll(x => x.IsDoctor == 1);
+
+                    /*---------------------------------------------------------- Doctor Prescription --------------------------------------------------*/
+                    if (tempDoctorDrugs.Count != 0)
+                    {
+                        patientHistory.Append("<div><div style=\"padding:6px 6px 0px 8px;background-color:#b4e3fa;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Prescription </label> <label style=\"display:" + setIND + "\"> Resep DOKTER </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\" style=\"margin-bottom: 0px;\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Item </label> <label style=\"display:" + setIND + "\"> Obat </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> U.O.M </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Frequency </label> <label style=\"display:" + setIND + "\"> Frekuensi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Dose </label> <label style=\"display:" + setIND + "\"> Dosis </label></b></td>" +
+                                                //"<td><b> <label style=\"display:" + setENG + "\"> Dose UOM </label> <label style=\"display:" + setIND + "\"> Dosis Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Route </label> <label style=\"display:" + setIND + "\"> Rute </label></b></td>" +
+                                                "<td><b>Iter </b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Routine </label> <label style=\"display:" + setIND + "\"> Rutin </label></b></td>" +
+                                                "</tr>");
+
+                        foreach (PatientHistoryPrescription dataDrugs in tempDoctorDrugs)
+                        {
+                            //var doseUom = "";
+                            //if (listdoseUom.Find(x => x.doseUomId.Equals(dataDrugs.dose_uom_id)) != null)
+                            //    doseUom = listdoseUom.Find(x => x.doseUomId.Equals(dataDrugs.dose_uom_id)).name;
+
+                            var routine = "";
+                            if (dataDrugs.isRoutine)
+                                routine = "Yes";
+                            else
+                                routine = "No";
+
+                            string dose = "";
+                            if (dataDrugs.IsDoseText == true)
+                            {
+                                dose = dataDrugs.doseText;
+                            }
+                            else if (dataDrugs.IsDoseText == false)
+                            {
+                                dose = string.Format("{0:N2}", dataDrugs.dose) + " " + dataDrugs.dose_uom;
+                            }
+
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataDrugs.salesItemName + "</td>" +
+                                                    "<td>" + dataDrugs.quantity + "</td>" +
+                                                    "<td>" + dataDrugs.uom + "</td>" +
+                                                    "<td>" + dataDrugs.frequency + "</td>" +
+                                                    "<td>" + dose + "</td>" +
+                                                    //"<td>" + dataDrugs.dose_uom + "</td>" +
+                                                    "<td>" + dataDrugs.instruction + "</td>" +
+                                                    "<td>" + dataDrugs.route + "</td>" +
+                                                    "<td>" + dataDrugs.iter + "</td>" +
+                                                    "<td>" + routine + "</td>" +
+                                                    "</tr>");
+                        }
+                        patientHistory.Append("</table></div>");
+
+                    }
+
+
+                    /*---------------------------------------------------------- Doctor Prescription Notes --------------------------------------------------*/
+                    var doctorNotes = "-";
+                    if (historyPlanning.Find(x => x.mappingId.Equals(Guid.Parse("2DF0294D-F94E-4BA4-8BA1-F017BFB55D92"))).remarks != "")
+                    {
+                        doctorNotes = historyPlanning.Find(x => x.mappingId.Equals(Guid.Parse("2DF0294D-F94E-4BA4-8BA1-F017BFB55D92"))).remarks;
+                    }
+                        patientHistory.Append("<div style=\"padding:6px 8px 6px 8px;font-family:Helvetica;background-color:#b4e3fa;margin-bottom: 15px;\">" +
+                                            "<div style=\"font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Prescription Notes </label> <label style=\"display:" + setIND + "\"> Catatan Resep DOKTER </label></b></div>" +
+                                            "<div style=\"font-size:12px;\">");
+
+                        
+                        var tempnotesdoc = doctorNotes.Split('\n').ToList();
+                        if (tempnotesdoc.Count != 0)
+                        {
+                            doctorNotes = "";
+                            for (int i = 0; i < tempnotesdoc.Count; i++)
+                            {
+                                patientHistory.Append("<div>" + tempnotesdoc[i] + "</div>");
+                            }
+                        }
+                        else
+                        {
+                            patientHistory.Append(doctorNotes);
+                        }
+
+                        patientHistory.Append("</div>" +
+                                                "</div>");
+
+
+                    /*---------------------------------------------------------- Doctor Racikan --------------------------------------------------*/
+                    if (tmpRacikanHeader.Count != 0)
+                    {
+                        patientHistory.Append("<div style=\"margin-bottom:15px;\"><div style=\"padding:6px 6px 0px 8px;background-color:#b4e3fa;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Compounds </label> <label style=\"display:" + setIND + "\"> Racikan DOKTER </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\" style=\"margin-bottom: 0px;\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Name </label> <label style=\"display:" + setIND + "\"> Nama </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Dose </label> <label style=\"display:" + setIND + "\"> Dosis </label></b></td>" +
+                                                //"<td><b> <label style=\"display:" + setENG + "\"> Dose UoM </label> <label style=\"display:" + setIND + "\"> Dosis Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Frequency </label> <label style=\"display:" + setIND + "\"> Frekuensi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Route </label> <label style=\"display:" + setIND + "\"> Rute </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> UoM </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b>Iter </b></td>" +
+                                                "</tr>");
+
+                        foreach (CompoundHeaderSoap dataRacikan in tmpRacikanHeader)
+                        {
+                            string dose = "";
+                            if (dataRacikan.IsDoseText == true)
+                            {
+                                dose = dataRacikan.dose_text;
+                            }
+                            else if (dataRacikan.IsDoseText == false)
+                            {
+                                dose = string.Format("{0:N2}", dataRacikan.dose) + " " + dataRacikan.dose_uom;
+                            }
+
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataRacikan.compound_name + "</td>" +
+                                                    "<td>" + dose + "</td>" +
+                                                    //"<td>" + dataRacikan.dose_uom + "</td>" +
+                                                    "<td>" + dataRacikan.frequency_code + "</td>" +
+                                                    "<td>" + dataRacikan.administration_route_code + "</td>" +
+                                                    "<td>" + dataRacikan.administration_instruction + "</td>" +
+                                                    "<td>" + dataRacikan.quantity + "</td>" +
+                                                    "<td>" + dataRacikan.uom_code + "</td>" +
+                                                    "<td>" + dataRacikan.iter + "</td>" +
+                                                    "</tr>");
+
+                            if (tmpRacikanDetail.Count > 0)
+                            {
+                                patientHistory.Append("<tr><td colspan=\"9\"> <table border=\"0\" style=\"width:50%; display:inline-table\"> <tr> <td style=\"border:0px;\"> <b>Item</b> </td> <td style=\"border:0px;\"> <b>Dose</b> </td> </tr> ");
+                                foreach (CompoundDetailSoap datadetailracikan in tmpRacikanDetail.Where(x => x.prescription_compound_header_id == dataRacikan.prescription_compound_header_id).ToList())
+                                {
+                                    string dosedata = "";
+                                    if (datadetailracikan.IsDoseText == true)
+                                    {
+                                        dosedata = datadetailracikan.dose_text;
+                                    }
+                                    else
+                                    {
+                                        dosedata = datadetailracikan.dose + " " + datadetailracikan.dose_uom_code;
+                                    }
+                                    patientHistory.Append("<tr><td style=\"border:0px;\">" + datadetailracikan.item_name + " </td> <td style=\"border:0px;\"> " + dosedata + " </td></tr>");
+                                }
+                                patientHistory.Append("</table>");
+                                patientHistory.Append("<div style=\"display:inline-block; vertical-align: top; padding-left: 10px; border-left: 1px dashed black;\"> <b>Instruksi Racikan</b> <br />" + dataRacikan.compound_note + "</div>");
+                                patientHistory.Append("</td></tr>");
+                            }
+                        }
+                        patientHistory.Append("</table></div>");
+                    }
+
+                    /*---------------------------------------------------------- Doctor Consumables --------------------------------------------------*/
+                    if (tmpConsumableDoctor.Count != 0)
+                    {
+                        patientHistory.Append("<div style=\"margin-bottom: 15px;\"><div style=\"padding:6px 6px 0px 8px;background-color:#b4e3fa;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Consumables </label> <label style=\"display:" + setIND + "\"> Alat Kesehatan DOKTER </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Item </label> <label style=\"display:" + setIND + "\"> Alat </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> U.O.M </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "</tr>");
+                        foreach (PatientHistoryPrescription dataconsumable in tmpConsumableDoctor)
+                        {
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataconsumable.salesItemName + "</td>" +
+                                                    "<td>" + dataconsumable.quantity + "</td>" +
+                                                    "<td>" + dataconsumable.uom + "</td>" +
+                                                    "<td>" + dataconsumable.instruction + "</td>" +
+                                                    "</tr>");
+                        }
+                        patientHistory.Append("</table></div>");
+                    }
+
+                    /*---------------------------------------------------------- Doctor Additional --------------------------------------------------*/
+                    if (tmpAdditionalDoctor.Count != 0)
+                    {
+                        patientHistory.Append("<div><div style=\"padding:6px 6px 0px 8px;background-color:#b4e3fa;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Additional Prescription </label> <label style=\"display:" + setIND + "\"> Tambahan Resep DOKTER </label></b></div>");
+
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\" style=\"margin-bottom: 0px;\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Item </label> <label style=\"display:" + setIND + "\"> Obat </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> U.O.M </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Frequency </label> <label style=\"display:" + setIND + "\"> Frekuensi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Dose </label> <label style=\"display:" + setIND + "\"> Dosis </label></b></td>" +
+                                                //"<td><b> <label style=\"display:" + setENG + "\"> Dose UOM </label> <label style=\"display:" + setIND + "\"> Dosis Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Route </label> <label style=\"display:" + setIND + "\"> Rute </label></b></td>" +
+                                                "<td><b>Iter </b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Routine </label> <label style=\"display:" + setIND + "\"> Rutin </label></b></td>" +
+                                                "</tr>");
+
+                        foreach (PatientHistoryPrescription dataDrugsAdd in tmpAdditionalDoctor)
+                        {
+
+                            var routine = "";
+                            if (dataDrugsAdd.isRoutine)
+                                routine = "Yes";
+                            else
+                                routine = "No";
+
+                            string dose = "";
+                            if (dataDrugsAdd.IsDoseText == true)
+                            {
+                                dose = dataDrugsAdd.doseText;
+                            }
+                            else if (dataDrugsAdd.IsDoseText == false)
+                            {
+                                dose = string.Format("{0:N2}", dataDrugsAdd.dose) + " " + dataDrugsAdd.dose_uom;
+                            }
+
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataDrugsAdd.salesItemName + "</td>" +
+                                                    "<td>" + dataDrugsAdd.quantity + "</td>" +
+                                                    "<td>" + dataDrugsAdd.uom + "</td>" +
+                                                    "<td>" + dataDrugsAdd.frequency + "</td>" +
+                                                    "<td>" + dose + "</td>" +
+                                                    //"<td>" + dataDrugsAdd.dose_uom + "</td>" +
+                                                    "<td>" + dataDrugsAdd.instruction + "</td>" +
+                                                    "<td>" + dataDrugsAdd.route + "</td>" +
+                                                    "<td>" + dataDrugsAdd.iter + "</td>" +
+                                                    "<td>" + routine + "</td>" +
+                                                    "</tr>");
+                        }
+                        patientHistory.Append("</table></div>");
+
+                        /*---------------------------------------------------------- Doctor Additional Notes --------------------------------------------------*/
+                        var doctorAdditionalNotes = "-";
+                        if (historyPlanning.Find(x => x.mappingId.Equals(Guid.Parse("5E34AE60-1D72-4EFD-8440-C4442515AABE"))).remarks != "")
+                        {
+                            doctorAdditionalNotes = historyPlanning.Find(x => x.mappingId.Equals(Guid.Parse("5E34AE60-1D72-4EFD-8440-C4442515AABE"))).remarks;
+                        }
+
+                        patientHistory.Append("<div style=\"padding:6px 8px 6px 8px;font-family:Helvetica;background-color:#b4e3fa;margin-bottom: 15px;\">" +
+                                                "<div style=\"font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Additional Notes </label> <label style=\"display:" + setIND + "\"> Catatan Tambahan DOKTER </label></b></div>");
+
+                        patientHistory.Append("<div style=\"font-size:12px;\">");
+                        var tempAddNotesDoctor = doctorAdditionalNotes.Split('\n').ToList();
+                        var doctorAddNotes = "-";
+                        if (tempAddNotesDoctor.Count != 0)
+                        {
+                            doctorAddNotes = "";
+                            for (int i = 0; i < tempAddNotesDoctor.Count; i++)
+                            {
+                                patientHistory.Append("<div>" + tempAddNotesDoctor[i] + "</div>");
+                            }
+                        }
+                        else
+                        {
+                            patientHistory.Append(doctorAddNotes);
+                        }
+                        patientHistory.Append("</div></div>");
+                    }
+
+                    /*---------------------------------------------------------- Doctor Racikan Additional --------------------------------------------------*/
+                    if (tmpRacikanHeaderAdd.Count != 0)
+                    {
+                        patientHistory.Append("<div style=\"margin-bottom:15px;\"><div style=\"padding:6px 6px 0px 8px;background-color:#b4e3fa;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> DOCTOR Additional Compounds </label> <label style=\"display:" + setIND + "\"> Racikan Tambahan DOKTER </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\" style=\"margin-bottom: 0px;\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Name </label> <label style=\"display:" + setIND + "\"> Nama </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Dose </label> <label style=\"display:" + setIND + "\"> Dosis </label></b></td>" +
+                                                //"<td><b> <label style=\"display:" + setENG + "\"> Dose UoM </label> <label style=\"display:" + setIND + "\"> Dosis Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Frequency </label> <label style=\"display:" + setIND + "\"> Frekuensi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Route </label> <label style=\"display:" + setIND + "\"> Rute </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> UoM </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b>Iter </b></td>" +
+                                                "</tr>");
+
+                        foreach (CompoundHeaderSoap dataRacikanadd in tmpRacikanHeaderAdd)
+                        {
+
+                            string dose = "";
+                            if (dataRacikanadd.IsDoseText == true)
+                            {
+                                dose = dataRacikanadd.dose_text;
+                            }
+                            else if (dataRacikanadd.IsDoseText == false)
+                            {
+                                dose = string.Format("{0:N2}", dataRacikanadd.dose) + " " + dataRacikanadd.dose_uom;
+                            }
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataRacikanadd.compound_name + "</td>" +
+                                                    "<td>" + dose + "</td>" +
+                                                    //"<td>" + dataRacikanadd.dose_uom + "</td>" +
+                                                    "<td>" + dataRacikanadd.frequency_code + "</td>" +
+                                                    "<td>" + dataRacikanadd.administration_route_code + "</td>" +
+                                                    "<td>" + dataRacikanadd.administration_instruction + "</td>" +
+                                                    "<td>" + dataRacikanadd.quantity + "</td>" +
+                                                    "<td>" + dataRacikanadd.uom_code + "</td>" +
+                                                    "<td>" + dataRacikanadd.iter + "</td>" +
+                                                    "</tr>");
+
+                            if (tmpRacikanDetailAdd.Count > 0)
+                            {
+                                patientHistory.Append("<tr><td colspan=\"9\"> <table border=\"0\" style=\"width:50%; display:inline-table\"> <tr> <td style=\"border:0px;\"> <b>Item</b> </td> <td style=\"border:0px;\"> <b>Dose</b> </td> </tr> ");
+                                foreach (CompoundDetailSoap datadetailracikan in tmpRacikanDetailAdd.Where(x => x.prescription_compound_header_id == dataRacikanadd.prescription_compound_header_id).ToList())
+                                {
+                                    string dosedata = "";
+                                    if (datadetailracikan.IsDoseText == true)
+                                    {
+                                        dosedata = datadetailracikan.dose_text;
+                                    }
+                                    else
+                                    {
+                                        dosedata = datadetailracikan.dose + " " + datadetailracikan.dose_uom_code;
+                                    }
+                                    patientHistory.Append("<tr><td style=\"border:0px;\">" + datadetailracikan.item_name + " </td> <td style=\"border:0px;\"> " + dosedata + " </td></tr>");
+                                }
+                                patientHistory.Append("</table>");
+                                patientHistory.Append("<div style=\"display:inline-block; vertical-align: top; padding-left: 10px; border-left: 1px dashed black;\"> <b>Instruksi Racikan</b> <br />" + dataRacikanadd.compound_note + "</div>");
+                                patientHistory.Append("</td></tr>");
+                            }
+                        }
+                        patientHistory.Append("</table></div>");
+                    }
+
+                    /*---------------------------------------------------------- Pharmacist Prescription --------------------------------------------------*/
+                    if (tmpPrescriptionPharmacist.Count != 0)
+                    {
+                        patientHistory.Append("<div><div style=\"padding:6px 6px 0px 8px;background-color:#dfe69b;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> PHARMACIST Prescription </label> <label style=\"display:" + setIND + "\"> Resep FARMASIS </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\" style=\"margin-bottom: 0px;\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Item </label> <label style=\"display:" + setIND + "\"> Obat </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> U.O.M </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Frequency </label> <label style=\"display:" + setIND + "\"> Frekuensi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Dose </label> <label style=\"display:" + setIND + "\"> Dosis </label></b></td>" +
+                                                //"<td><b> <label style=\"display:" + setENG + "\"> Dose UOM </label> <label style=\"display:" + setIND + "\"> Dosis Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Route </label> <label style=\"display:" + setIND + "\"> Rute </label></b></td>" +
+                                                "<td><b>Iter </b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Routine </label> <label style=\"display:" + setIND + "\"> Rutin </label></b></td>" +
+                                                "</tr>");
+                        foreach (PatientHistoryPrescription dataDrugs in tmpPrescriptionPharmacist)
+                        {
+                            //var doseUom = "";
+                            //if (listdoseUom.Find(x => x.doseUomId.Equals(dataDrugs.dose_uom_id)) != null)
+                            //    doseUom = listdoseUom.Find(x => x.doseUomId.Equals(dataDrugs.dose_uom_id)).name;
+
+                            var routine = "";
+                            if (dataDrugs.isRoutine)
+                                routine = "Yes";
+                            else
+                                routine = "No";
+
+                            string dose = "";
+                            if (dataDrugs.IsDoseText == true)
+                            {
+                                dose = dataDrugs.doseText;
+                            }
+                            else if (dataDrugs.IsDoseText == false)
+                            {
+                                dose = string.Format("{0:N2}", dataDrugs.dose) + " " + dataDrugs.dose_uom;
+                            }
+
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataDrugs.salesItemName + "</td>" +
+                                                    "<td>" + dataDrugs.quantity + "</td>" +
+                                                    "<td>" + dataDrugs.uom + "</td>" +
+                                                    "<td>" + dataDrugs.frequency + "</td>" +
+                                                    "<td>" + dose + "</td>" +
+                                                    //"<td>" + dataDrugs.dose_uom + "</td>" +
+                                                    "<td>" + dataDrugs.instruction + "</td>" +
+                                                    "<td>" + dataDrugs.route + "</td>" +
+                                                    "<td>" + dataDrugs.iter + "</td>" +
+                                                    "<td>" + routine + "</td>" +
+                                                    "</tr>");
+                        }
+                        patientHistory.Append("</table></div>");
+
+                    }
+
+                    /*---------------------------------------------------------- Pharmacist Prescription Notes --------------------------------------------------*/
+                    var pharmacistNotes = "-";
+                    if (headerPatient.PharmacyNotes != "")
+                    {
+                        pharmacistNotes = headerPatient.PharmacyNotes;
+                    }
+
+                        patientHistory.Append("<div style=\"padding:6px 8px 6px 8px;font-family:Helvetica;background-color:#dfe69b;margin-bottom: 15px;\">" +
+                                            "<div style=\"font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> PHARMACIST Prescription Notes </label> <label style=\"display:" + setIND + "\"> Catatan Resep FARMASIS </label></b></div>" +
+                                            "<div style=\"font-size:12px;\">");
+
+                        var tempnotes = pharmacistNotes.Split('\n').ToList();
+                        if (tempnotes.Count != 0)
+                        {
+                            for (int i = 0; i < tempnotes.Count; i++)
+                            {
+                                patientHistory.Append("<div>" + tempnotes[i] + "</div>");
+                            }
+                        }
+                        else
+                        {
+                            patientHistory.Append(pharmacistNotes);
+                        }
+
+                        patientHistory.Append("</div>" +
+                                    "</div>");
+                    
+
+                    /*---------------------------------------------------------- Pharmacist Consumables --------------------------------------------------*/
+                    if (tmpConsumablePharmacist.Count != 0)
+                    {
+                        patientHistory.Append("<div style=\"margin-bottom: 15px;\"><div style=\"padding:6px 6px 0px 8px;background-color:#dfe69b;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> PHARMACIST Consumables </label> <label style=\"display:" + setIND + "\"> Alat Kesehatan FARMASIS </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Item </label> <label style=\"display:" + setIND + "\"> Alat </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> U.O.M </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "</tr>");
+                        foreach (PatientHistoryPrescription dataconsumable in tmpConsumablePharmacist)
+                        {
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataconsumable.salesItemName + "</td>" +
+                                                    "<td>" + dataconsumable.quantity + "</td>" +
+                                                    "<td>" + dataconsumable.uom + "</td>" +
+                                                    "<td>" + dataconsumable.instruction + "</td>" +
+                                                    "</tr>");
+                        }
+                        patientHistory.Append("</table></div>");
+                    }
+
+                    /*---------------------------------------------------------- Pharmacist Additional --------------------------------------------------*/
+                    if (tmpAdditionalPharmacist.Count != 0)
+                    {
+                        patientHistory.Append("<div><div style=\"padding:6px 6px 0px 8px;background-color:#dfe69b;height:35px;font-family:Helvetica;font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> PHARMACIST Additional Prescription </label> <label style=\"display:" + setIND + "\"> Tambahan Resep FARMASIS </label></b></div>");
+                        patientHistory.Append("<table class=\"table table-striped table-condensed\" style=\"margin-bottom: 0px;\"><tr>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Item </label> <label style=\"display:" + setIND + "\"> Alat </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Qty </label> <label style=\"display:" + setIND + "\"> Jml </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> U.O.M </label> <label style=\"display:" + setIND + "\"> Unit </label></b></td>" +
+                                                "<td><b> <label style=\"display:" + setENG + "\"> Instruction </label> <label style=\"display:" + setIND + "\"> Instruksi </label></b></td>" +
+                                                "</tr>");
+                        foreach (PatientHistoryPrescription dataconsumable in tmpAdditionalPharmacist)
+                        {
+                            patientHistory.Append("<tr>" +
+                                                    "<td>" + dataconsumable.salesItemName + "</td>" +
+                                                    "<td>" + dataconsumable.quantity + "</td>" +
+                                                    "<td>" + dataconsumable.uom + "</td>" +
+                                                    "<td>" + dataconsumable.instruction + "</td>" +
+                                                    "</tr>");
+                        }
+                        patientHistory.Append("</table></div>");
+
+
+                        /*---------------------------------------------------------- Pharmacist Additional Notes --------------------------------------------------*/
+                        var pharmacistAdditionalNotes = "-";
+                        if (headerPatient.AdditionalPharmacyNotes != "")
+                        {
+                            pharmacistAdditionalNotes = headerPatient.AdditionalPharmacyNotes;
+                        }
+
+                        patientHistory.Append("<div style=\"padding:6px 8px 6px 8px;font-family:Helvetica;background-color:#dfe69b;margin-bottom: 15px;\">" +
+                                                "<div style=\"font-size:14px;\"><b> <label style=\"display:" + setENG + "\"> PHARMACIST Additional Notes </label> <label style=\"display:" + setIND + "\"> Catatan Tambahan FARMASIS </label></b></div>" +
+                                                "<div style=\"font-size:12px;\">" + pharmacistAdditionalNotes + "</div>" +
+                                            "</div>");
+                    }
+
+                //}
+
+                patientHistory.Append("</td></tr>");
+                patientHistory.Append("</table></div>");
+                //-------------------------------- String Patient History Data --------------------------------------------
+
+            }
+            #endregion
+            tblPatientHistory.InnerHtml = patientHistory.ToString();
+            log.Info(LogLibrary.Logging("E", "loadDataPatientHistory", userId, ""));
+        }
+        catch (Exception ex)
+        {
+            log.Error(LogLibrary.Error("getPatientData", userId, ex.InnerException.Message));
+        }
+    }
+}

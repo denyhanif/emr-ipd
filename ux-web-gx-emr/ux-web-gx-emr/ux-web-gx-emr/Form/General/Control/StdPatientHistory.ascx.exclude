@@ -1,0 +1,7 @@
+﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="StdPatientHistory.ascx.cs" Inherits="Form_General_Control_StdPatientHistory" %>
+<asp:UpdatePanel runat="server">
+    <ContentTemplate>
+        <div id="tblPatientHistory" runat="server"></div>
+        <asp:HiddenField ID="HFisBahasa" runat="server" />
+    </ContentTemplate>
+</asp:UpdatePanel>
