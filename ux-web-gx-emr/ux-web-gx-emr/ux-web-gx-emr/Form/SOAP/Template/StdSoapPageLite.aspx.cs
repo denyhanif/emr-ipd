@@ -8761,15 +8761,15 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         }
         //submitrawatinap
 
-        InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
-        if (inpatientData != null)
-        {
-            var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
+        //InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
+        //if (inpatientData != null)
+        //{
+        //    var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
 
-            //var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
-            //var inpatientmodel = JsonConvert.DeserializeObject<InpatientData>(Jsongetinpatient.ToString());
-            //var Statusrespon = Jsongetinpatient.Property("status").Value.ToString();
-        }
+        //    //var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
+        //    //var inpatientmodel = JsonConvert.DeserializeObject<InpatientData>(Jsongetinpatient.ToString());
+        //    //var Statusrespon = Jsongetinpatient.Property("status").Value.ToString();
+        //}
 
 
 
@@ -12953,13 +12953,13 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             // ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save rawat inap: "+ JsonConvert.SerializeObject(inpatientData) + " ');", true);
             ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('%c save rawat inap: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: #bada55');", true);
 
-            //var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
-            //var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
-            //var Status = Jsongetinpatient.Property("status").Value.ToString();
-            //var Message = Jsongetinpatient.Property("message").Value.ToString();
+            var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
+            var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
+            var Status = Jsongetinpatient.Property("status").Value.ToString();
+            var Message = Jsongetinpatient.Property("message").Value.ToString();
 
-            //ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
-            //ScriptManager.RegisterStartupScript(this, GetType(), "showlogg", "console.log('save draf rawat inap: message " + Message + "');", true);
+            ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
+            ScriptManager.RegisterStartupScript(this, GetType(), "showlogg", "console.log('save draf rawat inap: message " + Message + "');", true);
 
             div_rawatinap.Visible = true;
             lbl_rawatinap_dokter.Text = inpatientData.doctor_name;
@@ -12988,15 +12988,15 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
     }
 
-    public void SaveInpatent()
-    {
-        InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
-        var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
-        var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
-        var Status = Jsongetinpatient.Property("status").Value.ToString();
-        var Message = Jsongetinpatient.Property("message").Value.ToString();
-        ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
-        ScriptManager.RegisterStartupScript(this, GetType(), "showlog2", "console.log('save draf rawat inap: message " + Message + "');", true);
+    //public void SaveInpatent()
+    //{
+    //    InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
+    //    var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
+    //    var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
+    //    var Status = Jsongetinpatient.Property("status").Value.ToString();
+    //    var Message = Jsongetinpatient.Property("message").Value.ToString();
+    //    ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
+    //    ScriptManager.RegisterStartupScript(this, GetType(), "showlog2", "console.log('save draf rawat inap: message " + Message + "');", true);
 
-    }
+    //}
 }

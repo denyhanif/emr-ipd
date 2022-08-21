@@ -148,13 +148,18 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
                 hf_statusId.Value = inpatientData.status_id.ToString();
                 hf_encounter.Value = inpatientData.encounter_id.ToString();
+
                 hf_operationScheduleId.Value = inpatientData.operation_schedule_id.ToString();
 
                 hfOperationScheduleAdditionalId.Value = inpatientData.operation_schedule_additional_id.ToString();
+                hf_operationScheduleId2.Value = inpatientData.operation_schedule_id.ToString();
+                hf_is_action.Value = inpatientData.is_action.ToString();
+
+
 
                 //hf_statusBooking.Value = inpatientData.operation_schedule_header.status_booking_id; 
 
-                // diagnose di jadikan testing
+             
                 textbox_diagnosis.Text = inpatientData.diagnosis;
 
                 string[] separateDate = inpatientData.admission_date.Split(' ');
@@ -206,8 +211,16 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     //UPtindakanOperasi.Update();
                 }
                 //txt_tglperkiraanoperasi.Text = DateTime.Parse(inpatientData.admission_date.ToString()).ToString("dd MMMM yyyy");
-                txt_tglperkiraanoperasi.Text = inpatientData.admission_date;
-                txtwaktuperkiraanoperasi.Text = inpatientData.operation_schedule_header.incision_time;
+                txt_tglperkiraanoperasi.Text = DateTime.Parse(inpatientData.operation_schedule_header.operation_schedule_date.Substring(0, inpatientData.operation_schedule_header.operation_schedule_date.Length - 9).Trim()).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture);
+                txtwaktuperkiraanoperasi.Text = DateTime.ParseExact(inpatientData.operation_schedule_header.incision_time, "HH:mm:ss", CultureInfo.CurrentCulture).ToString("hh:mm tt");
+
+                var getFirstEstimateTime = inpatientData.operation_procedures.Where(x => x.operation_procedure_id != null).FirstOrDefault();
+
+
+                txt_JamLamaOperasi.Text = (Convert.ToInt32(getFirstEstimateTime.procedure_estimate_time)/60).ToString();
+                txt_MenitLamaOperasi.Text = (Convert.ToInt32(getFirstEstimateTime.procedure_estimate_time)%60).ToString(); ;
+
+
 
                 int menit = 0;
                 int jam = 0;
@@ -282,9 +295,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 {
                    cbl_recoveryroom.SelectedValue = inpatientData.operation_schedule_header.recovery_room_id.ToString();
                 }
-               
-
-
+              
                 if (inpatientData.fasting_procedure == true)
                 {
                     chbx_puasa_tidak.Checked = false;
@@ -302,8 +313,31 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 txt_otherLab.Text = inpatientData.other_lab;
                 txt_OtherRad.Text = inpatientData.other_rad;
 
-                //labrad
+                // procedure 
+                List<OperationProcedure> operationProcedure = new List<OperationProcedure>();
 
+                if (inpatientData.operation_procedures != null)
+                {
+                    foreach (var op in inpatientData.operation_procedures)
+                    {
+                        if (op.is_active == true)
+                        {
+                            OperationProcedure listOperation = new OperationProcedure();
+                            listOperation.operation_procedure_id = op.operation_procedure_id;
+                            listOperation.procedure_name_id = op.procedure_name_id;
+                            listOperation.procedure_name = op.procedure_name;
+                            listOperation.is_active = op.is_active;
+                            operationProcedure.Add(listOperation);
+                        }
+                    }
+                    
+                    Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] = operationProcedure;
+                    DataTable dtProcedure = Helper.ToDataTable((List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value]);
+                    gv_procedure.DataSource = dtProcedure;
+                    gv_procedure.DataBind();
+                }
+
+                //labrad
                 List<CpoeTrans> listlabstemp = new List<CpoeTrans>();
                 List<CpoeTrans> listradtemp = new List<CpoeTrans>();
 
@@ -311,7 +345,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 {
                     foreach (var a in inpatientData.lab_Rad_Additionals)
                     {
-
                         if (a.is_rad == true)
                         {
                             CpoeTrans lisrad = new CpoeTrans();
@@ -609,8 +642,9 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             
             var statusid = hf_statusId.Value;
             var encounter = hf_encounter.Value;
-            var operationalScheduleId = hf_operationScheduleId.Value;
-            var operationScheduleIdhf = hf_operationScheduleId.Value;
+            var operationalScheduleId = hf_operationScheduleId2.Value;
+            var isAction = hf_is_action.Value;
+            // var operationScheduleIdhf = hf_operationScheduleId.Value;
             var perationScheduleAdditionalId = hfOperationScheduleAdditionalId.Value;
             var newOperationScheduleId = Guid.NewGuid();
 
@@ -626,16 +660,17 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             PatientHeader header = JsongetPatientHistory.Data;
 
 
-            ScriptManager.RegisterStartupScript(this, GetType(), "showalertqqq", "console('haiiii " + perationScheduleAdditionalId + " ');", true);
+            // ScriptManager.RegisterStartupScript(this, GetType(), "showalertqqq", "console('haiiii " + perationScheduleAdditionalId + " ');", true);
 
 
             data.status_id = string.IsNullOrEmpty(perationScheduleAdditionalId) || Int32.Parse(perationScheduleAdditionalId) == 0  ? 1 : 2;
             // data.status_id = perationScheduleAdditionalId == null ? 1 : 2;
             data.user_id = MyUser.GetHopeUserID().ToString();
-            data.operation_schedule_additional_id = !string.IsNullOrEmpty(perationScheduleAdditionalId) || Int32.Parse(perationScheduleAdditionalId) != 0 ? Int32.Parse(perationScheduleAdditionalId) : 0;
+            data.operation_schedule_additional_id = string.IsNullOrEmpty(perationScheduleAdditionalId) || Int32.Parse(perationScheduleAdditionalId) == 0 ? 0 : Int32.Parse(perationScheduleAdditionalId);
             // data.operation_schedule_additional_id = perationScheduleAdditionalId == null ? Int32.Parse(perationScheduleAdditionalId) : 0;
             //data.operation_schedule_id = operationalScheduleId != null ? Guid.Parse(operationalScheduleId) : newOperationScheduleId;
-            data.operation_schedule_id = operationalScheduleId == null ? Guid.Parse(operationalScheduleId) : newOperationScheduleId;
+
+            data.operation_schedule_id =  string.IsNullOrEmpty(operationalScheduleId) && procedureOperation_NO ? Guid.Empty : ((string.IsNullOrEmpty(operationalScheduleId) && procedureOperation_Yes) || (operationalScheduleId == "00000000-0000-0000-0000-000000000000" && procedureOperation_Yes)) ? newOperationScheduleId : Guid.Parse(operationalScheduleId);
             data.encounter_id = header.EncounterId;
             data.patient_id = hfPatientId.Value;
             data.patientName = header.PatientName;
@@ -779,7 +814,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.doctor_id = Helper.doctorid.ToString();
                 data.doctor_name = textbox_dokter.Text;
                 data.diagnosis = textbox_diagnosis.Text;
-                data.admission_date =txttglmasukrawat.Text;
+                // data.admission_date =txttglmasukrawat.Text;
+                data.admission_date = $"{txttglmasukrawat.Text} {txtwaktumasukrawat.Text}";
                 data.patientName = header.PatientName;
                 data.birthDate = header.BirthDate.ToString();
                 data.umur = (DateTime.Now - header.BirthDate).ToString();
@@ -793,7 +829,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.is_pregnancy = false;
                 data.is_edited = false;
                 data.is_active = true;
-                data.is_action = chbx_tindakanoperasi_ya.Checked ? true : false;
+                data.is_action = procedureOperation_Yes ? true : false;
 
                 data.modified_date = DateTime.Now.ToString();
 
@@ -866,30 +902,33 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
 
                 #region OperationProcedure
-                List<OperationProcedure> operationProcedures = new List<OperationProcedure>();
-                OperationProcedure operationProcedure = new OperationProcedure();
-                operationProcedure.operation_procedure_id = data.operation_schedule_id.ToString();
-                operationProcedure.operation_schedule_id = opsHeader.operation_schedule_id; //opsHeader.operation_schedule_id.ToString();
+                List<OperationProcedure> operationProcedures = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
+                List<OperationProcedure> operationProcedureTemp = new List<OperationProcedure>();
 
+                foreach (var x in operationProcedures)
+                {
+                    OperationProcedure operationProcedure = new OperationProcedure();
+                    operationProcedure.operation_procedure_id = x.operation_procedure_id;
+                    operationProcedure.operation_schedule_id = opsHeader.operation_schedule_id;
+                    operationProcedure.procedure_user_id = 0;
+                    operationProcedure.procedure_estimate_time = ((Int16.Parse(txt_JamLamaOperasi.Text) * 60) + Int16.Parse(txt_MenitLamaOperasi.Text));
+                    operationProcedure.asisten_operator_id = 0;
+                    operationProcedure.konsultan_operator_id = 0;
+                    operationProcedure.start_time = $"{txt_tglperkiraanoperasi.Text} {txtwaktuperkiraanoperasi.Text}";
+                    operationProcedure.is_active = x.is_active;
+                    operationProcedure.procedure_name_id = x.procedure_name_id;
+                    operationProcedure.procedure_name = x.procedure_name;
+                    operationProcedure.created_by = MyUser.GetHopeUserID();
+                    operationProcedure.created_date = DateTime.Now.ToString();
+                    operationProcedure.modified_by = MyUser.GetHopeUserID();
+                    operationProcedure.modified_date = DateTime.Now.ToString();
+                    operationProcedureTemp.Add(operationProcedure);
+                }
 
-                
-                operationProcedure.procedure_user_id = 0;
-                operationProcedure.procedure_estimate_time = ((Int16.Parse(txt_JamLamaOperasi.Text) * 60) + Int16.Parse(txt_MenitLamaOperasi.Text));
-                operationProcedure.asisten_operator_id = 0;
-                operationProcedure.konsultan_operator_id = 0;
-                operationProcedure.start_time = "";
-                operationProcedure.is_active = true;
-                operationProcedure.created_by = MyUser.GetHopeUserID();
-                operationProcedure.created_date = DateTime.Now.ToString();
-                operationProcedure.modified_by = MyUser.GetHopeUserID();
-                operationProcedure.modified_date = DateTime.Now.ToString();
-                operationProcedures.Add(operationProcedure);
-
-                data.operation_procedures = operationProcedures;
+                data.operation_procedures = operationProcedureTemp;
                 #endregion
 
                 #region Labrad
-                
                 List<CpoeTrans> listrad = new List<CpoeTrans>();
                 listrad = (List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value];
                 List<CpoeTrans> listlab = new List<CpoeTrans>();
@@ -902,7 +941,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     labRadAddcpoe.AddRange(listrad);
 
                     List<LabRadAdditional> listLabRad = new List<LabRadAdditional>();
-
 
                     for (int i = 0; i < labRadAddcpoe.Count; i++)
                     {
@@ -917,6 +955,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                         lab_Rad_Additionals.created_by = MyUser.GetHopeUserID();
                         lab_Rad_Additionals.modified_by = MyUser.GetHopeUserID();
                         lab_Rad_Additionals.modified_date = DateTime.Now.ToString();
+
                         if(labRadAddcpoe[i].isdelete == 1)
                         {
                             lab_Rad_Additionals.is_active = false;
@@ -938,16 +977,15 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                         lab_Rad_Additionals.modified_date = DateTime.Now.ToString();
                         lab_Rad_Additionals.modified_by = MyUser.GetHopeUserID();
                         lab_Rad_Additionals.created_date = DateTime.Now.ToString();
+
                         if(lab_Rad_Additionals.is_active == true)
                         {
                             listLabRad.Add(lab_Rad_Additionals);
                         }
-                        
                     }
+
                     data.lab_Rad_Additionals = listLabRad;
-
                 }
-
                 #endregion
             }
             #endregion
@@ -975,7 +1013,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.doctor_name = textbox_dokter.Text;
                 data.diagnosis = textbox_diagnosis.Text;
                 //data.admission_date = DateTime.Parse(txttglmasukrawat.Text).ToString("dd MMMM yyyy");
-                data.admission_date = txttglmasukrawat.Text;
+                data.admission_date = $"{txttglmasukrawat.Text} {txtwaktumasukrawat.Text}";
                 #region Bangsal
                 if (chck_BangsalLain.Checked)
                 {
@@ -1003,17 +1041,22 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.localMrNo = header.MrNo;
                 data.create_encounter = "";
                 data.created_date = DateTime.Now.ToString();
-                data.created_by = MyUser.GetUsername();
-                data.modified_by = MyUser.GetUsername();
+                data.created_by = MyUser.GetHopeUserID();
+                data.modified_by = MyUser.GetHopeUserID();
                 data.is_pregnancy =false;
                 data.is_edited = false;
                 data.is_active = true;
-                data.is_action = false;
+                data.is_action = procedureOperation_Yes ? true : false; ;
 
                 data.modified_date = DateTime.Now.ToString();
+
+
                 #region OperationScheduleHeader
                 OperationScheduleHeader opsHeader = new OperationScheduleHeader();
-                opsHeader.operation_schedule_id = Guid.Empty;
+                // opsHeader.operation_schedule_id = Guid.Empty;// ini nih
+                // opsHeader.operation_schedule_id = string.IsNullOrEmpty(operationalScheduleId) && procedureOperation_NO ? Guid.Empty : (string.IsNullOrEmpty(operationalScheduleId) && procedureOperation_Yes) || ? newOperationScheduleId : Guid.Parse(operationalScheduleId);
+                opsHeader.operation_schedule_id = data.operation_schedule_id;
+
                 opsHeader.organization_id = Int16.Parse(Helper.organizationId.ToString());
                 opsHeader.operation_schedule_date = "";
                 opsHeader.incision_time = "";
@@ -1296,7 +1339,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             }
 
             OperationProcedure op = new OperationProcedure();
-            op.operation_procedure_id = procedureSelect.Rows[0]["operationprocedure_id"].ToString();
+            op.operation_procedure_id = Guid.NewGuid().ToString();
             op.operation_schedule_id = Guid.Empty;
             op.procedure_name = procedureSelect.Rows[0]["procedure_name"].ToString();
             op.procedure_user_id = 0;
@@ -1405,7 +1448,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
             foreach (var x in listItemCheck)
             {
-                if (x.operation_procedure_id == procedureId.Value.ToString())
+                if (x.procedure_name_id == Convert.ToInt32(procedureId.Value.ToString()))
                 {
                     if (x.is_active == true)
                     {

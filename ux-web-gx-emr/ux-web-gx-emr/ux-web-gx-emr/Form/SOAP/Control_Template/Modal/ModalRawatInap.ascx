@@ -56,6 +56,7 @@
             <!-- Use --->
             <asp:HiddenField ID="hfOperationScheduleAdditionalId" runat="server" />
             <asp:HiddenField ID="hf_operationScheduleId2" runat="server" />
+            <asp:HiddenField ID="hf_is_action" runat="server" />
             <!-- Use --->
 
             <input type="hidden" id="Hidden1" runat="server" />
@@ -233,7 +234,7 @@
 
                                                 <asp:TemplateField HeaderText="Nama" HeaderStyle-ForeColor="#2a3593" ItemStyle-Width="90%" HeaderStyle-Font-Size="12px" ItemStyle-BorderWidth="0" HeaderStyle-BorderWidth="0">
                                                     <ItemTemplate>
-                                                        <asp:HiddenField ID="hf_id_procedure" runat="server" Value='<%# Bind("operation_procedure_id") %>'></asp:HiddenField>
+                                                        <asp:HiddenField ID="hf_id_procedure" runat="server" Value='<%# Bind("procedure_name_id") %>'></asp:HiddenField>
                                                         <asp:Label Font-Size="12px" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_ProcedureName" runat="server" Text='<%# Eval("procedure_name") %>'></asp:Label>
                                                     </ItemTemplate>
                                                 </asp:TemplateField>
@@ -1076,24 +1077,29 @@
                 }
             });
 
-            // ini kenapa masuk if prm
-            //copy diagnosis
-            if (document.getElementById('MainContent_ModalRawatInap_textbox_diagnosis').value = null); {
-                var rawatinapdiagnosis = document.getElementById('MainContent_ModalRawatInap_textbox_diagnosis');
-                var from_elm = document.getElementById('MainContent_txtPrimary');
-                rawatinapdiagnosis.value = from_elm.value;
+            
+        }
 
-            }
 
-            if (document.getElementById('MainContent_ModalRawatInap_hfoperationScheduleId').value != null) {
-                $("#divTindakanOperasi").show()
-                //$("#divTindakanOperasi").css('visibility', 'visible');
-                console.log('div operasi harusnya uncul');
-            } else {
-                $("#divTindakanOperasi").hide()
-                //$("#divTindakanOperasi").css('visibility', 'hidden');
-            }
-        }   
+       
+        //copy diagnosis
+        if (document.getElementById('MainContent_ModalRawatInap_textbox_diagnosis').value = null); {
+            var rawatinapdiagnosis = document.getElementById('MainContent_ModalRawatInap_textbox_diagnosis');
+            var from_elm = document.getElementById('MainContent_txtPrimary');
+            rawatinapdiagnosis.value = from_elm.value;
+
+        }
+
+        if (document.getElementById('MainContent_ModalRawatInap_hfoperationScheduleId').value != null) {
+            $("#divTindakanOperasi").show()
+            //$("#divTindakanOperasi").css('visibility', 'visible');
+            console.log('div operasi harusnya uncul');
+        } else {
+            $("#divTindakanOperasi").hide()
+            //$("#divTindakanOperasi").css('visibility', 'hidden');
+        }
+
+        // console.log('hfoperationScheduleId', hfoperationScheduleId.value)
     })
 
 </script>

@@ -4266,8 +4266,8 @@
 								<asp:Button runat="server" ID="BtnHideInpatient" ClientIDMode="Static" Style="display: none" OnClick="BtnInpatientHidden_Click" />
 
 								<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
-								<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save Form" OnClientClick="return checkInpatientData();"  OnClick="BtnSaveRawatinap_Click"></asp:Button>
-								<%--<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save Form" OnClick="BtnSaveRawatinap_Click"></asp:Button>--%>
+								<%--<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save Form" OnClientClick="return checkInpatientData();"  OnClick="BtnSaveRawatinap_Click"></asp:Button>--%>
+								<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save Form" OnClick="BtnSaveRawatinap_Click"></asp:Button>
 							</ContentTemplate>
 						</asp:UpdatePanel>
 					</div>
@@ -7914,6 +7914,10 @@
             toastr.warning(msg + ' <br /> <button type="button" class="btn btn-danger btn-sm" style="height: 25px; padding-top: 3px; width: 55px; float:right;">OK</button>', 'Save Rawat Inap Alert!');
 		}
 
+		function saveInpatient() {
+            document.getElementById('<%=BtnSaveRawatInap.ClientID%>').click();
+        }
+
 		function checkInpatientData() {
             if ($('#MainContent_ModalRawatInap_textbox_diagnosis').val() == "") {
                 notificationInptient("Diagnosis tidak boleh kosong, silakan isi asesment pada SOAP");
@@ -7931,8 +7935,7 @@
                     return false;
                 }
                 else {
-                    document.getElementById('<%=BtnSaveRawatInap.ClientID%>').click();
-                    return true;
+                    saveInpatient()
                 }
             }
 			else if ($('#MainContent_ModalRawatInap_chbx_tindakanoperasi_ya').is(':checked')) {
@@ -7986,14 +7989,12 @@
 					return false;
 				}
 				else {
-					document.getElementById('<%=BtnSaveRawatInap.ClientID%>').click();
-					return true;
+                    saveInpatient()
 				}
 
 				return false;
 			}
 
-            return false;
 		}
 		
         
