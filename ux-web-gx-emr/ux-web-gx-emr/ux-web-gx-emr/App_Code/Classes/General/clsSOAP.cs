@@ -264,6 +264,7 @@ public class clsSOAP
 
         consname = consname.Replace("/", " or ");
 
+
         var JsonString = JsonConvert.SerializeObject(savesoap);
         var content = new StringContent(JsonString, Encoding.UTF8, "application/json");
         var postDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -931,7 +932,6 @@ public class clsSOAP
             return ex.Message;
         }
     }
-
    
     public static async Task<string> getRawatInap(long organizationId, string operation_schecule_id, long patient_id, string addmision_no,string encounter_id)
     {

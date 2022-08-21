@@ -499,6 +499,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalReferal : System.Web.
         {
             referalDatas = new List<ReferalData>();
         }
+
         if (referalDatas.Count == 0)
         {
             referalDatas = new List<ReferalData>();

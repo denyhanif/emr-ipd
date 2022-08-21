@@ -83,6 +83,13 @@ public class Helper
     public const string SessionRadiologyCheck = "EMR_SessionRadiology";
     public const string SessionLaboratoryCheck = "EMR_SessionLaboratory";
 
+    // Referral (rujukan & rawat inap)
+    public const string SessionProcedureInpatientData = "EMR_SessionProcedureData";
+    public const string SessionAnestheticInpatientData = "EMR_SessionAnestheticData";
+    public const string SessionWardInpatientData = "EMR_SessionWardData";
+    public const string SessionRecoveryRoomInpatientData = "EMR_SessionRecoveryRoomData";
+    public const string SessionProcedureInpatientChecked = "EMR_ListProcedureInpatientChecked";
+
 
     //public const string ViewStateOrderSetDrugs = "EMR_OrderSetDrugs";
     //public const string ViewStateOrderSetCompound = "EMR_OrderSetCompound";

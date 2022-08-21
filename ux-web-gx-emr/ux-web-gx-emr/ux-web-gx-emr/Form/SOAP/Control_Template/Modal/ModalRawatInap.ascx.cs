@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -13,6 +14,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 {
     private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     List<CpoeTrans> listChecked = new List<CpoeTrans>();
+    List<OperationProcedure> listProcedureInpatientChecked = new List<OperationProcedure>();
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -24,21 +27,14 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             PatientHeader header = JsongetPatientHistory.Data;
             //PatientCard.initializevalue(header);
             var adm = header.AdmissionNo;
-            GetWardData();
-            GetRecoveryRoom();
-            //var cls
-
+            
             HiddenField hfstatusId = (HiddenField)FindControl("hfstatusId");
 
             var hfstatudid = hfstatusId.Value;
-
-
             textbox_dokter.Text = header.DoctorName;
-           
-            GetProcedureData();
-
-            
-
+            GetAnestheticData();
+            GetWardData();
+            GetRecoveryRoom();
         }
 
         if (chck_BangsalLain.Checked)
@@ -107,54 +103,37 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         }
 
     }
-    public void GetProcedureData()
+    
+    public void GetAnestheticData()
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
         try
-        {
-            List<ProcedureData> procedureDatas = new List<ProcedureData>();
-            List<AnestesiData> anestesiDatas = new List<AnestesiData>();
+        {  
+            DataTable anestheticData = (DataTable)Session[Helper.SessionAnestheticInpatientData];
+            var anestheticList = Helper.ToDataList<AnestesiData>(anestheticData);
 
-            DataTable dt = (DataTable)Session[Helper.SessionListOrganization];
-
-            var dataProcedure = clsSOAP.getProcedure(Helper.organizationId);
-
-            
-
-            var ProcedureJson = JsonConvert.DeserializeObject<ResultProcedureResponse>(dataProcedure.Result.ToString());
-
-            ProcedureResponse dataProcedureObj = ProcedureJson.list;
-            procedureDatas = dataProcedureObj.procedure;
-
-            DropDownList ddl_namaoperasi = (DropDownList)FindControl("ddl_namaoperasi");
-            foreach (ProcedureData namaoperasi in procedureDatas)
-            {
-                ddl_namaoperasi.Items.Add(new ListItem(namaoperasi.procedure_name, namaoperasi.operationprocedure_id.ToString()));
-            }
-
-            anestesiDatas = dataProcedureObj.anestesi;
             DropDownList ddl_anasteticmethod = (DropDownList)FindControl("ddl_anasteticmethod");
-            foreach (AnestesiData anestesimethod in anestesiDatas)
+            foreach (AnestesiData anestesimethod in anestheticList)
             {
                 ddl_anasteticmethod.Items.Add(new ListItem(anestesimethod.anesthetia_type_name, anestesimethod.anestesi_id.ToString()));
             }
 
             string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetProcedureData", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetAnestheticData", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
         }
         catch (Exception ex)
         {
             string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetProcedureData", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetAnestheticData", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
-
     }
 
     public void initializevalue(InpatientData inpatientData)
     {
-        try {
+        try 
+        {
             if (inpatientData == null)
             {
                 InpatientData inpatientDataa = new InpatientData();
@@ -168,15 +147,31 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 //HiddenField hf_statusBooking = (HiddenField)FindControl("hfstatusBookingId");
 
 
-
-
                 hf_statusId.Value = inpatientData.status_id.ToString();
                 hf_encounter.Value = inpatientData.encounter_id.ToString();
                 hf_operationScheduleId.Value = inpatientData.operation_schedule_id.ToString();
                 //hf_statusBooking.Value = inpatientData.operation_schedule_header.status_booking_id; 
+                // CultureInfo provider = CultureInfo.InvariantCulture;
+                // DateTime dateTime15;
 
-                textbox_diagnosis.Text = inpatientData.diagnosis;
-                txttglmasukrawat.Text = inpatientData.admission_date;
+                // DateTime dt = DateTime.ParseExact("8/3/2022 12:00:00 AM", "MM/dd/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+
+                
+                string[] separateDate = inpatientData.admission_date.Split(' ');
+                string splitDate = separateDate[0];
+                string splitTime = separateDate[1];
+                string timePM_AM = separateDate[2];
+              
+
+                DateTime date = new DateTime(2011, 2, 19);
+                //textbox_diagnosis.Text = inpatientData.diagnosis;
+                //txttglmasukrawat.Text = dt.ToString("dd/M/yyyy", CultureInfo.InvariantCulture);
+                //txttglmasukrawat.Text = date.ToString("dd MMMM yyyy");
+                txttglmasukrawat.Text = DateTime.Parse(splitDate.Trim()).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture);
+                txtwaktumasukrawat.Text = $"{splitTime.Substring(0, splitTime.Length-3)} {timePM_AM}";
+ 
+                txtinstruksirawatinap.Text = inpatientData.instruction;
+                txtremarks.Text = inpatientData.remarks;
 
                 //txttglmasukrawat.Text = (DateTime.Parse(inpatientData.admission_date).ToString("dd MMMM yyyy")).ToString();
                 if (inpatientData.ward_id.ToString()=="0")
@@ -222,14 +217,14 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
                 int menit = 0;
                 int jam = 0;
-                foreach (var a in inpatientData.operation_procedures)
-                {
-                    ddl_namaoperasi.SelectedItem.Text = a.procedure_name;
-                    jam = a.procedure_estimate_time / 60;
-                    menit = a.procedure_estimate_time % 60;
-                    txt_JamLamaOperasi.Text = jam.ToString();
-                    txt_MenitLamaOperasi.Text = menit.ToString();
-                }
+                //foreach (var a in inpatientData.operation_procedures)
+                //{
+                //    ddl_namaoperasi.SelectedItem.Text = a.procedure_name;
+                //    jam = a.procedure_estimate_time / 60;
+                //    menit = a.procedure_estimate_time % 60;
+                //    txt_JamLamaOperasi.Text = jam.ToString();
+                //    txt_MenitLamaOperasi.Text = menit.ToString();
+                //}
 
                 ddl_anasteticmethod.SelectedItem.Text = inpatientData.operation_schedule_header.anesthetia_type_name;
 
@@ -313,8 +308,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 txt_otherLab.Text = inpatientData.other_lab;
                 txt_OtherRad.Text = inpatientData.other_rad;
 
-                txtinstruksirawatinap.Text = inpatientData.instruction;
-                txtremarks.Text = inpatientData.remarks;
                 //labrad
 
                 List<CpoeTrans> listlabstemp = new List<CpoeTrans>();
@@ -340,7 +333,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                             lisrad.name = a.item_name;
                             lisrad.type = a.item_type;
                             listradtemp.Add(lisrad);
-
                         }
                         else
                         {
@@ -362,7 +354,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     Session[Helper.Sessionradcheck + hfguidadditional.Value] = listradtemp;
                     Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] = listlabstemp;
 
-                   
                     DataTable dtrad = Helper.ToDataTable((List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value]);
                     gv_Rad.DataSource = dtrad;
                     gv_Rad.DataBind();
@@ -370,14 +361,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     DataTable dtlab = Helper.ToDataTable((List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value]);
                     gv_Lab.DataSource = dtlab;
                     gv_Lab.DataBind();
-
-
-
                 }
             }
-            
-
-
         } catch(Exception ex)
         {
             var message = ex.Message;
@@ -610,15 +595,13 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
     }
+
     public InpatientData getvalues()
     {
         InpatientData data = new InpatientData();
 
         try
         {
-            
-
-            
             DropDownList ddl_anasteticmethod = (DropDownList)FindControl("ddl_anasteticmethod");
             DropDownList ddl_namaoperasi = (DropDownList)FindControl("ddl_namaoperasi");
             HiddenField hf_admission = (HiddenField)FindControl("hfAdmissionId");
@@ -638,7 +621,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
             var JsongetPatientHistory = JsonConvert.DeserializeObject<ResponsePatientHeader>(varResult.Result.ToString());
             PatientHeader header = JsongetPatientHistory.Data;
-
 
             data.status_id = hf_statusId.Value.ToString() == "0" ? 2 : 1;
             data.user_id = MyUser.GetHopeUserID().ToString();
@@ -800,6 +782,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.modified_by = MyUser.GetHopeUserID();
                 data.is_pregnancy = false;
                 data.is_edited = false;
+                data.is_active = true;
+                data.is_action = false;
 
                 data.modified_date = DateTime.Now.ToString();
 
@@ -877,16 +861,16 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 operationProcedure.operation_procedure_id = data.operation_schedule_id.ToString();
                 operationProcedure.operation_schedule_id = opsHeader.operation_schedule_id; //opsHeader.operation_schedule_id.ToString();
 
-                if (chck_OperasiLain.Checked == true) {
-                    operationProcedure.procedure_name = txt_NamaOperasiLain.Text;
-                    operationProcedure.procedure_name_id = 0;
-                }
-                else
-                {
-                    operationProcedure.procedure_name = ddl_namaoperasi.SelectedItem.Text;
-                    var procedurvalue = ddl_namaoperasi.SelectedValue;
-                    operationProcedure.procedure_name_id = Int32.Parse(ddl_namaoperasi.SelectedValue);
-                }
+                //if (chck_OperasiLain.Checked == true) {
+                //    operationProcedure.procedure_name = txt_NamaOperasiLain.Text;
+                //    operationProcedure.procedure_name_id = 0;
+                //}
+                //else
+                //{
+                //    operationProcedure.procedure_name = ddl_namaoperasi.SelectedItem.Text;
+                //    var procedurvalue = ddl_namaoperasi.SelectedValue;
+                //    operationProcedure.procedure_name_id = Int32.Parse(ddl_namaoperasi.SelectedValue);
+                //}
                 
                 operationProcedure.procedure_user_id = 0;
                 operationProcedure.procedure_estimate_time = ((Int16.Parse(txt_JamLamaOperasi.Text) * 60) + Int16.Parse(txt_MenitLamaOperasi.Text));
@@ -1025,6 +1009,9 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.modified_by = MyUser.GetUsername();
                 data.is_pregnancy =false;
                 data.is_edited = false;
+                data.is_active = true;
+                data.is_action = false;
+
                 data.modified_date = DateTime.Now.ToString();
                 #region OperationScheduleHeader
                 OperationScheduleHeader opsHeader = new OperationScheduleHeader();
@@ -1104,7 +1091,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         return data;
     }
 
-
     public void BtnDeletelab_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -1168,7 +1154,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
     }
-    public void btndeleterad_Click(object sender, EventArgs e)
+    public void BtnDeleteRad_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
@@ -1247,16 +1233,15 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             up_DivRad.Update();
 
             string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDelete_Rad_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDeleteRad_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
 
         }
         catch (Exception ex)
         {
             string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDelete_Rad_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDeleteRad_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
-
     }
 
     public void JamOperasiValidation(bool txt)
@@ -1275,7 +1260,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
     }
 
-    public void menitOperasiValidation(bool txt)
+    public void MenitOperasiValidation(bool txt)
     {
         if (txt == true)
         {
@@ -1290,5 +1275,204 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         }
 
     }
+
+    public void BtnAjaxSearchProcedure_Click(object sender, EventArgs e)
+    {
+        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        try
+        {
+            DataTable procedureSelect = new DataTable();
+            procedureSelect = ((DataTable)Session[Helper.SessionProcedureInpatientData]).Select("operationprocedure_id = '" + hf_ItemSelectedProcedure.Value + "' AND procedure_name = '" + hf_ItemSelectedProcedure_name.Value + "' AND diagnosis = '" + hf_ItemSelectedProcedure_diagnosis.Value + "'").CopyToDataTable();
+
+            List<OperationProcedure> listExcludeProcedure = new List<OperationProcedure>();
+            List<OperationProcedure> listProcedureTemp;
+
+            if (Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] == null)
+            {
+                listProcedureTemp = new List<OperationProcedure>();
+            }
+            else
+            {
+                listProcedureTemp = new List<OperationProcedure>();
+                listProcedureTemp = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
+            }
+
+            OperationProcedure op = new OperationProcedure();
+            op.operation_procedure_id = procedureSelect.Rows[0]["operationprocedure_id"].ToString();
+            op.operation_schedule_id = Guid.Empty;
+            op.procedure_name = procedureSelect.Rows[0]["procedure_name"].ToString();
+            op.procedure_user_id = 0;
+            op.procedure_estimate_time = 0;
+            op.procedure_name_id = Int32.Parse(procedureSelect.Rows[0]["operationprocedure_id"].ToString());
+            op.asisten_operator_id = 0;
+            op.konsultan_operator_id = 0;
+            op.start_time = "";
+            op.is_active = true;
+            op.created_by = MyUser.GetHopeUserID();
+            op.created_date = DateTime.Now.ToString();
+            op.modified_by = MyUser.GetHopeUserID();
+            op.modified_date = DateTime.Now.ToString();
+
+            if (listProcedureTemp != null) {
+                if (listProcedureTemp.Any(y => y.procedure_name == op.procedure_name && y.is_active == true))
+                {
+                    listExcludeProcedure.Add(op);
+                }
+                else if (listProcedureTemp.Any(y => y.procedure_name == op.procedure_name && y.is_active == false))
+                {
+                    listProcedureTemp.FirstOrDefault(z => z.procedure_name == op.procedure_name).is_active = true;
+                }
+                else
+                {
+                    listProcedureTemp.Add(op);
+                }
+            }
+            else {
+                listProcedureTemp.Add(op);
+            }
+
+            Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] = listProcedureTemp;
+            listProcedureInpatientChecked = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
+
+            if (listProcedureInpatientChecked != null)
+            {
+                if (Helper.ToDataTable(listProcedureInpatientChecked).Select("is_active = true").Count() > 0)
+                {
+                    List<OperationProcedure> listcheckedTemp = new List<OperationProcedure>();
+                    foreach (var item in listProcedureInpatientChecked)
+                    {
+                        OperationProcedure temp = new OperationProcedure();
+                        temp.operation_procedure_id = item.operation_procedure_id;
+                        temp.operation_schedule_id = item.operation_schedule_id;
+                        temp.procedure_name = item.procedure_name;
+                        temp.procedure_user_id = item.procedure_user_id;
+                        temp.procedure_estimate_time = item.procedure_estimate_time;
+                        temp.procedure_name_id = item.procedure_name_id;
+                        temp.asisten_operator_id = item.asisten_operator_id;
+                        temp.konsultan_operator_id = item.konsultan_operator_id;
+                        temp.start_time = item.start_time;
+                        temp.is_active = item.is_active;
+                        temp.created_by = item.created_by;
+                        temp.created_date = item.created_date;
+                        temp.modified_by = item.modified_by;
+                        temp.modified_date = item.modified_date;
+
+                        listcheckedTemp.Add(temp);
+                    }
+
+                    DataTable dt = Helper.ToDataTable(listcheckedTemp).Select("is_active = true").CopyToDataTable();
+                    gv_procedure.DataSource = dt;
+                    gv_procedure.DataBind();
+                }
+                else
+                {
+                    gv_procedure.DataSource = null;
+                    gv_procedure.DataBind();
+                }
+            }
+
+            if (listExcludeProcedure.Count() > 0)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Procedure Already Exist');", true);
+            }
+
+            txt_ItemProcedure.Text = "";
+            up_DivProcedure.Update();
+
+            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearchProcedure_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+
+        }
+        catch (Exception ex)
+        {
+            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearchProcedure_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
+        }
+    }
+
+    public void BtnDeleteProcedure_Click(object sender, EventArgs e)
+    {
+        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+        try
+        {
+            int selRowIndex = ((GridViewRow)(((ImageButton)sender).Parent.Parent)).RowIndex;
+            HiddenField procedureId = (HiddenField)gv_procedure.Rows[selRowIndex].FindControl("hf_id_procedure");
+
+            List<OperationProcedure> listItemCheck = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
+
+            var itemProcedure = new OperationProcedure();
+            int flagItem = 0;
+
+            foreach (var x in listItemCheck)
+            {
+                if (x.operation_procedure_id == procedureId.Value.ToString())
+                {
+                    if (x.is_active == true)
+                    {
+                        x.is_active = false;
+                        itemProcedure = x;
+                        flagItem = 1;
+                    }
+                }
+            }
+
+            if (flagItem == 1)
+            {
+                listItemCheck.Remove(itemProcedure);
+                flagItem = 0;
+            }
+
+            Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] = listItemCheck;
+
+            if (Helper.ToDataTable(listItemCheck).Select("is_active = true").Count() > 0)
+            {
+                List<OperationProcedure> listCheckedShow = new List<OperationProcedure>();
+
+                foreach (var x in listItemCheck)
+                {
+                    OperationProcedure temp = new OperationProcedure();
+                    temp.operation_procedure_id = x.operation_procedure_id;
+                    temp.operation_schedule_id = x.operation_schedule_id;
+                    temp.procedure_name = x.procedure_name;
+                    temp.procedure_user_id = x.procedure_user_id;
+                    temp.procedure_estimate_time = x.procedure_estimate_time;
+                    temp.procedure_name_id = x.procedure_name_id;
+                    temp.asisten_operator_id = x.asisten_operator_id;
+                    temp.konsultan_operator_id = x.konsultan_operator_id;
+                    temp.start_time = x.start_time;
+                    temp.is_active = x.is_active;
+                    temp.created_by = x.created_by;
+                    temp.created_date = x.created_date;
+                    temp.modified_by = x.modified_by;
+                    temp.modified_date = x.modified_date;
+
+                    listCheckedShow.Add(temp);
+                }
+
+                gv_procedure.DataSource = Helper.ToDataTable(listCheckedShow).Select("is_active = true").CopyToDataTable();
+                gv_procedure.DataBind();
+
+            }
+            else
+            {
+                gv_procedure.DataSource = null;
+                gv_procedure.DataBind();
+            }
+
+            up_DivProcedure.Update();
+
+            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDeleteProcedure_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+        }
+        catch (Exception ex)
+        {
+            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDeleteProcedure_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
+        }
+    }
+    
 }
 

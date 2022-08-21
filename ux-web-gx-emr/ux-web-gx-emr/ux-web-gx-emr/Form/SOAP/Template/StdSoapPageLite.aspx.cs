@@ -89,6 +89,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             Session[Helper.Sessionradcheck] = null;
             Session[Helper.Sessionpolidata] = null;
             Session[Helper.Sessionsoapmodel] = null;
+            Session[Helper.SessionProcedureInpatientChecked] = null;
             HyperLink test = Master.FindControl("SOAPLink") as HyperLink;
             test.Style.Add("background-color", "#D6DBFF");
 
@@ -165,10 +166,67 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 //getrawat inap
                 PatientHeader headeradm = JsongetPatientHistory.Data;
 
+                // TAMA CODE
+                #region Procedure Anesthetic Data Inpatient
+                DataTable procedureDataTable;
+                DataTable anestheticDataTable;
+                if (Session[Helper.SessionProcedureInpatientData] == null && Session[Helper.SessionAnestheticInpatientData] == null)
+                {
+                    logParam = new Dictionary<string, string>
+                    {
+                        { "Organization_ID", Helper.organizationId.ToString() }
+                    };
+                    //Log.Debug(LogConfig.LogStart("getProcedure", logParam));
+
+                    List<ProcedureData> procedureDatas = new List<ProcedureData>();
+                    List<AnestesiData> anestheticDatas = new List<AnestesiData>();
+
+                    var dataProcedureAnesthetic  = clsSOAP.getProcedure(Helper.organizationId);
+                    var dataProcedureAnestheticJson = JsonConvert.DeserializeObject<ResultProcedureResponse>(dataProcedureAnesthetic.Result.ToString());
+                    //Log.Debug(LogConfig.LogEnd("getProcedure", dataProcedureJson.Status, dataProcedureJson.Message));
+
+                    ProcedureResponse dataObj = dataProcedureAnestheticJson.list;
+                    procedureDatas = dataObj.procedure;
+                    anestheticDatas = dataObj.anestesi;
+
+                    procedureDataTable = Helper.ToDataTable(procedureDatas);
+                    anestheticDataTable = Helper.ToDataTable(anestheticDatas);
+
+                    Session[Helper.SessionProcedureInpatientData] = procedureDataTable;
+                    Session[Helper.SessionAnestheticInpatientData] = anestheticDataTable;
+
+                    // testing       
+                    hf_procedure_data.Value = new JavaScriptSerializer().Serialize(Helper.ToDataList<ProcedureData>(procedureDataTable));
+                    hf_anesthetic_data.Value = new JavaScriptSerializer().Serialize(Helper.ToDataList<AnestesiData>(anestheticDataTable));
+                }
+                else
+                {
+                    procedureDataTable = (DataTable)Session[Helper.SessionProcedureInpatientData];
+                    anestheticDataTable = (DataTable)Session[Helper.SessionAnestheticInpatientData];
+                    
+                    // testing
+                    hf_procedure_data.Value = new JavaScriptSerializer().Serialize(Helper.ToDataList<ProcedureData>(procedureDataTable));
+                    hf_anesthetic_data.Value = new JavaScriptSerializer().Serialize(Helper.ToDataList<AnestesiData>(anestheticDataTable));
+                }
+                #endregion
+
+                #region Get Inpatient Data
+
+                #endregion
+
+
+
+                // END TAMA CODE
+
+
                 try
                 {
                     var getrawatinap = clsSOAP.getRawatInap(long.Parse(Helper.organizationId.ToString()), Guid.Empty.ToString(), long.Parse(hfPatientId.Value), headeradm.AdmissionNo, hfEncounterId.Value);
                     ResultInpatient jsoninpatient = JsonConvert.DeserializeObject<ResultInpatient>(getrawatinap.Result.ToString());
+                    hf_get_inpatient_data.Value = JsonConvert.SerializeObject(jsoninpatient.list);
+
+                    
+
                     if (jsoninpatient.list.patient_id != null)
                     {
 
@@ -180,7 +238,8 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                             var getDoctorbyOrg = clsSOAP.getDoctorByOrg(dt.Rows[0]["mobile_organization_id"].ToString());
                             var DoctorOrgJson = JsonConvert.DeserializeObject<ResultDoctorOrg>(getDoctorbyOrg.Result.ToString());
                             datadoctororgobj = DoctorOrgJson.data;
-                        } catch( Exception ex)
+                        } 
+                        catch( Exception ex)
                         {
                             string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
                             Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetFilterDokterSOAPInpatient", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
@@ -188,8 +247,15 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
                         InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
                         inpatientData = jsoninpatient.list;
+
+                        // hf_get_inpatient_data.Value = new JavaScriptSerializer().Serialize(inpatientData);
+                        
+
+                        // InpatientData record = JsonConvert.DeserializeObject<InpatientData>(inpatientData);
+
                         Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = inpatientData;
 
+                        hf_get_inpatient_data_btn_save_rawatinap.Value = JsonConvert.SerializeObject(inpatientData);
 
                         var templistdokter = datadoctororgobj.Where(x => x.doctor_hope_id == Convert.ToInt64(inpatientData.doctor_id)).ToList();
                         foreach (DoctorOrg a in templistdokter)
@@ -9193,7 +9259,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         //    error_box("Failed to Save SOAP", ex);
         //}
     }
-
+    // tamtam
     public void SaveDraft_SOAP()
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"); //Log.Info(LogConfig.LogStart());
@@ -9633,6 +9699,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 }
                 else
                 {
+                    
                     //Submit Health Record
                     //ScriptManager.RegisterStartupScript(Page, Page.GetType(), "Submit_HR", "SubmitIframe_HI();", true);
 
@@ -12810,13 +12877,11 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
     protected void BtnPrintRawatInap(object sender, EventArgs e)
     {
-
         var localIPAdress = "";
         localIPAdress = GetLocalIPAddress();
         //localIPAdress = "10.83.254.38"; //HARD CODE
         ScriptManager.RegisterStartupScript(
         this, GetType(), "OpenWindow", "window.open('http://" + localIPAdress + "/printingemr?printtype=RawatInap&OrganizationId=" + Helper.organizationId + "&AdmissionId=" + hfAdmissionId.Value.ToString() + "&EncounterId=" + hfEncounterId.Value.ToString() + "&PatientId=" + hfPatientId.Value.ToString() + "&PageSOAP=" + hfPageSoapId.Value.ToString() + "&PrintBy=" + Helper.GetLoginUser(this) + "','_blank');", true);
-
     }
 
     protected void BtnDeleteRawatInap_Click(object sender,EventArgs e)
@@ -12855,9 +12920,6 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "Delete ", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
 
         }
-
-
-
     }
 
     protected void BtnSaveRawatinap_Click(object sender, EventArgs e)
@@ -12870,8 +12932,6 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
             //var nilaihamil = bool.Parse(listsubjective.Find(y => y.soap_mapping_id == Guid.Parse("078147ba-9e11-4da0-86fa-8bd901d82923")).value);
 
-            
-
             if (string.IsNullOrEmpty(inpatientData.operation_schedule_header.status_booking_name))
             {
                 stickerinpatient.Visible = false;
@@ -12882,24 +12942,28 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 stickerinpatient.Visible = true;
                 lbl_rawatinap_status.Visible = true;
             }
-            
+
 
             //var inpatientprm = new JavaScriptSerializer().Serialize(inpatientData);
+
+            Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = inpatientData;
+            ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save rawat inap: "+ JsonConvert.SerializeObject(inpatientData) + "');", true);
 
             //var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
             //var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
             //var Status = Jsongetinpatient.Property("status").Value.ToString();
             //var Message = Jsongetinpatient.Property("message").Value.ToString();
 
-            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "CloseRawatinap", "$('#modal-rawatinap').modal('hide');", true);
+            //ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
+            //ScriptManager.RegisterStartupScript(this, GetType(), "showlogg", "console.log('save draf rawat inap: message " + Message + "');", true);
 
-            Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = inpatientData;
             div_rawatinap.Visible = true;
-
             lbl_rawatinap_dokter.Text = inpatientData.doctor_name;
             lbl_rawatinap_spesialis.Text = inpatientData.spesialis_dokter;
             lbl_rawatinap_waktu.Text = inpatientData.created_date;
             lbl_rawatinap_status.Text = inpatientData.operation_schedule_header.status_booking_name;
+            UP_Rawatinap.Update();
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "CloseRawatinap", "$('#modal-rawatinap').modal('hide');", true);
         }
         catch(Exception ex)
         {
@@ -12907,15 +12971,15 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetInpatientData", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
 
         }
-
-
-
     }
 
     protected void BtnInpatientHidden_Click(object sender,EventArgs e)
     {
         InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
         ModalRawatInap.initializevalue(inpatientData);
+
+        // testing
+        hf_get_inpatient_data_hidden_click.Value = JsonConvert.SerializeObject(inpatientData);
     }
 
     public void SaveInpatent()
@@ -12925,7 +12989,8 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
         var Status = Jsongetinpatient.Property("status").Value.ToString();
         var Message = Jsongetinpatient.Property("message").Value.ToString();
+        ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
+        ScriptManager.RegisterStartupScript(this, GetType(), "showlog2", "console.log('save draf rawat inap: message " + Message + "');", true);
 
-        
     }
 }

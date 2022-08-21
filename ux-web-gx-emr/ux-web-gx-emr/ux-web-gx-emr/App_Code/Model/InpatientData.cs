@@ -47,7 +47,6 @@ public class InpatientData
     public string modified_by { get; set; }
     public bool? is_pregnancy { get; set; }
     public bool? is_edited { get; set; }
-
     public bool? is_active { get; set; }
     public bool? is_action { get; set; }
 

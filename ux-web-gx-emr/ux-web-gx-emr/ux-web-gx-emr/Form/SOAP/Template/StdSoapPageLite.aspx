@@ -497,6 +497,17 @@
 				<asp:HiddenField ID="hf_flagrujukan_aido" runat="server" />
 
 				<uc1:PatientCard runat="server" ID="PatientCard" />
+
+				<!-- TAMA CODE TESTING JSON -->
+				
+				<asp:HiddenField ID="hf_procedure_data" runat="server" />
+				<asp:HiddenField ID="hf_anesthetic_data" runat="server" />
+				<asp:HiddenField ID="hf_get_inpatient_data" runat="server" />
+				<asp:HiddenField ID="hf_get_inpatient_data_hidden_click" runat="server" />
+				<asp:HiddenField ID="hf_get_inpatient_data_btn_save_rawatinap" runat="server" />
+
+				<!--  END TAMA CODE TESTING JSON-->
+
 			</div>
 
 			<div class="container-fluid bawah-kartu-pasien">
@@ -1218,23 +1229,24 @@
 								<div class="box-border-soap" style="padding-bottom: 0px">
 									<div style="margin-left: 15px; margin-right: 0px;">
 										<label id="lblbhs_hasiltindakansoap" style="font-size: 18px; font-weight: bold">Procedure Result</label>
-										&nbsp;
-                                                    
-                                                    <div id="divaddbuttontravel" runat="server" style="display: inline-flex">
-														<a id="lnkModalRekomendasi" class="btn btn-default btn-sm" title="Template" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modalRekomendasiTravel').modal();">
-															<label id="lblbhs_btntravelrecomendationsoap" style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>Travel Recomendation</label>
-														</a>
-													</div>
-										<div id="divaddbuttonreferal" runat="server" style="display: inline-flex">
-											<a id="lnkModalreferal" class="btn btn-default btn-sm" title="Template" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modal-referal').modal();$('#BtnHiddenReferal').trigger('click');">
-
-												<label id="lblbhs_btnreferalsoap"  style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>Referall</label>
+										&nbsp;            
+										<div id="divaddbuttontravel" runat="server" style="display: inline-flex">
+											<a id="lnkModalRekomendasi" class="btn btn-default btn-sm" title="Template" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modalRekomendasiTravel').modal();">
+												<label id="lblbhs_btntravelrecomendationsoap" style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>Travel Recomendation</label>
 											</a>
 										</div>
+										<!-- TAMA CODE edit wording -->
+										<!-- BUTTON REFERRAL / RUJUKAN -->
+										<div id="divaddbuttonreferal" runat="server" style="display: inline-flex">
+											<a id="lnkModalreferal" class="btn btn-default btn-sm" title="Template" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modal-referal').modal();$('#BtnHiddenReferal').trigger('click');">
+												<label id="lblbhs_btnreferalsoap"  style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>&nbsp;&nbsp;Rujukan</label>
+											</a>
+										</div>
+										<!-- TAMA CODE edit wording -->
+										<!-- BUTTON RAWAT INAP -->
 										<div id="divaddbuttonrawatinap" runat="server" style="display: inline-flex">
 											<a id="lnkModalrawatinap" runat="server" class="btn btn-default btn-sm" title="Rawat Inap" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modal-rawatinap').modal();$('#BtnHideInpatient').trigger('click');">
-
-												<label id="lblbhs_btnrawatinap" style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>Rawat Inap</label>
+												<label id="lblbhs_btnrawatinap" style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>&nbsp;&nbsp;Rawat Inap</label>
 											</a>
 										</div>
 										<br />
@@ -1245,10 +1257,10 @@
 								</div>
 								<%--</ContentTemplate>
                                     </asp:UpdatePanel>--%>
+								<!-- REFERRAL SOAP -->
 								<asp:UpdatePanel runat="server" ID="UpdatePanelRujukan" UpdateMode="Conditional">
 									<ContentTemplate>
 										<div class="box-border-soap" id="divrujukansoap" runat="server" style="padding-bottom: 0px">
-
 											<tabel style="margin-left: 15px; margin-right: 0px;">
 												<tr>
 													<td style="">
@@ -1256,30 +1268,22 @@
 													</td>
 													<td style="">
 														<asp:LinkButton ID="BtnEditReferral" Text="Edit Rujukan"  href="javascript:$('#modal-referal').modal();$('#BtnHiddenReferal').trigger('click');" Style="font-family: Helvetica; font-weight: bold; font-size: 12px; color: #303C9E; text-decoration: underline; border-right: 0.5px solid #B9B9B9; padding-right: 10px" runat="server" OnClick="BtnEditReferral_Click" CommandName="" CommandArgument='' />
-
 													</td>
 													<td style="width: 70px">
-														<asp:LinkButton ID="BtnDeleteAllReferral" Text="Hapus Semua"  Style="font-family: Helvetica; font-weight: bold; font-size: 12px; text-decoration: underline; margin-left: 20px" runat="server">
-															
-														</asp:LinkButton>
-
+														<asp:LinkButton ID="BtnDeleteAllReferral" Text="Hapus Semua"  Style="font-family: Helvetica; font-weight: bold; font-size: 12px; text-decoration: underline; margin-left: 20px" runat="server"></asp:LinkButton>
 													</td>
 												</tr>
 											</tabel>
 											<div style="margin-left: 15px; margin-right: 0px; padding-bottom: 10px">
 												<table style="border-collapse:separate;border-spacing: 0 0.3em;">
-
 													<asp:Repeater ID="rptrujukan" runat="server">
 														<ItemTemplate>
-
 															<asp:HiddenField ID="referral_id" runat="server" Value='<%# Bind("referral_id") %>' />
-
 															<tr style="margin-top: 5px; margin-bottom: 5px;">
 																<td style="width: 470px">
 																	<asp:Label Font-Size="12px" CssClass='<%#  Eval("is_editable").ToString().ToLower() == "1" ? "txtenable" : "txtdisable" %>' Font-Names="Helvetica, Arial, sans-serif" ID="lbl_referal_doctor_name" runat="server" Text='<%#Eval("referral_doctor_name") + " - " %>'></asp:Label>
-																	<asp:Label Font-Size="12px"  CssClass='<%#  Eval("is_editable").ToString().ToLower() == "1" ? "txtenable" : "txtdisable" %>' Enabled="false" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_speciality_name" runat="server" Text='<%#Eval("speciality_name").ToString().ToUpper() + " - " %>'></asp:Label>
-																	<asp:Label Font-Size="12px"  CssClass='<%#  Eval("is_editable").ToString().ToLower() == "1" ? "txtenable" : "txtdisable" %>'  Enabled="false" Font-Names="Helvetica, Arial, sans-serif" ID="Label19" runat="server" Text='<%# DateTime.Parse(Eval("created_date").ToString()).ToString("HH:mm")%>'></asp:Label>
-
+																	<asp:Label Font-Size="12px" CssClass='<%#  Eval("is_editable").ToString().ToLower() == "1" ? "txtenable" : "txtdisable" %>' Enabled="false" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_speciality_name" runat="server" Text='<%#Eval("speciality_name").ToString().ToUpper() + " - " %>'></asp:Label>
+																	<asp:Label Font-Size="12px" CssClass='<%#  Eval("is_editable").ToString().ToLower() == "1" ? "txtenable" : "txtdisable" %>'  Enabled="false" Font-Names="Helvetica, Arial, sans-serif" ID="Label19" runat="server" Text='<%# DateTime.Parse(Eval("created_date").ToString()).ToString("HH:mm")%>'></asp:Label>
 																</td>
 																<td>
 																	<span  class='<%# Eval("referal_status").ToString().ToLower() == "registered"|| Eval("referal_status").ToString() == "" ||Eval("referal_status").ToString().ToLower() == "new" ? "lbl-new" :Eval("referal_status").ToString().ToLower() == "apointment" ? " lbl-apointment" : Eval("referal_status").ToString().ToLower()== "cancel" ? "lbl-cancel" :"lbl-chekin" %>'>
@@ -1290,15 +1294,16 @@
 																	<asp:LinkButton ID="BtnDeleteReferral"  Enabled='<%# Eval("is_editable").ToString().ToLower() == "1" ? true : false %>'  Text="Hapus" CssClass='<%#  Eval("is_editable").ToString().ToLower() == "1" ? "linkbtn-hapusreferal" : "linkbtn-hapusreferal-disable"%>' runat="server" OnClick="BtnDeleteReferral_Click" CommandName="DeleteRow" CommandArgument='<%# Container.ItemIndex %>' />
 																</td>
 															</tr>
-
 														</ItemTemplate>
 													</asp:Repeater>
-
 												</table>
 											</div>
 										</div>
 									</ContentTemplate>
 								</asp:UpdatePanel>
+								<!-- END REFERRAL SOAP -->
+
+								<!-- RAWAT INAP SOAP -->
 								<asp:UpdatePanel runat="server" ID="UP_Rawatinap" UpdateMode="Conditional">
 									<ContentTemplate>
 										<div id="div_rawatinap" runat="server" class="box-border-soap" style="padding-bottom: 10px;">
@@ -1313,27 +1318,21 @@
 												</asp:UpdatePanel>
 											</div>
 											<div class="row" style="margin-top: 12px; margin-left: 15px">
-
-												<div runat="server" id="rptrawatinap" >
-													
-														<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_dokter" runat="server" Text="nama dokter"></asp:Label>
-
-														<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_spesialis" runat="server" Text="spesialis"></asp:Label>
-
-														<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_jenis" runat="server" Text="- Rawat Inap - "></asp:Label>
-
-														<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_waktu" runat="server" Text="createdate"></asp:Label>
-
-														<span runat="server" id="stickerinpatient" style="background: #E58314; border-radius: 10px; height: 17px; padding: 1px 13px 1px 13px;text-align: center; display: inline-block;">
-															<asp:Label Font-Size="12px" Style="color: #FFFFFF; letter-spacing: 0.48px" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_status" runat="server" Text="status_booking_name"> </asp:Label>
-														</span>
-													
+												<div runat="server" id="rptrawatinap" >	
+													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_dokter" runat="server" Text="nama dokter"></asp:Label>
+													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_spesialis" runat="server" Text="spesialis"></asp:Label>
+													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_jenis" runat="server" Text="- Rawat Inap - "></asp:Label>
+													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_waktu" runat="server" Text="createdate"></asp:Label>
+													<span runat="server" id="stickerinpatient" style="background: #E58314; border-radius: 10px; height: 17px; padding: 1px 13px 1px 13px;text-align: center; display: inline-block;">
+														<asp:Label Font-Size="12px" Style="color: #FFFFFF; letter-spacing: 0.48px" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_status" runat="server" Text="status_booking_name"> </asp:Label>
+													</span>
 												</div>
-
 											</div>
 										</div>
 									</ContentTemplate>
 								</asp:UpdatePanel>
+								<!-- END RAWAT INAP SOAP -->
+
 								<%--<asp:UpdatePanel runat="server">
                                         <ContentTemplate>--%>
 								<asp:HiddenField runat="server" ID="hdnSchedule_travel" />
@@ -4177,8 +4176,7 @@
 						</asp:UpdateProgress>
 					</div>
 					<div class="modal-header" style="height: 35px; padding-top: 7px; padding-bottom: 5px">
-						<h4 class="modal-title">
-							<asp:Label runat="server" Font-Bold="true" ID="modalReferalCaption" ClientIDMode="Static" Text="Rujukan"></asp:Label></h4>
+						<h4 class="modal-title"><asp:Label runat="server" Font-Bold="true" ID="modalReferalCaption" ClientIDMode="Static" Text="Rujukan"></asp:Label></h4>
 					</div>
 
 					<div class="modal-body">
@@ -4191,7 +4189,6 @@
 						<asp:UpdatePanel ID="UPsaveReferal" runat="server">
 							<ContentTemplate>
 								<asp:Button runat="server" ID="BtnHiddenReferal" ClientIDMode="Static" Style="display: none" OnClick="BtnReferalHidden_Click" />
-
 								<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
 								<asp:Button ID="btnSaveReferal" CssClass="btn btn-lightGreen" runat="server" OnClientClick="return checkfield();" Text="Save Form" OnClick="btnSaveReferal_Click"></asp:Button>
 							</ContentTemplate>
@@ -4231,7 +4228,7 @@
 							<ContentTemplate>
 	
 								<button class="btncancelrujukan" data-dismiss="modal" aria-hidden="true">Close</button>
-								<asp:LinkButton ID="BtnModalDeleteallReferal" CssClass="btndelrujukan" Style="margin-left: 23px" runat="server"  OnClick="BtnDeleteAllReferral_Click" Text="Delete All" ></asp:LinkButton>
+								<asp:LinkButton ID="BtnModalDeleteallReferal" CssClass="btndelrujukan" Style="margin-left: 23px" runat="server" OnClick="BtnDeleteAllReferral_Click" Text="Delete All" ></asp:LinkButton>
 							</ContentTemplate>
 						</asp:UpdatePanel>
 					</div>
@@ -4240,23 +4237,21 @@
 		</div>
 		<%-- ========================================================== END Modal Hapus Referal  ================================================================ --%>
 
-		<%-- ========================================================== Modal Rawat Inap  ================================================================ --%>
+		<%-- ========================================================== Modal Rawat Inap / Inpatient  ================================================================ --%>
 		<div class="modal fade" id="modal-rawatinap">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content" style="border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.24);">
 					<div>
-						<asp:UpdateProgress ID="UpdateProgress19" runat="server" AssociatedUpdatePanelID="UPsaveReferal">
+						<asp:UpdateProgress ID="UpdateProgress19" runat="server" AssociatedUpdatePanelID="UPsaveInpatient">
 							<ProgressTemplate>
-								<div class="modal-backdrop" style="background-color: white; opacity: 0.3; text-align: center">
-								</div>
+								<div class="modal-backdrop" style="background-color: white; opacity: 0.3; text-align: center"></div>
 								<img alt="" style="background-color: transparent; height: 20px;" src="<%= Page.ResolveClientUrl("~/Images/Background/small-loader.gif") %>" />
 								&nbsp;
 							</ProgressTemplate>
 						</asp:UpdateProgress>
 					</div>
 					<div class="modal-header" style="height: 35px; padding-top: 7px; padding-bottom: 5px">
-						<h4 class="modal-title">
-							<asp:Label runat="server" Font-Bold="true" ID="Label17" ClientIDMode="Static" Text="Rujukan"></asp:Label></h4>
+						<h4 class="modal-title"><asp:Label runat="server" Font-Bold="true" ID="Label17" ClientIDMode="Static" Text="Rujukan"></asp:Label></h4>
 					</div>
 
 					<div class="modal-body">
@@ -4266,13 +4261,13 @@
 						<uc1:ModalRawatInap runat="server" ID="ModalRawatInap" />
 					</div>
 					<div class="modal-footer justify-content-right">
-						<asp:UpdatePanel ID="UpdatePanel6" runat="server">
+						<asp:UpdatePanel ID="UPsaveInpatient" runat="server">
 							<ContentTemplate>
-
 								<asp:Button runat="server" ID="BtnHideInpatient" ClientIDMode="Static" Style="display: none" OnClick="BtnInpatientHidden_Click" />
 
-								<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
-								<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save" OnClientClick="return checkInpatientData();"  OnClick="BtnSaveRawatinap_Click"></asp:Button>
+								<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+								<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save Form" OnClientClick="return checkInpatientData();"  OnClick="BtnSaveRawatinap_Click"></asp:Button>
+								<%--<asp:Button ID="BtnSaveRawatInap" CssClass="btn btn-lightGreen" runat="server" Text="Save Form" OnClick="BtnSaveRawatinap_Click"></asp:Button>--%>
 							</ContentTemplate>
 						</asp:UpdatePanel>
 					</div>
@@ -4281,12 +4276,12 @@
 		</div>
 		<%-- ========================================================== END Modal Rawat Inap  ================================================================ --%>
 
-		<%-- ========================================================== Modal Hapus Rawat Inap  ================================================================ --%>
+		<%-- ========================================================== Modal Hapus Rawat Inap / Inpatient ================================================================ --%>
 		<div class="modal fade" id="modal-delete-rawatinap">
 			<div class="modal-dialog modal-sm" style="top: 100px; width: 320px; height: 172px">
 				<div class="modal-content" style="border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.24);">
 					<div>
-						<asp:UpdateProgress ID="UpdateProgress20" runat="server" AssociatedUpdatePanelID="UPsaveReferal">
+						<asp:UpdateProgress ID="UpdateProgress20" runat="server" >
 							<ProgressTemplate>
 								<div class="modal-backdrop" style="background-color: white; opacity: 0.3; text-align: center">
 								</div>
@@ -7913,25 +7908,34 @@
 			return false;
 		}
 
-        function checkInpatientData() {
-			
+		// TAMA CODE JAVASCRIPT
+        function notificationInptient(msg) {
+            warningnotificationOption();
+            toastr.warning(msg + ' <br /> <button type="button" class="btn btn-danger btn-sm" style="height: 25px; padding-top: 3px; width: 55px; float:right;">OK</button>', 'Save Rawat Inap Alert!');
+		}
 
-			if ($('#MainContent_ModalRawatInap_chbx_tindakanoperasi_tidak').is(':checked')) {
-
-                if (intruksi_rawatinap.length <= 0) {
-                    notificationInptient("Instruksi Rawat Inap  Tidak Boleh Kosong");
-                    $("[id$='MainContent_ModalRawatInap_txtinstruksirawatinap']").focus();
+		function checkInpatientData() {
+            if ($('#MainContent_ModalRawatInap_textbox_diagnosis').val() == "") {
+                notificationInptient("Diagnosis tidak boleh kosong, silakan isi asesment pada SOAP");
+				return false;
+			}
+            else if (!$('#MainContent_ModalRawatInap_chbx_tindakanoperasi_ya').is(':checked') && !$('#MainContent_ModalRawatInap_chbx_tindakanoperasi_tidak').is(':checked')) {
+                notificationInptient("Tindakan operasi belum dipilih");
+                return false;
+            }
+			else if ($('#MainContent_ModalRawatInap_chbx_tindakanoperasi_tidak').is(':checked')) {
+                console.log("tindakan operasi tidak");
+                if ($('#MainContent_ModalRawatInap_txtinstruksirawatinap').val() == "") {
+					notificationInptient("Instruksi tidak boleh kosong");
+					$('#MainContent_ModalRawatInap_txtinstruksirawatinap').focus();
                     return false;
                 }
                 else {
                     document.getElementById('<%=BtnSaveRawatInap.ClientID%>').click();
                     return true;
                 }
-
             }
-
-
-			if ($('#MainContent_ModalRawatInap_chbx_tindakanoperasi_ya').is(':checked')) {
+			else if ($('#MainContent_ModalRawatInap_chbx_tindakanoperasi_ya').is(':checked')) {
                 console.log("tindakan operasi ya");
 				var jam_operasi = $("[id$='MainContent_ModalRawatInap_txt_JamLamaOperasi']").val();
                 var menit_operasi = $("[id$='MainContent_ModalRawatInap_txt_MenitLamaOperasi']").val();
@@ -7987,19 +7991,36 @@
 				}
 
 				return false;
-
-            } 
-
+			}
 
             return false;
-            
-			
 		}
+		
+        
 
-        function notificationInptient(msg) {
-            warningnotificationOption();
-            toastr.warning(msg + ' <br /> <button type="button" class="btn btn-danger btn-sm" style="height: 25px; padding-top: 3px; width: 55px; float:right;">OK</button>', 'Save Rawat Inap Alert!');
-        }
+		// -- TESTING TAMA
+        var hfProcedureData = document.getElementById("<%= hf_procedure_data.ClientID %>")
+		var hfProcedureDataValue = JSON.parse(hfProcedureData.value)
+
+        var hfAnestheticData = document.getElementById("<%= hf_anesthetic_data.ClientID %>")
+		var hfAnestheticDataValue = JSON.parse(hfAnestheticData.value)
+
+		var hfGetInpatientData = document.getElementById("<%= hf_get_inpatient_data.ClientID %>")
+
+		var hfGetInpatientData_hidden_click = document.getElementById("<%= hf_get_inpatient_data_hidden_click.ClientID %>")
+
+		var hfGetInpatientData_btn_save_rawatInap = document.getElementById("<%= hf_get_inpatient_data_btn_save_rawatinap.ClientID %>")
+      
+        console.log('get procedure', hfProcedureDataValue);
+        console.log('get Anesthetic', hfAnestheticDataValue);
+		console.log('get Inpatient Data', hfGetInpatientData.value);
+        console.log('get Inpatient Data Hidden Click', hfGetInpatientData_hidden_click.value);
+        console.log('get Inpatient Data Btn save rawat inap', hfGetInpatientData_btn_save_rawatInap.value);
+
+		// -- END TESTING TAMA
+
+
+		// END TAMA CODE
 
 		function txtOnKeyPressOthersAllergy() {
 			var c = event.keyCode;
