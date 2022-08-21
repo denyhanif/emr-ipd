@@ -138,42 +138,36 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             {
                 InpatientData inpatientDataa = new InpatientData();
             }
-            else if (inpatientData.admission_date != null)
+            else if (inpatientData.status_id != null)
             {
-
                 HiddenField hf_statusId = (HiddenField)FindControl("hfstatusId");
                 HiddenField hf_encounter = (HiddenField)FindControl("hfencounterId");
                 HiddenField hf_operationScheduleId = (HiddenField)FindControl("hfoperationScheduleId");
-                //HiddenField hf_statusBooking = (HiddenField)FindControl("hfstatusBookingId");
-
+                // HiddenField hf_operationScheduleAdditionalId = (HiddenField)FindControl("hfOperationScheduleAdditionalId");
+                HiddenField hf_statusBooking = (HiddenField)FindControl("hfstatusBookingId");
 
                 hf_statusId.Value = inpatientData.status_id.ToString();
                 hf_encounter.Value = inpatientData.encounter_id.ToString();
                 hf_operationScheduleId.Value = inpatientData.operation_schedule_id.ToString();
+
+                hfOperationScheduleAdditionalId.Value = inpatientData.operation_schedule_additional_id.ToString();
+
                 //hf_statusBooking.Value = inpatientData.operation_schedule_header.status_booking_id; 
-                // CultureInfo provider = CultureInfo.InvariantCulture;
-                // DateTime dateTime15;
 
-                // DateTime dt = DateTime.ParseExact("8/3/2022 12:00:00 AM", "MM/dd/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+                // diagnose di jadikan testing
+                textbox_diagnosis.Text = inpatientData.diagnosis;
 
-                
                 string[] separateDate = inpatientData.admission_date.Split(' ');
                 string splitDate = separateDate[0];
                 string splitTime = separateDate[1];
                 string timePM_AM = separateDate[2];
-              
-
-                DateTime date = new DateTime(2011, 2, 19);
-                //textbox_diagnosis.Text = inpatientData.diagnosis;
-                //txttglmasukrawat.Text = dt.ToString("dd/M/yyyy", CultureInfo.InvariantCulture);
-                //txttglmasukrawat.Text = date.ToString("dd MMMM yyyy");
+             
                 txttglmasukrawat.Text = DateTime.Parse(splitDate.Trim()).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture);
                 txtwaktumasukrawat.Text = $"{splitTime.Substring(0, splitTime.Length-3)} {timePM_AM}";
  
                 txtinstruksirawatinap.Text = inpatientData.instruction;
                 txtremarks.Text = inpatientData.remarks;
 
-                //txttglmasukrawat.Text = (DateTime.Parse(inpatientData.admission_date).ToString("dd MMMM yyyy")).ToString();
                 if (inpatientData.ward_id.ToString()=="0")
                 {
                     txt_BangsalLain.Enabled = true;
@@ -602,38 +596,56 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
         try
         {
-            DropDownList ddl_anasteticmethod = (DropDownList)FindControl("ddl_anasteticmethod");
-            DropDownList ddl_namaoperasi = (DropDownList)FindControl("ddl_namaoperasi");
             HiddenField hf_admission = (HiddenField)FindControl("hfAdmissionId");
-
             HiddenField hf_statusId = (HiddenField)FindControl("hfstatusId");
             HiddenField hf_encounter = (HiddenField)FindControl("hfencounterId");
+            HiddenField hf_doctorid = (HiddenField)FindControl("hfDoctorID");
             HiddenField hf_operationScheduleId = (HiddenField)FindControl("hfoperationScheduleId");
+            // HiddenField hf_operationScheduleAdditionalId = (HiddenField)FindControl("hfOperationScheduleAdditionalId");
+
+            // DropDownList ddl_namaoperasi = (DropDownList)FindControl("ddl_namaoperasi");
+
+            DropDownList ddl_anasteticmethod = (DropDownList)FindControl("ddl_anasteticmethod");
             
             var statusid = hf_statusId.Value;
             var encounter = hf_encounter.Value;
-            var opschedule = hf_operationScheduleId.Value;
+            var operationalScheduleId = hf_operationScheduleId.Value;
             var operationScheduleIdhf = hf_operationScheduleId.Value;
-            HiddenField hf_doctorid = (HiddenField)FindControl("hfDoctorID");
+            var perationScheduleAdditionalId = hfOperationScheduleAdditionalId.Value;
+            var newOperationScheduleId = Guid.NewGuid();
+
+            bool procedureOperation_Yes = chbx_tindakanoperasi_ya.Checked;
+            bool procedureOperation_NO = chbx_tindakanoperasi_tidak.Checked;
+
 
             hfPatientId.Value = Request.QueryString["idPatient"];
             hfEncounterId.Value = Request.QueryString["EncounterId"];
+
             var varResult = clsCommon.GetPatientHeader(long.Parse(hfPatientId.Value), hfEncounterId.Value.ToString());
             var JsongetPatientHistory = JsonConvert.DeserializeObject<ResponsePatientHeader>(varResult.Result.ToString());
             PatientHeader header = JsongetPatientHistory.Data;
 
-            data.status_id = hf_statusId.Value.ToString() == "0" ? 2 : 1;
+
+            ScriptManager.RegisterStartupScript(this, GetType(), "showalertqqq", "console('haiiii " + perationScheduleAdditionalId + " ');", true);
+
+
+            data.status_id = string.IsNullOrEmpty(perationScheduleAdditionalId) || Int32.Parse(perationScheduleAdditionalId) == 0  ? 1 : 2;
+            // data.status_id = perationScheduleAdditionalId == null ? 1 : 2;
             data.user_id = MyUser.GetHopeUserID().ToString();
-            data.operation_schedule_additional_id = 0;
-            data.operation_schedule_id = Guid.NewGuid();
+            data.operation_schedule_additional_id = !string.IsNullOrEmpty(perationScheduleAdditionalId) || Int32.Parse(perationScheduleAdditionalId) != 0 ? Int32.Parse(perationScheduleAdditionalId) : 0;
+            // data.operation_schedule_additional_id = perationScheduleAdditionalId == null ? Int32.Parse(perationScheduleAdditionalId) : 0;
+            //data.operation_schedule_id = operationalScheduleId != null ? Guid.Parse(operationalScheduleId) : newOperationScheduleId;
+            data.operation_schedule_id = operationalScheduleId == null ? Guid.Parse(operationalScheduleId) : newOperationScheduleId;
             data.encounter_id = header.EncounterId;
             data.patient_id = hfPatientId.Value;
             data.patientName = header.PatientName;
-            #region estimation day
+            
+            // LAMA RAWAT
             if (chbx_lamarawat_kurangseminggu.Checked)
             {
                 data.estimation_day = "<7 hari";
-            }else if (chbx_lamarawat_lebihseminggu.Checked)
+            }
+            else if (chbx_lamarawat_lebihseminggu.Checked)
             {
                 data.estimation_day = ">7 hari";
             }
@@ -641,8 +653,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             {
                 data.estimation_day = "";
             }
-            #endregion
-            #region Ward
+          
+            // BANGSAL
             if (chck_BangsalLain.Checked)
             {
                 data.ward_name = txt_BangsalLain.Text;
@@ -658,9 +670,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.ward_name = "";
                 data.ward_id = "0";
             }
-            #endregion
-
-            
+          
             if (chbx_tindakanoperasi_ya.Checked)
             {
                #region Tindakan Operasi 
@@ -774,7 +784,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.birthDate = header.BirthDate.ToString();
                 data.umur = (DateTime.Now - header.BirthDate).ToString();
                 data.sexId = header.Gender.ToString();
-                data.seks = "";
+                data.seks = header.Gender == 1 ? "Male" : "Female"; ;
                 data.localMrNo = header.MrNo;
                 data.create_encounter = "";
                 data.created_date = DateTime.Now.ToString();
@@ -783,7 +793,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.is_pregnancy = false;
                 data.is_edited = false;
                 data.is_active = true;
-                data.is_action = false;
+                data.is_action = chbx_tindakanoperasi_ya.Checked ? true : false;
 
                 data.modified_date = DateTime.Now.ToString();
 
@@ -849,7 +859,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 opsHeader.report_rujukan = false;
                 opsHeader.temp_patientname = header.PatientName ;
                 opsHeader.temp_dob = header.BirthDate.ToString();
-                opsHeader.temp_contactno = "+62";
+                opsHeader.temp_contactno = "0";
 
                 data.operation_schedule_header = opsHeader;
                 #endregion
@@ -861,16 +871,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 operationProcedure.operation_procedure_id = data.operation_schedule_id.ToString();
                 operationProcedure.operation_schedule_id = opsHeader.operation_schedule_id; //opsHeader.operation_schedule_id.ToString();
 
-                //if (chck_OperasiLain.Checked == true) {
-                //    operationProcedure.procedure_name = txt_NamaOperasiLain.Text;
-                //    operationProcedure.procedure_name_id = 0;
-                //}
-                //else
-                //{
-                //    operationProcedure.procedure_name = ddl_namaoperasi.SelectedItem.Text;
-                //    var procedurvalue = ddl_namaoperasi.SelectedValue;
-                //    operationProcedure.procedure_name_id = Int32.Parse(ddl_namaoperasi.SelectedValue);
-                //}
+
                 
                 operationProcedure.procedure_user_id = 0;
                 operationProcedure.procedure_estimate_time = ((Int16.Parse(txt_JamLamaOperasi.Text) * 60) + Int16.Parse(txt_MenitLamaOperasi.Text));
@@ -948,9 +949,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 }
 
                 #endregion
-
-
-
             }
             #endregion
            
@@ -958,9 +956,9 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             {
             #region Tanpa tindakan operasi
 
-                data.user_id = (MyUser.GetHopeUserID());
-                data.operation_schedule_additional_id = 0;
-                data.operation_schedule_id = Guid.Empty;
+                // data.user_id = (MyUser.GetHopeUserID());
+                //data.operation_schedule_additional_id = 0;
+                // data.operation_schedule_id = Guid.Empty;
                 data.encounter_id = header.EncounterId;
                 data.use_tools = false;
                 data.tools_detail = "";
@@ -1001,7 +999,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 data.birthDate = header.BirthDate.ToString();
                 data.umur = (DateTime.Now - header.BirthDate).ToString();
                 data.sexId = header.Gender.ToString();
-                data.seks = "";
+                data.seks = header.Gender == 1 ? "Male" : "Female";
                 data.localMrNo = header.MrNo;
                 data.create_encounter = "";
                 data.created_date = DateTime.Now.ToString();

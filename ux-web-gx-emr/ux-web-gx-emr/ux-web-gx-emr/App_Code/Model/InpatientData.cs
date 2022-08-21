@@ -76,7 +76,6 @@ public class OperationScheduleHeader
     public bool? is_active { get; set; }
     public Nullable<Guid> room_id { get; set; }
     public string status_booking_id { get; set; }
-
     public string status_booking_name { get; set; }
     public string patient_id { get; set; }
     public string created_date { get; set; }

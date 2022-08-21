@@ -35,6 +35,8 @@
 </style>
 <%--<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.css" rel="stylesheet"/>--%>
 
+
+
 <div class="content-rawat-inap">
     <asp:UpdateProgress ID="UpdateProgress15" runat="server" AssociatedUpdatePanelID="Up_rawatinap">
 	    <ProgressTemplate>
@@ -48,6 +50,13 @@
     <asp:UpdatePanel runat="server" ID="Up_rawatinap" UpdateMode="Conditional">
         <ContentTemplate>
             <input type="hidden" id="hfPatientId" runat="server" />
+       
+
+
+            <!-- Use --->
+            <asp:HiddenField ID="hfOperationScheduleAdditionalId" runat="server" />
+            <asp:HiddenField ID="hf_operationScheduleId2" runat="server" />
+            <!-- Use --->
 
             <input type="hidden" id="Hidden1" runat="server" />
             <asp:HiddenField ID="HiddenField1" runat="server" />
@@ -69,13 +78,13 @@
             <asp:HiddenField ID="hfprescriptionHOPE" runat="server" />
             <asp:HiddenField ID="hfDoctorID" runat="server" />
 
-            <asp:HiddenField ID="hfOperationScheduleAdditionalId" runat="server" />
                 
             <asp:HiddenField ID="hfstatusId" runat="server"  Value='<%# Bind("status_id") %>' />
-<%--        <asp:HiddenField ID="hfstatusBookingId" runat="server"  Value='<%# Bind("status_booking_id") %>' />--%>
             <asp:HiddenField ID="hfoperationScheduleId" runat="server"  Value='<%# Bind("operation_schedule_id") %>' />
             <asp:HiddenField ID="hfEncounterId" runat="server" Value='<%# Bind("encounter_id") %>'  />
+        
 
+<%--        <asp:HiddenField ID="hfstatusBookingId" runat="server"  Value='<%# Bind("status_booking_id") %>' />--%>
             <!-- DOKTER NAME -->
             <div class="row" style="margin-bottom:20px; margin-top:10px;">
                 <div class="col-sm-12">

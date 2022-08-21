@@ -502,7 +502,7 @@
 				
 				<asp:HiddenField ID="hf_procedure_data" runat="server" />
 				<asp:HiddenField ID="hf_anesthetic_data" runat="server" />
-				<asp:HiddenField ID="hf_get_inpatient_data" runat="server" />
+				
 				<asp:HiddenField ID="hf_get_inpatient_data_hidden_click" runat="server" />
 				<asp:HiddenField ID="hf_get_inpatient_data_btn_save_rawatinap" runat="server" />
 
@@ -8005,7 +8005,6 @@
         var hfAnestheticData = document.getElementById("<%= hf_anesthetic_data.ClientID %>")
 		var hfAnestheticDataValue = JSON.parse(hfAnestheticData.value)
 
-		var hfGetInpatientData = document.getElementById("<%= hf_get_inpatient_data.ClientID %>")
 
 		var hfGetInpatientData_hidden_click = document.getElementById("<%= hf_get_inpatient_data_hidden_click.ClientID %>")
 
@@ -8013,7 +8012,6 @@
       
         console.log('get procedure', hfProcedureDataValue);
         console.log('get Anesthetic', hfAnestheticDataValue);
-		console.log('get Inpatient Data', hfGetInpatientData.value);
         console.log('get Inpatient Data Hidden Click', hfGetInpatientData_hidden_click.value);
         console.log('get Inpatient Data Btn save rawat inap', hfGetInpatientData_btn_save_rawatInap.value);
 

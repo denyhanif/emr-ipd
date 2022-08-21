@@ -223,9 +223,12 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 {
                     var getrawatinap = clsSOAP.getRawatInap(long.Parse(Helper.organizationId.ToString()), Guid.Empty.ToString(), long.Parse(hfPatientId.Value), headeradm.AdmissionNo, hfEncounterId.Value);
                     ResultInpatient jsoninpatient = JsonConvert.DeserializeObject<ResultInpatient>(getrawatinap.Result.ToString());
-                    hf_get_inpatient_data.Value = JsonConvert.SerializeObject(jsoninpatient.list);
+                    // hf_get_inpatient_data.Value = JsonConvert.SerializeObject(jsoninpatient.list);
+                 //   Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = jsoninpatient.list;
 
-                    
+                    ScriptManager.RegisterStartupScript(this, GetType(), "showloggg", "console.log('%cinpatient data first time: " + JsonConvert.SerializeObject(jsoninpatient.list) + "  ', 'background: #222; color: yellow');", true);
+
+
 
                     if (jsoninpatient.list.patient_id != null)
                     {
@@ -12947,7 +12950,8 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             //var inpatientprm = new JavaScriptSerializer().Serialize(inpatientData);
 
             Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = inpatientData;
-            ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save rawat inap: "+ JsonConvert.SerializeObject(inpatientData) + "');", true);
+            // ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save rawat inap: "+ JsonConvert.SerializeObject(inpatientData) + " ');", true);
+            ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('%c save rawat inap: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: #bada55');", true);
 
             //var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
             //var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
@@ -12980,6 +12984,8 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
         // testing
         hf_get_inpatient_data_hidden_click.Value = JsonConvert.SerializeObject(inpatientData);
+        ScriptManager.RegisterStartupScript(this, GetType(), "showlogg2", "console.log('%cBtnInpatientHidden_Click: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: yellow');", true);
+
     }
 
     public void SaveInpatent()
