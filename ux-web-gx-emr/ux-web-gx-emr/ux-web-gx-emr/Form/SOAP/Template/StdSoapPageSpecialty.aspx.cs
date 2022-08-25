@@ -13824,7 +13824,7 @@ public partial class Form_SOAP_Template_StdSoapPageSpecialty : System.Web.UI.Pag
     }
     #endregion
 
-    #region rawat inap
+    #region REFERRAL (RAWAT INAP)
     protected void BtnSaveRawatinap_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -13855,13 +13855,8 @@ public partial class Form_SOAP_Template_StdSoapPageSpecialty : System.Web.UI.Pag
             Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetInpatientData", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
 
         }
-
-
-
-       
-
-
     }
+
     protected void BtnPrintRawatInap(object sender, EventArgs e)
     {
 
@@ -13870,8 +13865,8 @@ public partial class Form_SOAP_Template_StdSoapPageSpecialty : System.Web.UI.Pag
         //localIPAdress = "10.83.254.38"; //HARD CODE
         ScriptManager.RegisterStartupScript(
         this, GetType(), "OpenWindow", "window.open('http://" + localIPAdress + "/printingemr?printtype=RawatInap&OrganizationId=" + Helper.organizationId + "&AdmissionId=" + hfAdmissionId.Value.ToString() + "&EncounterId=" + hfEncounterId.Value.ToString() + "&PatientId=" + hfPatientId.Value.ToString() + "&PageSOAP=" + hfPageSoapId.Value.ToString() + "&PrintBy=" + Helper.GetLoginUser(this) + "','_blank');", true);
-
     }
+
     protected void BtnDeleteRawatInap_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");

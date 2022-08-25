@@ -1352,12 +1352,12 @@
 											        <div class="row" style="margin-top: 12px; margin-left: 15px">
 
 												      <div runat="server" id="rptrawatinap" >
-													
+	
 															<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_dokter" runat="server" Text="nama dokter"></asp:Label>
 
 															<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_spesialis" runat="server" Text="spesialis"></asp:Label>
 
-															<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_jenis" runat="server" Text="- Rawat Inap - "></asp:Label>
+															<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_jenis" runat="server" Text="- Rawat Inap"></asp:Label>
 
 															<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_waktu" runat="server" Text="createdate"></asp:Label>
 

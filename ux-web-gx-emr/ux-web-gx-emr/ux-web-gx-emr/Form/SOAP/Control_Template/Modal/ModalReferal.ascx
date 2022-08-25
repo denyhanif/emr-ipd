@@ -91,7 +91,7 @@
              </div>--%>
              <div class="col-md-5"  id="divjenisrujukan" runat="server" style="border-left:dashed 1px #707070;margin-left: -70px;">
                  <div class="pretty p-default p-round">
-                       <asp:RadioButton runat="server" Value="1" ID="RB_Konsul1x" Checked='<%# Eval("referral_type").ToString() == "Konsultasi 1 Kali" ? true : false %>' Enabled='<%# Eval("is_editable").ToString() == "0" ? false : true %>'  OnCheckedChanged="RB_Konsul1x_CheckedChanged"  AutoPostBack="true"/>
+                       <asp:RadioButton runat="server" Value="1" ID="RB_Konsul1x" Checked='<%# Eval("referral_type").ToString() == "Konsultasi 1 Kali" ? true : false %>' Enabled='<%# Eval("is_editable").ToString() == "0" ? false : true %>'  OnCheckedChanged="RB_Konsul1x_CheckedChanged" AutoPostBack="true"/>
                        <div class="state p-primary-o">
                            <label>Konsultasi 1 Kali</label>
                         </div>

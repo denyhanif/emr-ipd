@@ -37,6 +37,11 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             GetRecoveryRoom();
         }
 
+        //if(chbx_tindakanoperasi_ya.Checked)
+        //{
+        //    divTindakanOperasi.Visible = true;
+        //}
+
         if (chck_BangsalLain.Checked)
         {
             cbl_ward.Enabled = false;
@@ -54,6 +59,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         {
             cbl_recoveryroom.Items[i].Attributes.Add("onclick", "MutExChkListRecovery(this)");
         }
+
+        
     }
 
     public void GetWardData()
@@ -82,7 +89,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         }
         
     }
-
     public void GetRecoveryRoom()
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -101,9 +107,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetRecoveryRoomData", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
         }
-
     }
-    
+
     public void GetAnestheticData()
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -129,14 +134,13 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
     }
-
     public void initializevalue(InpatientData inpatientData)
     {
         try 
         {
             if (inpatientData == null)
             {
-                InpatientData inpatientDataa = new InpatientData();
+                inpatientData = new InpatientData();
             }
             else if (inpatientData.status_id != null)
             {
@@ -154,8 +158,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 hfOperationScheduleAdditionalId.Value = inpatientData.operation_schedule_additional_id.ToString();
                 hf_operationScheduleId2.Value = inpatientData.operation_schedule_id.ToString();
                 hf_is_action.Value = inpatientData.is_action.ToString();
-
-
 
                 //hf_statusBooking.Value = inpatientData.operation_schedule_header.status_booking_id; 
 
@@ -184,8 +186,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     cbl_ward.SelectedValue = inpatientData.ward_id.ToString();
                     cbl_ward.SelectedItem.Text = inpatientData.ward_name;
                 }
-                
-                
+               
 
                 if (inpatientData.estimation_day.ToString() == "<7 hari")
                 {
@@ -210,6 +211,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     //divTindakanOperasi.Visible = true;
                     //UPtindakanOperasi.Update();
                 }
+
                 //txt_tglperkiraanoperasi.Text = DateTime.Parse(inpatientData.admission_date.ToString()).ToString("dd MMMM yyyy");
                 txt_tglperkiraanoperasi.Text = DateTime.Parse(inpatientData.operation_schedule_header.operation_schedule_date.Substring(0, inpatientData.operation_schedule_header.operation_schedule_date.Length - 9).Trim()).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture);
                 txtwaktuperkiraanoperasi.Text = DateTime.ParseExact(inpatientData.operation_schedule_header.incision_time, "HH:mm:ss", CultureInfo.CurrentCulture).ToString("hh:mm tt");
@@ -220,10 +222,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 txt_JamLamaOperasi.Text = (Convert.ToInt32(getFirstEstimateTime.procedure_estimate_time)/60).ToString();
                 txt_MenitLamaOperasi.Text = (Convert.ToInt32(getFirstEstimateTime.procedure_estimate_time)%60).ToString(); ;
 
-
-
-                int menit = 0;
-                int jam = 0;
                 //foreach (var a in inpatientData.operation_procedures)
                 //{
                 //    ddl_namaoperasi.SelectedItem.Text = a.procedure_name;
@@ -234,6 +232,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 //}
 
                 ddl_anasteticmethod.SelectedItem.Text = inpatientData.operation_schedule_header.anesthetia_type_name;
+                ddl_anasteticmethod.SelectedItem.Value = inpatientData.operation_schedule_header.anesthetia_user_id.ToString();
 
                 if (!string.IsNullOrEmpty(inpatientData.tools_detail))
                 {
@@ -313,7 +312,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 txt_otherLab.Text = inpatientData.other_lab;
                 txt_OtherRad.Text = inpatientData.other_rad;
 
-                // procedure 
+                // PROCEDURE LIST
                 List<OperationProcedure> operationProcedure = new List<OperationProcedure>();
 
                 if (inpatientData.operation_procedures != null)
@@ -337,7 +336,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     gv_procedure.DataBind();
                 }
 
-                //labrad
+                // LAB RAD
                 List<CpoeTrans> listlabstemp = new List<CpoeTrans>();
                 List<CpoeTrans> listradtemp = new List<CpoeTrans>();
 
@@ -390,239 +389,17 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     gv_Lab.DataBind();
                 }
             }
+           
         } catch(Exception ex)
         {
             var message = ex.Message;
         }
+
         //divTindakanOperasi.Visible = true;
         //UPtindakanOperasi.Update();
 
         Up_rawatinap.Update();
-
     }
-
-    public void BtnAjaxSearchRAD_Click(object sender, EventArgs e)
-    {
-        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-
-        try
-        {
-            DataTable radSelect = new DataTable();
-
-            radSelect = ((DataTable)Session[Helper.SessionItemAllCPOE]).Select("template_name = 'RAD' AND id = '" + hf_ItemSelectedRad.Value + "' AND name = '" + HF_ItemSelectedRad_name.Value + "' AND remarks = '" + HF_ItemSelectedRad_remarks.Value + "'").CopyToDataTable();
-
-            List<CpoeTrans> listExcludeTrans = new List<CpoeTrans>();
-            // List<CpoeTrans> listNotExist = new List<CpoeTrans>();
-            List<CpoeTrans> listTempCpoeTrans;
-
-            if (Session[Helper.Sessionradcheck + hfguidadditional.Value] == null)
-            {
-                listTempCpoeTrans = new List<CpoeTrans>();
-            }
-            else
-            {
-                listTempCpoeTrans = new List<CpoeTrans>();
-                listTempCpoeTrans = (List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value];
-            }
-
-            CpoeTrans ct = new CpoeTrans();
-            ct.id = long.Parse(radSelect.Rows[0]["id"].ToString());
-            ct.name = radSelect.Rows[0]["name"].ToString();
-            ct.type = radSelect.Rows[0]["type"].ToString();
-            ct.remarks = radSelect.Rows[0]["remarks"].ToString();
-            ct.isnew = int.Parse(radSelect.Rows[0]["isnew"].ToString());
-            ct.iscito = int.Parse(radSelect.Rows[0]["iscito"].ToString());
-            ct.issubmit = int.Parse(radSelect.Rows[0]["issubmit"].ToString());
-            ct.isdelete = int.Parse(radSelect.Rows[0]["isdelete"].ToString());
-            ct.ischeck = int.Parse(radSelect.Rows[0]["ischeck"].ToString());
-            ct.IsSendHope = int.Parse(radSelect.Rows[0]["IsSendHope"].ToString());
-
-            if (listTempCpoeTrans != null)
-            {
-                if (listTempCpoeTrans.Any(y => y.name == ct.name && y.isdelete == 0))
-                {
-                    listExcludeTrans.Add(ct);
-                }
-                else if (listTempCpoeTrans.Any(y => y.name == ct.name && y.isdelete == 1))
-                {
-                    listTempCpoeTrans.FirstOrDefault(z => z.name == ct.name).isdelete = 0;
-                }
-                else
-                {
-                    listTempCpoeTrans.Add(ct);
-                }
-
-                //else if (listTempCpoeTrans.Any(y => ct.ischeck == 0))
-                //{
-                //    listNotExist.Add(ct);
-                //}
-            }
-            else
-            {
-                listTempCpoeTrans.Add(ct);
-            }
-
-            Session[Helper.Sessionradcheck + hfguidadditional.Value] = listTempCpoeTrans;
-
-            listChecked = (List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value];
-            if (listChecked != null)
-            {
-                if (Helper.ToDataTable(listChecked).Select("isdelete = 0 and ischeck <> 0").Count() > 0)
-                {
-                    List<CpoeTrans> listcheckedTemp = new List<CpoeTrans>();
-                    foreach (var list in listChecked)
-                    {
-                        CpoeTrans temp = new CpoeTrans();
-                        temp.id = list.id;
-                        temp.ischeck = list.ischeck;
-                        temp.iscito = list.iscito;
-                        temp.isdelete = list.isdelete;
-                        temp.isnew = list.isnew;
-                        temp.issubmit = list.issubmit;
-
-                        if (list.remarks != "")
-                        {
-                            temp.name = list.name + " (" + list.remarks + ")";
-                        }
-                        else
-                        {
-                            temp.name = list.name;
-                        }
-
-                        temp.type = temp.type;
-                        temp.remarks = list.remarks;
-                        temp.IsSendHope = list.IsSendHope;
-                        listcheckedTemp.Add(temp);
-                    }
-                    DataTable dt = Helper.ToDataTable(listcheckedTemp).Select("isdelete = 0 and ischeck <> 0").CopyToDataTable();
-                    gv_Rad.DataSource = dt;
-                    gv_Rad.DataBind();
-                }
-                else
-                {
-                    gv_Rad.DataSource = null;
-                    gv_Rad.DataBind();
-                }
-            }
-
-            if (listExcludeTrans.Count() > 0)
-            {
-                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert(' Service Already Exist');", true);
-            }
-
-            txt_ItemRad.Text = "";
-            up_DivRad.Update();
-
-            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_RadRawatInap_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
-        }
-        catch (Exception ex)
-        {
-            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_RadRawatInap_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
-            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
-        }
-
-    }
-
-    public void BtnAjaxSearchLAB_Click(object sender, EventArgs e)
-    {
-        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-
-        try
-        {
-            DataTable labSelect;
-            labSelect = ((DataTable)Session[Helper.SessionItemAllCPOE]).Select("template_name = 'LAB' AND id = '" + hf_ItemSelectedLab.Value + "' AND type <> 'CitoLab'").CopyToDataTable();
-
-            List<CpoeTrans> listExcludeTrans = new List<CpoeTrans>();
-            // List<CpoeTrans> listNotExist = new List<CpoeTrans>();
-            List<CpoeTrans> listTempCpoeTrans;
-
-            if (Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] == null)
-            {
-                listTempCpoeTrans = new List<CpoeTrans>();
-            }
-            else
-            {
-                listTempCpoeTrans = new List<CpoeTrans>();
-                listTempCpoeTrans = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value];
-            }
-
-            CpoeTrans x = new CpoeTrans();
-            x.id = long.Parse(labSelect.Rows[0]["id"].ToString());
-            x.name = labSelect.Rows[0]["name"].ToString();
-            x.type = labSelect.Rows[0]["type"].ToString();
-            x.remarks = labSelect.Rows[0]["remarks"].ToString();
-            x.isnew = int.Parse(labSelect.Rows[0]["isnew"].ToString());
-            x.iscito = int.Parse(labSelect.Rows[0]["iscito"].ToString());
-            x.issubmit = int.Parse(labSelect.Rows[0]["issubmit"].ToString());
-            x.isdelete = int.Parse(labSelect.Rows[0]["isdelete"].ToString());
-            x.ischeck = int.Parse(labSelect.Rows[0]["ischeck"].ToString());
-            x.IsSendHope = int.Parse(labSelect.Rows[0]["IsSendHope"].ToString());
-
-            if (listTempCpoeTrans != null)
-            {
-                if (listTempCpoeTrans.Any(y => y.name == x.name && y.isdelete == 0))
-                {
-                    listExcludeTrans.Add(x);
-                }
-                else if (listTempCpoeTrans.Any(y => y.name == x.name && y.isdelete == 1))
-                {
-                    listTempCpoeTrans.FirstOrDefault(z => z.name == x.name).isdelete = 0;
-                }
-                else
-                {
-                    listTempCpoeTrans.Add(x);
-                }
-
-                //else if (listTempCpoeTrans.Any(y => x.ischeck == 0))
-                //{
-                //    listNotExist.Add(x);
-                //}
-            }
-            else
-            {
-                listTempCpoeTrans.Add(x);
-            }
-
-            Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] = listTempCpoeTrans;
-
-            listChecked = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value];
-            if (listChecked != null)
-            {
-
-                if (Helper.ToDataTable(listChecked).Select("isdelete = 0 and ischeck <> 0").Count() > 0)
-                {
-                    DataTable dt = Helper.ToDataTable(listChecked).Select("isdelete = 0 and ischeck <> 0").CopyToDataTable();
-                    gv_Lab.DataSource = dt;
-                    gv_Lab.DataBind();
-                }
-                else
-                {
-                    gv_Lab.DataSource = null;
-                    gv_Lab.DataBind();
-                }
-            }
-
-            if (listExcludeTrans.Count() > 0)
-            {
-                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert(' Service Already Exist');", true);
-            }
-
-            txt_ItemLab.Text = "";
-            up_DivLab.Update();
-
-            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_LabRawatInap_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
-        }
-        catch (Exception ex)
-        {
-            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_LabRawatInap_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
-            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
-        }
-    }
-
     public InpatientData getvalues()
     {
         InpatientData data = new InpatientData();
@@ -843,7 +620,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 opsHeader.is_cito = false;
                 opsHeader.positioning_time = 0;
                 opsHeader.anesthetia_type_name = ddl_anasteticmethod.SelectedItem.Text;
-                opsHeader.anesthetia_user_id = Convert.ToInt32(ddl_anasteticmethod.SelectedValue);
+                opsHeader.anesthetia_user_id =  Convert.ToInt32(ddl_anasteticmethod.SelectedValue);
                 if (chck_OperasiTindakanLain.Checked == true)
                 {
                     opsHeader.recovery_room = txt_OperasiTindakanLain.Text;
@@ -895,7 +672,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 opsHeader.report_rujukan = false;
                 opsHeader.temp_patientname = header.PatientName ;
                 opsHeader.temp_dob = header.BirthDate.ToString();
-                opsHeader.temp_contactno = "0";
+                opsHeader.temp_contactno = "";
 
                 data.operation_schedule_header = opsHeader;
                 #endregion
@@ -1073,7 +850,9 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 opsHeader.is_confirmed = false;
                 opsHeader.is_active = false;
                 opsHeader.room_id = Guid.Empty;
-                opsHeader.status_booking_id = "6";
+                // status_booking_id: inpatient_data.operation_schedule_id == "00000000-0000-0000-0000-000000000000" && isOperationProcedureChecked_no.checked ? 0 : inpatient_data.operation_schedule_header.status_booking_id == 7 && isOperationProcedureChecked_no.checked ? 0 : 6,
+
+                opsHeader.status_booking_id = "0";
                 opsHeader.patient_id = hfPatientId.Value;
                 opsHeader.created_date = DateTime.Now.ToString();
                 opsHeader.created_by = MyUser.GetHopeUserID();
@@ -1102,7 +881,7 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                 opsHeader.report_rujukan = false;
                 opsHeader.temp_patientname = header.PatientName;
                 opsHeader.temp_dob = header.BirthDate.ToString();
-                opsHeader.temp_contactno = "+62";
+                opsHeader.temp_contactno = "";
 
                 data.operation_schedule_header = opsHeader;
                 #endregion
@@ -1130,6 +909,101 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         }
        
         return data;
+    }
+    
+
+    #region Lab Inpatient List
+    public void BtnAjaxSearchLAB_Click(object sender, EventArgs e)
+    {
+        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+        try
+        {
+            DataTable labSelect;
+            labSelect = ((DataTable)Session[Helper.SessionItemAllCPOE]).Select("template_name = 'LAB' AND id = '" + hf_ItemSelectedLab.Value + "' AND type <> 'CitoLab'").CopyToDataTable();
+
+            List<CpoeTrans> listExcludeTrans = new List<CpoeTrans>();
+            List<CpoeTrans> listTempCpoeTrans;
+
+            if (Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] == null)
+            {
+                listTempCpoeTrans = new List<CpoeTrans>();
+            }
+            else
+            {
+                listTempCpoeTrans = new List<CpoeTrans>();
+                listTempCpoeTrans = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value];
+            }
+
+            CpoeTrans x = new CpoeTrans();
+            x.id = long.Parse(labSelect.Rows[0]["id"].ToString());
+            x.name = labSelect.Rows[0]["name"].ToString();
+            x.type = labSelect.Rows[0]["type"].ToString();
+            x.remarks = labSelect.Rows[0]["remarks"].ToString();
+            x.isnew = int.Parse(labSelect.Rows[0]["isnew"].ToString());
+            x.iscito = int.Parse(labSelect.Rows[0]["iscito"].ToString());
+            x.issubmit = int.Parse(labSelect.Rows[0]["issubmit"].ToString());
+            x.isdelete = int.Parse(labSelect.Rows[0]["isdelete"].ToString());
+            x.ischeck = int.Parse(labSelect.Rows[0]["ischeck"].ToString());
+            x.IsSendHope = int.Parse(labSelect.Rows[0]["IsSendHope"].ToString());
+
+            if (listTempCpoeTrans != null)
+            {
+                if (listTempCpoeTrans.Any(y => y.name == x.name && y.isdelete == 0))
+                {
+                    listExcludeTrans.Add(x);
+                }
+                else if (listTempCpoeTrans.Any(y => y.name == x.name && y.isdelete == 1))
+                {
+                    listTempCpoeTrans.FirstOrDefault(z => z.name == x.name).isdelete = 0;
+                }
+                else
+                {
+                    listTempCpoeTrans.Add(x);
+                }
+            }
+            else
+            {
+                listTempCpoeTrans.Add(x);
+            }
+
+            Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] = listTempCpoeTrans;
+            hf_LabLength.Value = listTempCpoeTrans.Count().ToString();
+
+            listChecked = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value];
+            if (listChecked != null)
+            {
+
+                if (Helper.ToDataTable(listChecked).Select("isdelete = 0 and ischeck <> 0").Count() > 0)
+                {
+                    DataTable dt = Helper.ToDataTable(listChecked).Select("isdelete = 0 and ischeck <> 0").CopyToDataTable();
+                    gv_Lab.DataSource = dt;
+                    gv_Lab.DataBind();
+                }
+                else
+                {
+                    gv_Lab.DataSource = null;
+                    gv_Lab.DataBind();
+                }
+            }
+
+            if (listExcludeTrans.Count() > 0)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert(' Service Already Exist');", true);
+            }
+
+            txt_ItemLab.Text = "";
+            up_DivLab.Update();
+
+            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_LabRawatInap_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+        }
+        catch (Exception ex)
+        {
+            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_LabRawatInap_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
+        }
     }
 
     public void BtnDeletelab_Click(object sender, EventArgs e)
@@ -1172,6 +1046,10 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
             Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] = listcheck;
 
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+            hf_LabLength.Value = listcheck.Count().ToString();
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+
             if (Helper.ToDataTable(listcheck).Select("isdelete = 0").Count() > 0)
             {
                 gv_Lab.DataSource = Helper.ToDataTable(listcheck).Select("isdelete = 0").CopyToDataTable();
@@ -1195,10 +1073,133 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
     }
-    public void BtnDeleteRad_Click(object sender, EventArgs e)
+    #endregion
+
+    #region Rad Inpatient Lst
+    public void BtnAjaxSearchRAD_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
+        try
+        {
+            DataTable radSelect = new DataTable();
+
+            radSelect = ((DataTable)Session[Helper.SessionItemAllCPOE]).Select("template_name = 'RAD' AND id = '" + hf_ItemSelectedRad.Value + "' AND name = '" + HF_ItemSelectedRad_name.Value + "' AND remarks = '" + HF_ItemSelectedRad_remarks.Value + "'").CopyToDataTable();
+
+            List<CpoeTrans> listExcludeTrans = new List<CpoeTrans>();
+            List<CpoeTrans> listTempCpoeTrans;
+
+            if (Session[Helper.Sessionradcheck + hfguidadditional.Value] == null)
+            {
+                listTempCpoeTrans = new List<CpoeTrans>();
+            }
+            else
+            {
+                listTempCpoeTrans = new List<CpoeTrans>();
+                listTempCpoeTrans = (List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value];
+            }
+
+            CpoeTrans ct = new CpoeTrans();
+            ct.id = long.Parse(radSelect.Rows[0]["id"].ToString());
+            ct.name = radSelect.Rows[0]["name"].ToString();
+            ct.type = radSelect.Rows[0]["type"].ToString();
+            ct.remarks = radSelect.Rows[0]["remarks"].ToString();
+            ct.isnew = int.Parse(radSelect.Rows[0]["isnew"].ToString());
+            ct.iscito = int.Parse(radSelect.Rows[0]["iscito"].ToString());
+            ct.issubmit = int.Parse(radSelect.Rows[0]["issubmit"].ToString());
+            ct.isdelete = int.Parse(radSelect.Rows[0]["isdelete"].ToString());
+            ct.ischeck = int.Parse(radSelect.Rows[0]["ischeck"].ToString());
+            ct.IsSendHope = int.Parse(radSelect.Rows[0]["IsSendHope"].ToString());
+
+            if (listTempCpoeTrans != null)
+            {
+                if (listTempCpoeTrans.Any(y => y.name == ct.name && y.isdelete == 0))
+                {
+                    listExcludeTrans.Add(ct);
+                }
+                else if (listTempCpoeTrans.Any(y => y.name == ct.name && y.isdelete == 1))
+                {
+                    listTempCpoeTrans.FirstOrDefault(z => z.name == ct.name).isdelete = 0;
+                }
+                else
+                {
+                    listTempCpoeTrans.Add(ct);
+                }
+            }
+            else
+            {
+                listTempCpoeTrans.Add(ct);
+            }
+
+            Session[Helper.Sessionradcheck + hfguidadditional.Value] = listTempCpoeTrans;
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+            hf_RadLength.Value = listTempCpoeTrans.Count().ToString();
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+
+            listChecked = (List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value];
+            if (listChecked != null)
+            {
+                if (Helper.ToDataTable(listChecked).Select("isdelete = 0 and ischeck <> 0").Count() > 0)
+                {
+                    List<CpoeTrans> listcheckedTemp = new List<CpoeTrans>();
+                    foreach (var list in listChecked)
+                    {
+                        CpoeTrans temp = new CpoeTrans();
+                        temp.id = list.id;
+                        temp.ischeck = list.ischeck;
+                        temp.iscito = list.iscito;
+                        temp.isdelete = list.isdelete;
+                        temp.isnew = list.isnew;
+                        temp.issubmit = list.issubmit;
+
+                        if (list.remarks != "")
+                        {
+                            temp.name = list.name + " (" + list.remarks + ")";
+                        }
+                        else
+                        {
+                            temp.name = list.name;
+                        }
+
+                        temp.type = temp.type;
+                        temp.remarks = list.remarks;
+                        temp.IsSendHope = list.IsSendHope;
+                        listcheckedTemp.Add(temp);
+                    }
+                    DataTable dt = Helper.ToDataTable(listcheckedTemp).Select("isdelete = 0 and ischeck <> 0").CopyToDataTable();
+                    gv_Rad.DataSource = dt;
+                    gv_Rad.DataBind();
+                }
+                else
+                {
+                    gv_Rad.DataSource = null;
+                    gv_Rad.DataBind();
+                }
+            }
+
+            if (listExcludeTrans.Count() > 0)
+            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert(' Service Already Exist');", true);
+            }
+
+            txt_ItemRad.Text = "";
+            up_DivRad.Update();
+
+            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_RadRawatInap_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+        }
+        catch (Exception ex)
+        {
+            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnAjaxSearch_RadRawatInap_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
+        }
+
+    }
+
+    public void BtnDeleteRad_Click(object sender, EventArgs e)
+    {
+        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         try
         {
             int selRowIndex = ((GridViewRow)(((ImageButton)sender).Parent.Parent)).RowIndex;
@@ -1238,6 +1239,9 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             }
 
             Session[Helper.Sessionradcheck + hfguidadditional.Value] = listcheck;
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+            hf_RadLength.Value = listcheck.Count().ToString();
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
 
             if (Helper.ToDataTable(listcheck).Select("isdelete = 0").Count() > 0)
             {
@@ -1285,38 +1289,11 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         }
     }
 
-    public void JamOperasiValidation(bool txt)
-    {
-        if (txt == true)
-        {
-            TextBox txt_JamLamaOperasi = (TextBox)FindControl("txt_JamLamaOperasi");
-            txt_JamLamaOperasi.Style.Add("border", "1px solid red");
-           
-        }
-        else
-        {
-            TextBox txt_JamLamaOperasi = (TextBox)FindControl("txt_JamLamaOperasi");
-            txt_JamLamaOperasi.Style.Add("border", "1px solid #76767C");
-        }
+    #endregion
 
-    }
 
-    public void MenitOperasiValidation(bool txt)
-    {
-        if (txt == true)
-        {
-            TextBox txt_MenitLamaOperasi = (TextBox)FindControl("txt_MenitLamaOperasi");
-            txt_MenitLamaOperasi.Style.Add("border", "1px solid red");
 
-        }
-        else
-        {
-            TextBox txt_MenitLamaOperasi = (TextBox)FindControl("txt_MenitLamaOperasi");
-            txt_MenitLamaOperasi.Style.Add("border", "1px solid #76767C");
-        }
-
-    }
-
+    #region Operation Procedure
     public void BtnAjaxSearchProcedure_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -1354,7 +1331,8 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             op.modified_by = MyUser.GetHopeUserID();
             op.modified_date = DateTime.Now.ToString();
 
-            if (listProcedureTemp != null) {
+            if (listProcedureTemp != null)
+            {
                 if (listProcedureTemp.Any(y => y.procedure_name == op.procedure_name && y.is_active == true))
                 {
                     listExcludeProcedure.Add(op);
@@ -1368,13 +1346,16 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
                     listProcedureTemp.Add(op);
                 }
             }
-            else {
+            else
+            {
                 listProcedureTemp.Add(op);
             }
 
             Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] = listProcedureTemp;
             listProcedureInpatientChecked = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
-
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+            hf_procedureLength.Value = listProcedureInpatientChecked.Count().ToString();
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
             if (listProcedureInpatientChecked != null)
             {
                 if (Helper.ToDataTable(listProcedureInpatientChecked).Select("is_active = true").Count() > 0)
@@ -1440,7 +1421,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
         {
             int selRowIndex = ((GridViewRow)(((ImageButton)sender).Parent.Parent)).RowIndex;
             HiddenField procedureId = (HiddenField)gv_procedure.Rows[selRowIndex].FindControl("hf_id_procedure");
-
             List<OperationProcedure> listItemCheck = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
 
             var itemProcedure = new OperationProcedure();
@@ -1466,6 +1446,9 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             }
 
             Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] = listItemCheck;
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+            hf_procedureLength.Value = listItemCheck.Count().ToString();
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
 
             if (Helper.ToDataTable(listItemCheck).Select("is_active = true").Count() > 0)
             {
@@ -1494,7 +1477,6 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
 
                 gv_procedure.DataSource = Helper.ToDataTable(listCheckedShow).Select("is_active = true").CopyToDataTable();
                 gv_procedure.DataBind();
-
             }
             else
             {
@@ -1514,6 +1496,237 @@ public partial class Form_SOAP_Control_Template_Modal_ModalRawatInap : System.We
             //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
         }
     }
-    
+
+    // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+    public void ClearProcedure()
+    {
+        List<OperationProcedure> currentExistProcedure = (List<OperationProcedure>)Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value];
+        List<CpoeTrans> currentExitLab = (List<CpoeTrans>)Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value];
+        List<CpoeTrans> currentExistRad = (List<CpoeTrans>)Session[Helper.Sessionradcheck + hfguidadditional.Value];
+
+        if (currentExistProcedure != null)
+        {
+            currentExistProcedure.Clear();
+            Session[Helper.SessionProcedureInpatientChecked + hfguidadditional.Value] = currentExistProcedure;
+
+            hf_procedureLength.Value = currentExistProcedure.Count().ToString();
+            gv_procedure.DataSource = null;
+            gv_procedure.DataBind();
+            up_DivProcedure.Update();
+        }
+        else
+        {
+            gv_procedure.DataSource = null;
+            gv_procedure.DataBind();
+            up_DivProcedure.Update();
+        }
+
+        if (currentExistRad != null)
+        {
+            currentExistRad.Clear();
+            Session[Helper.Sessionradcheck + hfguidadditional.Value] = currentExistRad;
+
+            hf_RadLength.Value = currentExistRad.Count().ToString();
+            gv_Rad.DataSource = null;
+            gv_Rad.DataBind();
+
+            up_DivRad.Update();
+        }
+        else
+        {
+            gv_Rad.DataSource = null;
+            gv_Rad.DataBind();
+
+            up_DivRad.Update();
+        }
+
+        if (currentExitLab != null)
+        {
+            currentExitLab.Clear();
+            Session[Helper.SessionLabPathologyChecked + hfguidadditional.Value] = currentExitLab;
+
+            hf_LabLength.Value = currentExitLab.Count().ToString();
+            gv_Lab.DataSource = null;
+            gv_Lab.DataBind();
+            up_DivLab.Update();
+        }
+        else
+        {
+            gv_Lab.DataSource = null;
+            gv_Lab.DataBind();
+            up_DivLab.Update();
+        }
+
+        txt_JamLamaOperasi.Text = "";
+        txt_MenitLamaOperasi.Text = "";
+        txt_tglperkiraanoperasi.Text = "";
+        txtwaktuperkiraanoperasi.Text = "";
+        chbx_tindakanoperasi_ya.Checked = false;
+
+        txt_OtherRad.Text = "";
+        txt_otherLab.Text = "";
+
+        if (chbx_alat_tidak.Checked)
+        {
+            chbx_alat_tidak.Checked = false;
+        }
+        else if (chbx_alat_ya.Checked)
+        {
+            chbx_alat_ya.Checked = false;
+            txt_alat_ya.Text = "";
+            txt_alat_ya.Enabled = false;
+        }
+
+        if (chck_Tabel1.Checked)
+        {
+            chck_Tabel1.Checked = false;
+        }
+        else if (chck_Tabel2.Checked)
+        {
+            chck_Tabel2.Checked = false;
+        }
+        else if (chck_Tabel3.Checked)
+        {
+            chck_Tabel3.Checked = false;
+        }
+        else if (chck_Tabel4.Checked)
+        {
+            chck_Tabel4.Checked = false;
+        }
+        else if (chck_Tabel5.Checked)
+        {
+            chck_Tabel5.Checked = false;
+        }
+        else if (chck_Tabel6.Checked)
+        {
+            chck_Tabel6.Checked = false;
+        }
+        else if (chck_Tabel7.Checked)
+        {
+            chck_Tabel2.Checked = false;
+        }
+        else if (chck_TabelLain.Checked)
+        {
+            chck_TabelLain.Checked = false;
+            txt_TabelLain.Text = "";
+            txt_TabelLain.Enabled = false;
+        }
+
+        if (chbx_puasa_ya.Checked)
+        {
+            chbx_puasa_ya.Checked = false;
+            txt_puasa_ya.Text = "";
+            txt_puasa_ya.Enabled = false;
+        }
+        else if (chbx_puasa_tidak.Checked)
+        {
+            chbx_puasa_tidak.Checked = false;
+        }
+
+        DropDownList ddlAnasteticMethod = (DropDownList)FindControl("ddl_anasteticmethod");
+        ddlAnasteticMethod.SelectedItem.Text = "Anesthetic Method...";
+        ddlAnasteticMethod.SelectedValue = "-1";
+
+        //if (chck_OperasiTindakanLain.Checked)
+        //{
+        //    chck_OperasiTindakanLain.Checked = false;
+        //    txt_OperasiTindakanLain.Text = "";
+        //    txt_OperasiTindakanLain.Enabled = false;
+        //}
+        //else
+        //{
+        //    //CheckBoxList cbxListRecoveryRoom = (CheckBoxList)FindControl("cbl_recoveryroom");
+        //    //cbxListRecoveryRoom.SelectedIndex = -1;
+        //}
+
+        cbl_recoveryroom.ClearSelection();
+    }
+    // ------------------------------------------------------------------------------------------
+    // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+    public void BtnProcedureClearHidden_Click(object sender, EventArgs e)
+    {
+        string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+        try
+        {
+            ClearProcedure();
+
+            string EndTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Debug(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnProcedureClearHidden_Click", StartTime, EndTime, "OK", MyUser.GetUsername(), "", "", ""));
+        }
+        catch (Exception ex)
+        {
+            string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnProcedureClearHidden_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
+            //Log.Error(LogConfig.LogError(ex.Message.ToString()), ex);
+        }
+    }
+    // ----------------------------------------------------------------------------------------------
+    #endregion
+
+
+
+
+    public void JamOperasiValidation(bool txt)
+    {
+        if (txt == true)
+        {
+            TextBox txt_JamLamaOperasi = (TextBox)FindControl("txt_JamLamaOperasi");
+            txt_JamLamaOperasi.Style.Add("border", "1px solid red");
+           
+        }
+        else
+        {
+            TextBox txt_JamLamaOperasi = (TextBox)FindControl("txt_JamLamaOperasi");
+            txt_JamLamaOperasi.Style.Add("border", "1px solid #76767C");
+        }
+
+    }
+
+    public void MenitOperasiValidation(bool txt)
+    {
+        if (txt == true)
+        {
+            TextBox txt_MenitLamaOperasi = (TextBox)FindControl("txt_MenitLamaOperasi");
+            txt_MenitLamaOperasi.Style.Add("border", "1px solid red");
+
+        }
+        else
+        {
+            TextBox txt_MenitLamaOperasi = (TextBox)FindControl("txt_MenitLamaOperasi");
+            txt_MenitLamaOperasi.Style.Add("border", "1px solid #76767C");
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //protected void CBX_WithoutProcedure(Object sender, EventArgs e)
+    //{
+    //    // ScriptManager.RegisterStartupScript(this, GetType(), "alert", "alert('test');", true);
+    //    ScriptManager.RegisterStartupScript(Page, Page.GetType(), "showmodaltargethistory", "showAlertTest();", true);
+    //}
+
+
+    //protected void btn_test(object sender, EventArgs e)
+    //{
+
+    //    //ScriptManager.RegisterStartupScript(this, GetType(), "alert", "alert('test');", true);
+    //}
 }
 

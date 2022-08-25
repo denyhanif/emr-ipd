@@ -33,9 +33,6 @@
     }
 
 </style>
-<%--<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.css" rel="stylesheet"/>--%>
-
-
 
 <div class="content-rawat-inap">
     <asp:UpdateProgress ID="UpdateProgress15" runat="server" AssociatedUpdatePanelID="Up_rawatinap">
@@ -51,12 +48,12 @@
         <ContentTemplate>
             <input type="hidden" id="hfPatientId" runat="server" />
        
-
-
             <!-- Use --->
             <asp:HiddenField ID="hfOperationScheduleAdditionalId" runat="server" />
             <asp:HiddenField ID="hf_operationScheduleId2" runat="server" />
-            <asp:HiddenField ID="hf_is_action" runat="server" />
+            <asp:HiddenField ID="hf_is_action" runat="server" Value="false" />
+
+            
             <!-- Use --->
 
             <input type="hidden" id="Hidden1" runat="server" />
@@ -142,17 +139,26 @@
                 </div>
             </div>
 
+            <%--<asp:Button Text="text" runat="server" OnClick="btn_test" />--%>
+
             <!-- TINDAKAN OPERASI/PROSEDUR -->
             <div class="row" style="margin-bottom:20px">
                 <div class="col-sm-12">
                     <label style="display:block"><strong>Tindakan Operasi/Prosedur<sup style="color: red; font-weight:900;">*</sup></strong></label>
                     <asp:CheckBox runat="server" ID="chbx_tindakanoperasi_tidak" Text=" Tidak" onclick="javascript:chckTindakanOperasiTidak(this);" />
                     <asp:CheckBox runat="server" ID="chbx_tindakanoperasi_ya" style="margin-left:50px" Text=" Ya" onclick="javascript:chckTindakanOperasiYa(this);"/>
+<%--                    <asp:CheckBox ID="cbx_test" runat="server" OnCheckedChanged="   " Text="test" AutoPostBack="true" />--%>
+
+
                 </div>
             </div>
 
-            <!-- TINDAKAN OPERASI/PROSEDUR SECTION " -->
-            <div ID="divTindakanOperasi" style="display:none" >
+            <!-- TINDAKAN OPERASI/PROSEDUR SECTION -->
+            <div ID="divTindakanOperasi" style=" display:none;" >
+                <!-- --------------------------------------------------- NEW TAMA CODE ----------------------------------------------- -->
+                <asp:Button ID="BtnProcedureHidden" runat="server" Text="Button" CssClass="hidden" OnClick="BtnProcedureClearHidden_Click" />
+
+                <!-- ----------------------------------------------------------------------------------------------- -->
 
                 <!-- TANGGAL PERKIRAAN OPERASI DAN WAKTU -->
                 <div class="row" style="margin-bottom:20px">
@@ -184,9 +190,11 @@
                         <div id="namaOperasiLain" style="margin-top:10px">
                             <asp:TextBox runat="server" ID="txt_NamaOperasiLain" Style="display:none; margin-bottom:10px;" Width="200px" Height="32px"></asp:TextBox>
                         </div>--%>
-
+                        
                         <asp:UpdatePanel ID="up_DivProcedure" runat="server" UpdateMode="Conditional">
                             <ContentTemplate>
+
+
                                 <table style="border:0; margin-bottom: 4px;">
                                     <tr>
                                         <td>
@@ -210,16 +218,19 @@
                                                 <asp:TextBox ID="txt_ItemProcedure" runat="server" Placeholder="Add item here..." Style="width: 214px;height:32px;border-radius:4px; font-weight: normal; font-size: 12px;" class="autosuggest" onkeydown="return txtOnKeyPressFalse();" onfocus="setflagloading('inpatientProcedure','true');"></asp:TextBox>
                                                 <span class="fa fa-chevron-down form-control-feedback" style="margin-top: -9px; z-index: 0; "></span>
                                             </div>
-                        
+
+                                            <!-- NEW TAMA CODE -->
+                                            <asp:HiddenField ID="hf_procedureLength" runat="server" value="0" />
+                                            <!-- NEW TAMA CODE -->
+                                            
                                             <asp:HiddenField ID="hf_ItemSelectedProcedure" runat="server" />
                                             <asp:HiddenField ID="hf_ItemSelectedProcedure_name" runat="server" />
                                             <asp:HiddenField ID="hf_ItemSelectedProcedure_diagnosis" runat="server" />
-                                    
+                               
                                             <asp:Button ID="Btn_AjaxSearchProcedure" runat="server" Text="Button" CssClass="hidden" OnClick="BtnAjaxSearchProcedure_Click" />
                                         </div>
                                     </ContentTemplate>
                                 </asp:UpdatePanel>
-
 
                                 <div style="overflow-y: auto; max-height: 250px;" class="scrollEMR">
                                     <div class="col-md-6" style="margin-left: -60px;margin-top: 10px;">
@@ -268,7 +279,7 @@
                     <div class="col-sm-12">
                         <label style="display:block"><strong>Anesthetic Method<sup style="color:red;">&nbsp;*</sup></strong></label>
                         <asp:DropDownList Style="cursor: pointer; border: solid 1px #AAAAB3; border-radius: 4px; margin-right:10px" ID="ddl_anasteticmethod" Width="200px" Height="32px" runat="server" >
-                            <asp:ListItem Value="-1" >- Anestetic Method -</asp:ListItem>
+                            <asp:ListItem Value="-1" Text="Anesthetic Method..." />
                         </asp:DropDownList>
                     </div>
                 </div>
@@ -368,13 +379,15 @@
                                                 <asp:TextBox ID="txt_ItemRad" runat="server" Placeholder="Add item here..." Style="width: 214px;height:32px;border-radius:4px; font-weight: normal; font-size: 12px;" class="autosuggest" onkeydown="return txtOnKeyPressFalse();" onfocus="setflagloading('cpoerad','true');"></asp:TextBox>
                                                 <span class="fa fa-chevron-down form-control-feedback" style="margin-top: -9px; z-index: 0; "></span>
                                             </div>
-                        
+                                            <!-- NEW TAMA CODE -->
+                                            <asp:HiddenField ID="hf_RadLength" runat="server" value="0" />
+                                            <!-- NEW TAMA CODE -->
+
                                             <asp:HiddenField ID="hf_ItemSelectedRad" runat="server" />
                                             <asp:HiddenField ID="HF_ItemSelectedRad_name" runat="server" />
                                             <asp:HiddenField ID="HF_ItemSelectedRad_remarks" runat="server" />
 
-                                          <%--  <asp:Button ID="Btn_AjaxSearchRad" runat="server" Text="Button" CssClass="hidden" />--%>
-
+                                            <%--<asp:Button ID="BtnRadHidden" runat="server" Text="Button" CssClass="hidden" OnClick="BtnRadClearHidden_Click" />--%>
                                             <asp:Button ID="Btn_AjaxSearchRad" runat="server" Text="Button" CssClass="hidden" OnClick="BtnAjaxSearchRAD_Click" />
                                         </div>
                                     </ContentTemplate>
@@ -440,7 +453,14 @@
                                                 <asp:TextBox ID="txt_ItemLab" runat="server" Placeholder="Add item here..." Style="width: 214px;height:32px; border-radius:4px; font-weight: normal; font-size: 12px;" class="autosuggest" onkeydown="return txtOnKeyPressFalse();" onfocus="setflagloading('cpoelab','true');"></asp:TextBox>
                                                 <span class="fa fa-chevron-down form-control-feedback" style="margin-top: -9px; z-index: 0; "></span>
                                             </div>
+
+                                            <!-- NEW TAMA CODE -->
+                                            <asp:HiddenField ID="hf_LabLength" runat="server" value="0" />
+                                            <!-- NEW TAMA CODE -->
+
                                             <asp:HiddenField ID="hf_ItemSelectedLab" runat="server" />
+
+                                            <%--<asp:Button ID="BtnLabHidden" runat="server" Text="Button" CssClass="hidden" OnClick="BtnLabClearHidden_Click" />--%>
                                             <asp:Button ID="Btn_AjaxSearchLab" runat="server" Text="Button" CssClass="hidden" OnClick="BtnAjaxSearchLAB_Click" />
                                         </div>
                                     </ContentTemplate>
@@ -516,36 +536,36 @@
 
     function tglmasukrawat() {
         var dp = $('#<%=txttglmasukrawat.ClientID%>');
-        dp.datepicker({
-            changeMonth: true,
-            changeYear: true,
-            format: "dd MM yyyy",
-            language: "tr"
-        }).on('changeDate', function (ev) {
-            $(this).blur();
-            $(this).datepicker('hide');
-        })
-    }
+       dp.datepicker({
+           changeMonth: true,
+           changeYear: true,
+           format: "dd MM yyyy",
+           language: "tr"
+       }).on('changeDate', function (ev) {
+           $(this).blur();
+           $(this).datepicker('hide');
+       })
+   }
 
     function tglperkiraanoprsi() {
         var dp = $('#<%=txt_tglperkiraanoperasi.ClientID%>');
-        dp.datepicker({
-            changeMonth: true,
-            changeYear: true,
-            format: "dd MM yyyy",
-            language: "tr"
-        }).on('changeDate', function (ev) {
-            $(this).blur();
-            $(this).datepicker('hide');
-        })
-    }
+       dp.datepicker({
+           changeMonth: true,
+           changeYear: true,
+           format: "dd MM yyyy",
+           language: "tr"
+       }).on('changeDate', function (ev) {
+           $(this).blur();
+           $(this).datepicker('hide');
+       })
+   }
 
     function wktumasukrawat() {
         var dp = $('#<%=txtwaktumasukrawat.ClientID%>');
-        dp.datetimepicker({
-            format: 'LT'
-        })
-    }
+         dp.datetimepicker({
+             format: 'LT'
+         })
+     }
 
     function wktperkiraanoprsi() {
         var dp = $('#<%=txtwaktuperkiraanoperasi.ClientID%>');
@@ -554,27 +574,10 @@
         })
     }
 
-   <%-- function enableOperasiLain(chks) {
-        var chck = document.getElementById("<%= chck_OperasiLain.ClientID %>");
-        if (chck.checked) {
-            $('#<%= ddl_namaoperasi.ClientID %>').attr('style', 'height:32px;border-radius:4px;background-color:#E7E8EF; width:170px');
-            $('#<%= ddl_namaoperasi.ClientID %>').attr("disabled", "disabled");
-            document.getElementById("<% = ddl_namaoperasi.ClientID %>").value = "0";
-            $('#<%= txt_NamaOperasiLain.ClientID %>').show();
-            $('#<%= txt_NamaOperasiLain.ClientID %>').focus();
-        } else {
-            $('#<%= ddl_namaoperasi.ClientID %>').attr('style', 'height:32px;border-radius:4px;background-color:transparent; width:170px');
-            $('#<%=ddl_namaoperasi.ClientID %>').removeAttr("disabled");
-            document.getElementById("<% = txt_NamaOperasiLain.ClientID %>").value = "";
-            $('#<%=txt_NamaOperasiLain.ClientID %>').hide();
-        }
-    }--%>
-
     // BANGSAL
     function chckBangsalLain(chks) {
         var cbx_bangsallain = document.getElementById("<%= chck_BangsalLain.ClientID%>");
         var txt_BangsalLain = document.getElementById("<%= txt_BangsalLain.ClientID %>");
-
         if (cbx_bangsallain.checked) {
             txt_BangsalLain.removeAttribute("disabled");
             $('#<%=cbl_ward.ClientID %>').find("input,button,textarea,select").attr("disabled", "disabled");
@@ -586,7 +589,7 @@
         }
     }
 
-    // Seletah operasi tindakan
+    // SETELAH OPERASI TINDAKAN
     function checkAfterOP(chks) {
         var cbx_OperasiTindakanLain = document.getElementById("<%= chck_OperasiTindakanLain.ClientID %>");
         var txt_OperasiTindakanLain = document.getElementById("<%= txt_OperasiTindakanLain.ClientID%>");
@@ -597,7 +600,7 @@
         } else {
             $('#<%=cbl_recoveryroom.ClientID %>').find("input,button,textarea,select").attr("disabled", false);
             txt_OperasiTindakanLain.setAttribute("disabled", true);
-            txt_OperasiTindakanLain.value="";
+            txt_OperasiTindakanLain.value = "";
         }
     }
 
@@ -608,6 +611,7 @@
         var txt_puasa_ya = document.getElementById("<%=txt_puasa_ya.ClientID%>");
         if (chks.checked) {
             txt_puasa_ya.setAttribute("disabled", true);
+            txt_puasa_ya.value = "";
             cbx_puasaya.checked = false;
         }
     }
@@ -620,8 +624,12 @@
             txt_puasa_ya.disabled = false;
             cbx_puasatidak.checked = false;
         }
+        else {
+            txt_puasa_ya.setAttribute("disabled", true);
+            txt_puasa_ya.value = "";
+        }
     }
-  
+
     // LAMA RAWAT
     function chckLamaRawatKrngSeminggu(chk) {
         var chks = document.getElementById("<% = chbx_lamarawat_kurangseminggu.ClientID %>");
@@ -630,7 +638,6 @@
             chksLbhSeminggu.checked = false;
         }
     }
-
     function chckLamaRawatLbhSeminggu(chk) {
         var chks = document.getElementById("<% = chbx_lamarawat_lebihseminggu.ClientID %>");
         if (chks.checked) {
@@ -639,24 +646,86 @@
         }
     }
 
-    // TINDAKAN OPERASI
+    // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+    // if (hfIsActionVal.toUpperCase() == "TRUE") {
+
+
+
+
     function chckTindakanOperasiTidak(chc) {
-        var chks = document.getElementById("<%= chbx_tindakanoperasi_tidak.ClientID %>");
-        if (chks.checked) {
-            var chksTindakanOperasi = document.getElementById("<%= chbx_tindakanoperasi_ya.ClientID%>");
+        var hfProcedureLengthVal = document.getElementById("<%= hf_procedureLength.ClientID %>").value;
+        var hfLabLengthVal = document.getElementById("<%= hf_LabLength.ClientID %>").value;
+        var hfRadLengthVal = document.getElementById("<%= hf_RadLength.ClientID %>").value;
+
+        var txtJamOperasi = document.getElementById("<%= txt_JamLamaOperasi.ClientID %>").value;
+        var txtMenitOperasi = document.getElementById("<%= txt_MenitLamaOperasi.ClientID %>").value;
+        var txtTglPerkiraanOperasi = document.getElementById("<%= txt_tglperkiraanoperasi.ClientID %>").value;
+        var txtTglPerkiraanOperasi = document.getElementById("<%= txtwaktuperkiraanoperasi.ClientID %>").value;
+
+        var chksTindakanOperasi = document.getElementById("<%= chbx_tindakanoperasi_ya.ClientID %>");
+        var chksTindakanOperasi_tidak = document.getElementById("<%= chbx_tindakanoperasi_tidak.ClientID %>");
+        var chksAlat_ya = document.getElementById("<%= chbx_alat_ya.ClientID %>");
+        var chksAlat_tidak = document.getElementById("<%= chbx_alat_tidak.ClientID %>");
+        var chksPuasa_ya = document.getElementById("<%= chbx_puasa_ya.ClientID %>");
+        var chksPuasa_tidak = document.getElementById("<%= chbx_puasa_tidak.ClientID %>");
+
+        var chksTblCategory1 = document.getElementById("<%= chck_Tabel1.ClientID %>");
+        var chksTblCategory2 = document.getElementById("<%= chck_Tabel2.ClientID %>");
+        var chksTblCategory3 = document.getElementById("<%= chck_Tabel3.ClientID %>");
+        var chksTblCategory4 = document.getElementById("<%= chck_Tabel4.ClientID %>");
+        var chksTblCategory5 = document.getElementById("<%= chck_Tabel5.ClientID %>");
+        var chksTblCategory6 = document.getElementById("<%= chck_Tabel6.ClientID %>");
+        var chksTblCategory7 = document.getElementById("<%= chck_Tabel7.ClientID %>");
+        var chksTblCategoryLain = document.getElementById("<%= chck_TabelLain.ClientID %>");
+
+        var chksOprTindakanLain = document.getElementById("<%= chck_OperasiTindakanLain.ClientID %>");
+
+        var chksRecoveryRooms = document.getElementById("<%=cbl_recoveryroom.ClientID%>").getElementsByTagName("input");
+        var ddlAnesteticMethod = $("[id$='MainContent_ModalRawatInap_ddl_anasteticmethod'] option:selected").val();
+
+        var isChecked = false;
+        var cblImageFormat = document.getElementById("<%=cbl_recoveryroom.ClientID%>");
+        var chkButtons = cblImageFormat.getElementsByTagName("input");
+        for (var i = 0; i < chkButtons.length; i++) {
+            if (chkButtons[i].checked) {
+                isChecked = true;
+                break;
+            }
+        }
+
+        var rules = hfProcedureLengthVal != 0 || hfLabLengthVal != 0 || hfRadLengthVal != 0 || txtJamOperasi != "" || txtMenitOperasi != "" ||
+            txtTglPerkiraanOperasi != "" || txtTglPerkiraanOperasi != "" || ddlAnesteticMethod != "-1" || chksOprTindakanLain.checked || chksPuasa_ya.checked ||
+            chksAlat_ya.checked || isChecked;
+
+        var chksCategoryRules = chksTblCategory1.checked || chksTblCategory2.checked || chksTblCategory3.checked || chksTblCategory4.checked || chksTblCategory5.checked ||
+            chksTblCategory6.checked || chksTblCategory7.checked || chksTblCategoryLain.checked;
+
+        if (rules || chksCategoryRules) {
+            if (confirm("Terdapat data yang sudah diisi, apakah Anda yakin ingin mengubah ke 'Tidak' ?")) {
+                document.getElementById('<%= BtnProcedureHidden.ClientID %>').click();
+                $("#divTindakanOperasi").hide()
+            }
+            else {
+                chksTindakanOperasi_tidak.checked = false;
+            }
+        }
+        else {
             chksTindakanOperasi.checked = false;
             $("#divTindakanOperasi").hide()
         }
     }
+
+    // --------------------------------------------------------------- END NEW ---------------------------------------------------------------------------------- //
+
 
     function chckTindakanOperasiYa(chc) {
         var chks = document.getElementById("<%= chbx_tindakanoperasi_ya.ClientID %>");
         if (chks.checked) {
             var chksTindakanOperasi_tidak = document.getElementById("<%= chbx_tindakanoperasi_tidak.ClientID%>");
             chksTindakanOperasi_tidak.checked = false;
-            $("#divTindakanOperasi").show()
+            $("#divTindakanOperasi").show();
         } else {
-            $("#divTindakanOperasi").hide()
+            $("#divTindakanOperasi").hide();
         }
     }
 
@@ -705,7 +774,6 @@
             cbxtabellain.checked = false;
             txttabellain.setAttribute("disabled", true);
             txttabellain.value = "";
-            console.log("tabel 1");
         }
     }
 
@@ -729,7 +797,6 @@
              cbxtabellain.checked = false;
              txttabellain.setAttribute("disabled", true);
              txttabellain.value = "";
-             console.log("tabel 2");
          }
     }
 
@@ -753,7 +820,6 @@
              cbxtabellain.checked = false;
              txttabellain.setAttribute("disabled", true);
              txttabellain.value = "";
-             console.log("tabel 3");
          }
     }
 
@@ -777,7 +843,6 @@
             cbxtabellain.checked = false;
             txttabellain.value = "";
             txttabellain.setAttribute("disabled", true);
-            console.log("tabel 4");
         }
     }
 
@@ -801,7 +866,6 @@
             cbxtabellain.checked = false;
             txttabellain.setAttribute("disabled", true);
             txttabellain.value = "";
-            console.log("tabel 5");
         }
     }
 
@@ -825,7 +889,6 @@
             txttabellain.setAttribute("disabled", true);
             cbxtabellain.checked = false;
             txttabellain.value = "";
-            console.log("tabel 6");
         }
     }
 
@@ -850,7 +913,6 @@
             cbxtabellain.checked = false;
             txttabellain.setAttribute("disabled", true);
             txttabellain.value = "";
-            console.log("tabel 7");
         }
     }
 
@@ -895,9 +957,7 @@
         }
     }
 
-
     function ProcedureOperation() {
-        console.log('masuk ProcedureOperation')
         $("#MainContent_ModalRawatInap_txt_ItemProcedure").autocomplete({
             source: "../Control_Template/AutoCompleteProcedure.aspx",
             minLength: 0,
@@ -1041,7 +1101,16 @@
         }
     }
 
+    function showAlertTest() {
+        alert("hanif");
+    }
+
     $(document).ready(function () {
+
+        //$("#MainContent_ModalRawatInap_modal-rawatinap").on("hidden.bs.modal", function () {
+        //    $(".modal-body").html("Where did he go?!?!?!");
+        //});
+
         ProcedureOperation();
         RadRawatInap();
         LabRawatInap();
@@ -1076,12 +1145,8 @@
                     document.getElementById('<%= hf_LoadingLab.ClientID %>').value = "false";
                 }
             });
-
-            
         }
-
-
-       
+      
         //copy diagnosis
         if (document.getElementById('MainContent_ModalRawatInap_textbox_diagnosis').value = null); {
             var rawatinapdiagnosis = document.getElementById('MainContent_ModalRawatInap_textbox_diagnosis');
@@ -1090,16 +1155,17 @@
 
         }
 
-        if (document.getElementById('MainContent_ModalRawatInap_hfoperationScheduleId').value != null) {
-            $("#divTindakanOperasi").show()
-            //$("#divTindakanOperasi").css('visibility', 'visible');
-            console.log('div operasi harusnya uncul');
-        } else {
-            $("#divTindakanOperasi").hide()
-            //$("#divTindakanOperasi").css('visibility', 'hidden');
-        }
+        //if (document.getElementById('MainContent_ModalRawatInap_hfoperationScheduleId').value != null) {
+        //    $("#divTindakanOperasi").show()
+        //    //$("#divTindakanOperasi").css('visibility', 'visible');
+        //    console.log('div operasi harusnya uncul');
+        //} else {
+        //    $("#divTindakanOperasi").hide()
+        //    //$("#divTindakanOperasi").css('visibility', 'hidden');
+        //}
 
         // console.log('hfoperationScheduleId', hfoperationScheduleId.value)
     })
+
 
 </script>

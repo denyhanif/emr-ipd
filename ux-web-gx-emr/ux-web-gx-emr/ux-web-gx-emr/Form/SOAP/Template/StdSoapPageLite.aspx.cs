@@ -277,9 +277,13 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                             lbl_rawatinap_status.Visible = true;
                         }
 
-                        lnkModalrawatinap.Disabled = true;
-                        lnkModalrawatinap.Style.Add("background-color", "#B9B9B9");
-                        lnkModalrawatinap.Attributes.Remove("href");
+
+
+                        // if()
+                        // BTN RAWAT INAP
+                        // lnkModalrawatinap.Disabled = true;
+                        // lnkModalrawatinap.Style.Add("background-color", "#B9B9B9");
+                        // lnkModalrawatinap.Attributes.Remove("href");
 
           
 
@@ -812,6 +816,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                    // ModalReferal.initializevalue(Jsongetsoap.list.referal);
                 }
 
+                // CONFIG REFERRAL
                 //if (orgsetting.Find(y => y.setting_name.ToUpper() == "USE_REFERRAL".ToUpper()).setting_value == "TRUE")
                 //{
                 //    divaddbuttonreferal.Visible = true;
@@ -2320,13 +2325,12 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 BtnDeleteAllReferral.Style.Add("color", "#E84118");
             }
 
-
-
+            // -------------------------------------------NEW TAMA CODE ---------------------------------------------
             InpatientData inpatientDataObj = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
-
             if (inpatientDataObj != null)
             {
-                if (inpatientDataObj.admission_date != null)
+                // if (inpatientDataObj.admission_date != null)
+                if ((inpatientDataObj.operation_schedule_header.status_booking_id != "7" && inpatientDataObj.is_active == true) || (inpatientDataObj.is_active != false && inpatientDataObj.operation_schedule_header.status_booking_id == ""))
                 {
                     div_rawatinap.Visible = true;
                 }
@@ -2339,7 +2343,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             {
                 div_rawatinap.Visible = false;
             }
-
+            // -------------------------------------------------------------------------------------------------------
 
             Log.Debug(LogLibrary.SaveLogNew(Helper.organizationId.ToString(), "EncounterId", hfEncounterId.Value.ToString(), "Page_Load", StartTime, "OK", MyUser.GetUsername()
                           , "", "", ""));
@@ -6756,7 +6760,17 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             //}
             //else
             //{
+
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
             SaveDraft_SOAP();
+
+            // SUBMIT RAWAT INAP
+            SubmitRawatInap();
+
+            // DELETE RAWAT INAP
+            DeleteRawatInapFinal();
+            // --------------------------------------------------------------------------------------------------
+
             //}
             Log.Debug(LogLibrary.SaveLogNew(Helper.organizationId.ToString(), "EncounterId", hfEncounterId.Value.ToString(), "btnsave_click", StartTime, "OK", MyUser.GetUsername(), "", "", ""));
         }
@@ -6972,7 +6986,17 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             //    Submit_SOAP_disable();
             //}
 
+
+            // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
             Submit_SOAP_disable();
+
+            // SUBMIT RAWAT INAP
+            SubmitRawatInap();
+            // DELETE RAWAT INAP
+            DeleteRawatInapFinal();
+
+            // -----------------------------------------------------------------------------------------------------------
+
             Log.Debug(LogLibrary.SaveLogNew(Helper.organizationId.ToString(), "EncounterId", hfEncounterId.Value.ToString(), "btnSubmitDisable_click", StartTime, "OK", MyUser.GetUsername(), "", "", ""));
         }
         catch (Exception ex)
@@ -7005,6 +7029,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         //Log.Info(LogConfig.LogEnd());
     }
 
+    // TAMA CODE
     protected void btnSubmit_click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"); //Log.Info(LogConfig.LogStart());
@@ -8039,6 +8064,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
     public void ActionSubmit()
     {
+        
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"); //Log.Info(LogConfig.LogStart());
 
         SOAP soapmodel = (SOAP)Session[Helper.Sessionsoapmodel + hfguidadditional.Value];
@@ -8759,19 +8785,14 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         {
             soapmodel.referal = new List<ReferalData>();
         }
-        //submitrawatinap
 
-        //InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
-        //if (inpatientData != null)
-        //{
-        //    var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
+        // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+        // SUBMIT RAWAT INAP
+        SubmitRawatInap();
 
-        //    //var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
-        //    //var inpatientmodel = JsonConvert.DeserializeObject<InpatientData>(Jsongetinpatient.ToString());
-        //    //var Statusrespon = Jsongetinpatient.Property("status").Value.ToString();
-        //}
-
-
+        // DELETE RAWAT INAP
+        DeleteRawatInapFinal();
+        // ------------------------------------------------------------------------------------------------
 
         UpdatePanelRujukan.Update();
         //DataTable dtreferal = Helper.ToDataTable(referalDatas);
@@ -8898,7 +8919,6 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 if (Complaint.Text != "" && Anamnesis.Text != "" && txtPrimary.Text != "" && txtOthers.Text != "" && txtPlanning.Text != "")
                 {
                     ActionSubmit();
-                  
 
                 }
                 else
@@ -8909,7 +8929,6 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             else
             {
                 ActionSubmit();
-               
 
             }
 
@@ -12790,6 +12809,8 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
     #endregion
 
+
+    #region REFERRAL - RUJUKAN
     protected void BtnDeleteReferral_Click(object sender, EventArgs e)
     {
         try
@@ -12804,7 +12825,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
             //DataTable dt = Session["presdrug"] as DataTable;
 
             if (dt.Select("is_delete = 0").Count() > 0)
-            {   
+            {
                 Session[Helper.SessionSOAPReferral + hfguidadditional.Value] = Helper.ToDataList<ReferalData>(dt.Select("is_delete = 0").CopyToDataTable());//convert kr list
                 rptrujukan.DataSource = dt.Select("is_delete = 0").CopyToDataTable();
                 rptrujukan.DataBind();
@@ -12826,7 +12847,7 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         catch (Exception ex)
         {
 
-            string msg  =ex.Message;
+            string msg = ex.Message;
             ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Connection Time Out. Please Try Again');", true);
         }
 
@@ -12834,50 +12855,50 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
     protected void BtnDeleteAllReferral_Click(object sender, EventArgs e)
     {
-        
-            List<ReferalData> referalDatas = (List<ReferalData>)Session[Helper.SessionSOAPReferral + hfguidadditional.Value];
-            DataTable dt = Helper.ToDataTable(referalDatas);
-            //var cekdt = dt.Select("is_editable = 0");
-            if (dt.Select("is_editable = 0") != null )
+        List<ReferalData> referalDatas = (List<ReferalData>)Session[Helper.SessionSOAPReferral + hfguidadditional.Value];
+        DataTable dt = Helper.ToDataTable(referalDatas);
+        //var cekdt = dt.Select("is_editable = 0");
+        if (dt.Select("is_editable = 0") != null)
+        {
+            referalDatas.Clear();
+            List<ReferalData> referalDataemp = new List<ReferalData>();
+            Session[Helper.SessionSOAPReferral + hfguidadditional.Value] = referalDataemp;
+
+            if (referalDataemp.Count <= 0)
             {
-                referalDatas.Clear();
-                List<ReferalData> referalDataemp = new List<ReferalData>();
-                Session[Helper.SessionSOAPReferral + hfguidadditional.Value] = referalDataemp;
-
-
-                if (referalDataemp.Count <= 0)
-                {
-                    //DataTable dtreferal = Helper.ToDataTable(referalDataemp);
-                    rptrujukan.DataSource = null;
-                    rptrujukan.DataBind();
-                }
-                else
-                {
-                    DataTable dtreferal = Helper.ToDataTable(referalDataemp);
-                    rptrujukan.DataSource = dtreferal;
-                    rptrujukan.DataBind();
-                }
-                divrujukansoap.Visible = false;
-                UpdatePanelRujukan.Update();
-
+                //DataTable dtreferal = Helper.ToDataTable(referalDataemp);
+                rptrujukan.DataSource = null;
+                rptrujukan.DataBind();
             }
             else
             {
-                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Rujukan tidak bisa terhaous semua ada, yang aproved');", true);
-
+                DataTable dtreferal = Helper.ToDataTable(referalDataemp);
+                rptrujukan.DataSource = dtreferal;
+                rptrujukan.DataBind();
             }
-            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "CloseReferal", "$('#modal-delete-referal').modal('hide');", true);
+            divrujukansoap.Visible = false;
+            UpdatePanelRujukan.Update();
 
+        }
+        else
+        {
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "connection", "alert('Rujukan tidak bisa terhaous semua ada, yang aproved');", true);
+
+        }
+        ScriptManager.RegisterStartupScript(Page, Page.GetType(), "CloseReferal", "$('#modal-delete-referal').modal('hide');", true);
     }
-    protected void BtnEditReferral_Click(object sender, EventArgs e)
-    {
-    }
+
+    protected void BtnEditReferral_Click(object sender, EventArgs e) { }
+
     protected void BtnReferalHidden_Click(object sender, EventArgs e)
     {
         List<ReferalData> referalDatas = (List<ReferalData>)Session[Helper.SessionSOAPReferral + hfguidadditional.Value];
         ModalReferal.initializevalue(referalDatas);
     }
+    #endregion
 
+    // --------------------------------------------------- NEW TAMA CODE -----------------------------------------------
+    #region REFERRAL - RAWAT INAP
     protected void BtnPrintRawatInap(object sender, EventArgs e)
     {
         var localIPAdress = "";
@@ -12887,41 +12908,41 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
         this, GetType(), "OpenWindow", "window.open('http://" + localIPAdress + "/printingemr?printtype=RawatInap&OrganizationId=" + Helper.organizationId + "&AdmissionId=" + hfAdmissionId.Value.ToString() + "&EncounterId=" + hfEncounterId.Value.ToString() + "&PatientId=" + hfPatientId.Value.ToString() + "&PageSOAP=" + hfPageSoapId.Value.ToString() + "&PrintBy=" + Helper.GetLoginUser(this) + "','_blank');", true);
     }
 
-    protected void BtnDeleteRawatInap_Click(object sender,EventArgs e)
+    protected void BtnDeleteRawatInap_Click(object sender, EventArgs e)
     {
         string StartTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-        
+
         try
         {
             InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
 
-            InpatientDeleteParam paramdelete = new InpatientDeleteParam();
-            paramdelete.admission_no = inpatientData.operation_schedule_header.admission_no;
-            paramdelete.encounter_id = Guid.Parse(inpatientData.encounter_id.ToString());
-            paramdelete.operation_schedule_id = Guid.Parse(inpatientData.operation_schedule_id.ToString());
-            paramdelete.organization_id = Convert.ToInt64(inpatientData.operation_schedule_header.organization_id);
-            paramdelete.patient_id = Convert.ToInt64(inpatientData.patient_id);
-            paramdelete.user_id = Convert.ToInt64(MyUser.GetHopeUserID());
-            paramdelete.is_from_opd = inpatientData.operation_schedule_header.is_from_opd;
+            if(inpatientData != null)
+            {
+                if (inpatientData.is_active == true)
+                {
+                    if (inpatientData.operation_schedule_header.status_booking_id != "7")
+                    {
+                        inpatientData.operation_schedule_header.status_booking_id = "7";
+                        inpatientData.is_active = false;
+                    }
+                }
 
-            var cancelinpatient = clsSOAP.InpatientCancel(paramdelete);
-            var Jsoncancelinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(cancelinpatient.Result);
-            var Status = Jsoncancelinpatient.Property("status").Value.ToString();
-            var Message = Jsoncancelinpatient.Property("message").Value.ToString();
-            div_rawatinap.Visible = true;
+                Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = inpatientData;
 
-            lbl_rawatinap_dokter.Text = inpatientData.doctor_name;
-            lbl_rawatinap_spesialis.Text = inpatientData.spesialis_dokter;
-            lbl_rawatinap_waktu.Text = inpatientData.created_date;
-            lbl_rawatinap_status.Text = inpatientData.operation_schedule_header.status_booking_name;
+                ScriptManager.RegisterStartupScript(this, GetType(), "sessiondel", "console.log('%csetelah delete session: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: violet');", true);
+
+
+                div_rawatinap.Visible = false;
+            }
+
+            UP_Rawatinap.Update();
+            
             ScriptManager.RegisterStartupScript(Page, Page.GetType(), "CloseDeleteAllInpatient", "$('#modal-delete-rawatinap').modal('hide');", true);
-
         }
-        catch ( Exception ex)
+        catch (Exception ex)
         {
             string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "Delete ", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
-
+            Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "BtnDeleteRawatInap_Click", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
         }
     }
 
@@ -12931,9 +12952,8 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
 
         try
         {
-            InpatientData inpatientData = ModalRawatInap.getvalues();
-
             //var nilaihamil = bool.Parse(listsubjective.Find(y => y.soap_mapping_id == Guid.Parse("078147ba-9e11-4da0-86fa-8bd901d82923")).value);
+            InpatientData inpatientData = ModalRawatInap.getvalues();
 
             if (string.IsNullOrEmpty(inpatientData.operation_schedule_header.status_booking_name))
             {
@@ -12945,58 +12965,120 @@ public partial class Form_SOAP_Template_StdSoapPageLite : System.Web.UI.Page
                 stickerinpatient.Visible = true;
                 lbl_rawatinap_status.Visible = true;
             }
-
-
-            //var inpatientprm = new JavaScriptSerializer().Serialize(inpatientData);
-
+            // < !--NEW TAMA CODE -->
             Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = inpatientData;
-            // ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save rawat inap: "+ JsonConvert.SerializeObject(inpatientData) + " ');", true);
-            ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('%c save rawat inap: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: #bada55');", true);
-
-            var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
-            var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
-            var Status = Jsongetinpatient.Property("status").Value.ToString();
-            var Message = Jsongetinpatient.Property("message").Value.ToString();
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
-            ScriptManager.RegisterStartupScript(this, GetType(), "showlogg", "console.log('save draf rawat inap: message " + Message + "');", true);
+            // ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('%c save rawat inap: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: #bada55');", true);
 
             div_rawatinap.Visible = true;
             lbl_rawatinap_dokter.Text = inpatientData.doctor_name;
             lbl_rawatinap_spesialis.Text = inpatientData.spesialis_dokter;
             lbl_rawatinap_waktu.Text = inpatientData.created_date;
             lbl_rawatinap_status.Text = inpatientData.operation_schedule_header.status_booking_name;
+
             UP_Rawatinap.Update();
+
             ScriptManager.RegisterStartupScript(Page, Page.GetType(), "CloseRawatinap", "$('#modal-rawatinap').modal('hide');", true);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             string ErrorTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             Log.Error(LogLibrary.SaveLog(Helper.organizationId.ToString(), "EncounterId", Request.QueryString["EncounterId"] != null ? Request.QueryString["EncounterId"].ToString() : "", "GetInpatientData", StartTime, ErrorTime, "Error", MyUser.GetUsername(), "", "", ex.Message));
-
         }
     }
 
-    protected void BtnInpatientHidden_Click(object sender,EventArgs e)
+    protected void BtnInpatientHidden_Click(object sender, EventArgs e)
     {
         InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
-        ModalRawatInap.initializevalue(inpatientData);
+
+        if (inpatientData.is_active == false || inpatientData.operation_schedule_header.status_booking_id == "7")
+        {
+            InpatientData newInpatientData = new InpatientData();
+            Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value] = newInpatientData;
+            ModalRawatInap.initializevalue(newInpatientData);
+
+            // ScriptManager.RegisterStartupScript(this, GetType(), "showlogg2", "console.log('%cis active false " + JsonConvert.SerializeObject(newInpatientData) + " ', 'background: #222; color: red');", true);
+
+        }
+        else
+        {
+            ModalRawatInap.initializevalue(inpatientData);
+           // ScriptManager.RegisterStartupScript(this, GetType(), "showlogg2", "console.log('%cis active true', 'background: #222; color: yellow');", true);
+        }
 
         // testing
         hf_get_inpatient_data_hidden_click.Value = JsonConvert.SerializeObject(inpatientData);
         ScriptManager.RegisterStartupScript(this, GetType(), "showlogg2", "console.log('%cBtnInpatientHidden_Click: " + JsonConvert.SerializeObject(inpatientData) + "  ', 'background: #222; color: yellow');", true);
-
     }
 
-    //public void SaveInpatent()
-    //{
-    //    InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
-    //    var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
-    //    var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
-    //    var Status = Jsongetinpatient.Property("status").Value.ToString();
-    //    var Message = Jsongetinpatient.Property("message").Value.ToString();
-    //    ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('save draf rawat inap: status " + Status + "');", true);
-    //    ScriptManager.RegisterStartupScript(this, GetType(), "showlog2", "console.log('save draf rawat inap: message " + Message + "');", true);
+    public void SubmitRawatInap()
+    {
+        try
+        {
+            InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
 
-    //}
+            if (inpatientData != null)
+            {
+                if (inpatientData.status_id != 0 && Convert.ToInt32(inpatientData.operation_schedule_header.status_booking_id) != 7)
+                {
+                    var saveinpatient = clsSOAP.SaveInpatientData(inpatientData);
+                    var Jsongetinpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(saveinpatient.Result);
+
+                    var Status = Jsongetinpatient.Property("status").Value.ToString();
+                    var Message = Jsongetinpatient.Property("message").Value.ToString();
+
+                    if (Status.ToUpper() == "SUCCESS")
+                    {
+                        ScriptManager.RegisterStartupScript(this, GetType(), "showlogdeleterawatinap", "console.log('save draf rawat inap: status " + Status + "');", true);
+                        ScriptManager.RegisterStartupScript(this, GetType(), "showlogdeleterawatinap", "console.log('save draf rawat inap: message " + Message + "');", true);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    public void DeleteRawatInapFinal()
+    {
+        try
+        {
+            InpatientData inpatientData = (InpatientData)Session[Helper.SessionSOAPRawatInap + hfguidadditional.Value];
+
+            if (inpatientData != null)
+            {
+                if ((inpatientData.operation_schedule_additional_id != 0 && inpatientData.is_active == false) || (inpatientData.operation_schedule_additional_id != 0 && inpatientData.operation_schedule_header.status_booking_id == "7"))
+                {
+                    InpatientDeleteParam deleteParam = new InpatientDeleteParam();
+
+                    deleteParam.admission_no = inpatientData.operation_schedule_header.admission_no;
+                    deleteParam.encounter_id = Guid.Parse(inpatientData.encounter_id.ToString());
+                    deleteParam.operation_schedule_id = Guid.Parse(inpatientData.operation_schedule_id.ToString());
+                    deleteParam.organization_id = Convert.ToInt64(inpatientData.operation_schedule_header.organization_id);
+                    deleteParam.patient_id = Convert.ToInt64(inpatientData.patient_id);
+                    deleteParam.user_id = Convert.ToInt64(MyUser.GetHopeUserID());
+                    deleteParam.is_from_opd = inpatientData.operation_schedule_header.is_from_opd;
+
+                    var deleteInpatient = clsSOAP.InpatientCancel(deleteParam);
+                    var jsonDeleteInpatient = (JObject)JsonConvert.DeserializeObject<dynamic>(deleteInpatient.Result);
+                    var status = jsonDeleteInpatient.Property("status").Value.ToString();
+                    var Message = jsonDeleteInpatient.Property("message").Value.ToString();
+
+                    if (status.ToUpper() == "SUCCESS")
+                    {
+                        ScriptManager.RegisterStartupScript(this, GetType(), "showlog", "console.log('delete final rawat inap: status " + status + "');", true);
+                        ScriptManager.RegisterStartupScript(this, GetType(), "showlog2", "console.log('delete final rawat inap: message " + Message + "');", true);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+    #endregion
+
+    // ------------------------------------------------------------------------------------------------------------------
 }

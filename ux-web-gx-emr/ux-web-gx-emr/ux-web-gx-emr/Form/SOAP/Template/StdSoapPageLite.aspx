@@ -1238,7 +1238,7 @@
 										<!-- TAMA CODE edit wording -->
 										<!-- BUTTON REFERRAL / RUJUKAN -->
 										<div id="divaddbuttonreferal" runat="server" style="display: inline-flex">
-											<a id="lnkModalreferal" class="btn btn-default btn-sm" title="Template" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modal-referal').modal();$('#BtnHiddenReferal').trigger('click');">
+											<a id="lnkModalreferal" class="btn btn-default btn-sm" title="Rujukan" style="height: 25px; padding-top: 3px; margin-bottom: 10px; background-color: #303C9E" href="javascript:$('#modal-referal').modal();$('#BtnHiddenReferal').trigger('click');">
 												<label id="lblbhs_btnreferalsoap"  style="color: white; font-weight: bold; cursor: pointer"><i class="fa fa-plus-circle"></i>&nbsp;&nbsp;Rujukan</label>
 											</a>
 										</div>
@@ -1321,7 +1321,7 @@
 												<div runat="server" id="rptrawatinap" >	
 													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_dokter" runat="server" Text="nama dokter"></asp:Label>
 													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_spesialis" runat="server" Text="spesialis"></asp:Label>
-													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_jenis" runat="server" Text="- Rawat Inap - "></asp:Label>
+													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_jenis" runat="server" Text="- Rawat Inap "></asp:Label>
 													<asp:Label Font-Size="12px" Style="color: #333" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_waktu" runat="server" Text="createdate"></asp:Label>
 													<span runat="server" id="stickerinpatient" style="background: #E58314; border-radius: 10px; height: 17px; padding: 1px 13px 1px 13px;text-align: center; display: inline-block;">
 														<asp:Label Font-Size="12px" Style="color: #FFFFFF; letter-spacing: 0.48px" Font-Names="Helvetica, Arial, sans-serif" ID="lbl_rawatinap_status" runat="server" Text="status_booking_name"> </asp:Label>
@@ -4226,7 +4226,6 @@
 					<div class="modal-footer justify-content-right">
 						<asp:UpdatePanel ID="UpdatePanel4" runat="server">
 							<ContentTemplate>
-	
 								<button class="btncancelrujukan" data-dismiss="modal" aria-hidden="true">Close</button>
 								<asp:LinkButton ID="BtnModalDeleteallReferal" CssClass="btndelrujukan" Style="margin-left: 23px" runat="server" OnClick="BtnDeleteAllReferral_Click" Text="Delete All" ></asp:LinkButton>
 							</ContentTemplate>
@@ -4271,7 +4270,7 @@
 							</ContentTemplate>
 						</asp:UpdatePanel>
 					</div>
-				</div>
+				</div>d
 			</div>
 		</div>
 		<%-- ========================================================== END Modal Rawat Inap  ================================================================ --%>
@@ -7908,7 +7907,7 @@
 			return false;
 		}
 
-		// TAMA CODE JAVASCRIPT
+		// TAMA CODE REFERRAL (RUjukan & Rawat Inap)
         function notificationInptient(msg) {
             warningnotificationOption();
             toastr.warning(msg + ' <br /> <button type="button" class="btn btn-danger btn-sm" style="height: 25px; padding-top: 3px; width: 55px; float:right;">OK</button>', 'Save Rawat Inap Alert!');
@@ -7952,14 +7951,12 @@
                 var cbx_alatya = $("[id$='MainContent_ModalRawatInap_chbx_alat_ya']").is(':checked');
                 //var txt_alatya = $("[id$='MainContent_ModalRawatInap_txt_alat_ya']");
                 if (ddl_namaoperasi == "Pilih Operasi/Tindakan" ) {
-					console.log("nam operasi");
 					notificationInptient("Pilih Operasi atau Tidakan");
                     $("[id$='MainContent_ModalRawatInap_ddl_namaoperasi']").focus();
 					return false;
                 }
 				
 				if (jam_operasi.length <= 0) {
-					console.log("jam operasi kosong");
 					notificationInptient("Jam Lama Operasi Tidak Boleh Kosong");
 					$("[id$='MainContent_ModalRawatInap_txt_JamLamaOperasi']").focus();
                     $("[id$='MainContent_ModalRawatInap_txt_JamLamaOperasi']").attr("style", "height:32px;width:69px;text-align:center;border-radius:4px;border:1px solid red");
@@ -7975,15 +7972,13 @@
 					return false;
 
 				}
-                if (ddl_anesteticmetod == "Select Anestetic Method") {
-                    console.log("nama metod anestedi");
+                if (ddl_anesteticmetod == "Anesthetic Method...") {
 					notificationInptient("Pilih Anestetic Method");
                     $("[id$='MainContent_ModalRawatInap_ddl_anasteticmethod']").focus();
                     return false;
 				}
 
 				if (intruksi_rawatinap.length <= 0) {
-					console.log("jam operasi kosong");
 					notificationInptient("Instruksi Rawat Inap  Tidak Boleh Kosong");
                     $("[id$='MainContent_ModalRawatInap_txtinstruksirawatinap']").focus();
 					return false;
@@ -10253,6 +10248,7 @@
 
 
 		window.addEventListener('message', messageHandler, false);
+     
 
     </script>
 </asp:Content>

@@ -1031,7 +1031,6 @@ public class clsSOAP
             HttpClient http = new HttpClient();
             http.BaseAddress = new Uri(ConfigurationManager.AppSettings["urlIPDOT"].ToString());
 
-
             http.DefaultRequestHeaders.Accept.Clear();
             http.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -1040,12 +1039,12 @@ public class clsSOAP
                 return await http.PostAsync(string.Format($"/operationschedule/cancelpoc"), httpContent);
             });
 
-            Log.Debug(LogLibrary.SaveLogNew(MyUser.GetHopeOrgID().ToString(), "encounter_ticket_id", deleteParam.encounter_id.ToString(), "CancelRawatInap", StartTime, "OK", MyUser.GetUsername(), "/" + "" + "/saveasdraft/" + postDate + "/" + "" + "/" + "", jsonString, task.Result.Content.ReadAsStringAsync().Result.ToString()));
+            Log.Debug(LogLibrary.SaveLogNew(MyUser.GetHopeOrgID().ToString(), "encounter_ticket_id", deleteParam.encounter_id.ToString(), "InpatientCancel", StartTime, "OK", MyUser.GetUsername(), "/" + "" + "/saveasdraft/" + postDate + "/" + "" + "/" + "", jsonString, task.Result.Content.ReadAsStringAsync().Result.ToString()));
             return task.Result.Content.ReadAsStringAsync().Result;
         }
         catch (Exception ex)
         {
-            Log.Error(LogLibrary.SaveLogNew(MyUser.GetHopeOrgID().ToString(), "encounter_ticket_id", deleteParam.encounter_id.ToString(), "CancelRawatInap", StartTime, "ERROR", MyUser.GetUsername(), "/" + "" + "/saveasdraft/" + postDate + "/" + "" + "/" + "", jsonString, ex.Message));
+            Log.Error(LogLibrary.SaveLogNew(MyUser.GetHopeOrgID().ToString(), "encounter_ticket_id", deleteParam.encounter_id.ToString(), "InpatientCancel", StartTime, "ERROR", MyUser.GetUsername(), "/" + "" + "/saveasdraft/" + postDate + "/" + "" + "/" + "", jsonString, ex.Message));
             return ex.Message;
         }
     }
